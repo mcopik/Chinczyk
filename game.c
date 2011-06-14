@@ -159,9 +159,10 @@ void Main_Loop(int _type)
 	static int Width = 0,Height = 0;
 	static char * Label;
 	static FIFO * Randomized = NULL;
+	static int Last_Randomized = 1;
 	static int Accumulator = 0;
 	static int Frame_Length = 0;
-	static int FPS_Time = 0.0f;
+	static int FPS_Time = 0.0;
 	static int FPS_Counter = 0;
 	static int Time;
 	static int * First_Move;
@@ -169,7 +170,6 @@ void Main_Loop(int _type)
 	int Buffer;
 	int * tab;
 	int temp;
-	char buff[STRING_SIZE];
 	
 	if(Game_Status == CONFIG)
 	{
@@ -202,6 +202,7 @@ void Main_Loop(int _type)
 			
 		/** Gettin game options */
 		//Menu_Config(graph_it,game_it);
+		Text_Init(Width,Height);
 		Game_Status = START;
 	}
 	
@@ -223,7 +224,7 @@ void Main_Loop(int _type)
 		if(FPS_Time >= 1000)
 		{
 			FPS_Time -= 1000;
-                        Text_Create_FPS(FPS_Counter);
+			Text_Create_FPS(FPS_Counter);
 			FPS_Counter = 0;
 		}
 		//Accumulator -= Frame_Length;
@@ -247,8 +248,7 @@ void Main_Loop(int _type)
 			case START:
 			
 				Init_Game(&game_it,&Players,&Fields,&Number_of_Players,&First_Move);
-				Draw_Init(Fields,Players,Number_of_Players);
-				Text_Init(Width,Height);
+				Draw_Init(Fields,Players,Number_of_Players,&Last_Randomized);
 				Text_Create_Draw(0,NULL);
                                 Text_Create_Player(Players[Active_Player].Name);
                                 Text_Create_FPS(0);
@@ -287,6 +287,7 @@ void Main_Loop(int _type)
 				srand(time(NULL));
 				temp = 6;
 				FIFO_Push(Randomized,temp);//rand()%6);
+				Last_Randomized = 6;
 				if(FIFO_Check(Randomized) == 6 || First_Move[Active_Player])
 				{
 					Next_Draw = 1;
@@ -357,8 +358,9 @@ void Main_Loop(int _type)
 						Available_Move = -1;
 						temp = FIFO_Pop(Randomized);
 						FIFO_Get_All(Randomized,&temp,&tab);
-                                                Text_Create_Draw(temp,tab);
-                                                if(FIFO_Check(Randomized) == -1 && Next_Draw)
+						Text_Create_Draw(temp,tab);
+						free(tab);
+						if(FIFO_Check(Randomized) == -1 && Next_Draw)
 						{
 							Game_Status = QUIT;//WAIT;
 							Set_Change();
@@ -434,6 +436,8 @@ void Main_Loop(int _type)
 					free(Players);
 				if(Label)
 					free(Label);
+				if(First_Move)
+					free(First_Move);
 				if(Randomized)
 					FIFO_Delete(Randomized);
 				Text_Clean();

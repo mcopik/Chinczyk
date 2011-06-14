@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS= -g -Wall
-LDFLAGS= -lGL -lGLU -lglut 
+LDFLAGS= -lGL -lGLU -lglut /lib64/libm.so.6 
 SOURCES=  main.c game.c input.c graphic.c array.c
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=bin/game

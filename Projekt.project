@@ -23,7 +23,7 @@
       </Compiler>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="s" IntermediateDirectory="./Debug" Command="./game" CommandArguments="--default" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
+      <General OutputFile="s" IntermediateDirectory="./Debug" Command="./game" CommandArguments="--default" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="/home/mcopik/Pulpit/Projekt/bin" PauseExecWhenProcTerminates="yes"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;"/>
       <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
         <PostConnectCommands/>

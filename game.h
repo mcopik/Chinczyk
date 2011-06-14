@@ -85,6 +85,7 @@ void FIFO_Push(FIFO * _FIFO, int _value);
 int FIFO_Pop(FIFO * _FIFO);
 int FIFO_Check(FIFO * _FIFO);
 void FIFO_Delete(FIFO * _FIFO);
+void FIFO_Get_All(FIFO * _queue,int * _size,int ** _tab);
 	/**
 	 */
 void Create_Player(Player * _player,const char * _name,float * _colors,int _type);

@@ -126,7 +126,7 @@ void  Close_Image(Image * _image){
     free(_image->Data);
 }
 
-void _Draw(int _type,Field * _fields,Player * _players,int _players_number,Blink_Info * _info)
+void _Draw(int _type,Field * _fields,Player * _players,int _players_number,int * _randomized,Blink_Info * _info)
 {
 	static Field * Fields = NULL;
 	static Player * Players = NULL;
@@ -135,6 +135,7 @@ void _Draw(int _type,Field * _fields,Player * _players,int _players_number,Blink
 	static int List_Name;
 	static float * Camera;
 	static int Frequency = -1;
+	static int * Randomized;
 	static GLUquadricObj *quadratic = NULL;
 	/** \var static unsigned int Texture[3];
     *	\brief Contains textures
@@ -145,6 +146,7 @@ void _Draw(int _type,Field * _fields,Player * _players,int _players_number,Blink
 	static int Blink_Pawns[4] = {-1,-1,-1,-1};
 	static int Blink_Field = -1;
 	static int Active_Player = -1;
+	static int Cube_Pips[2][6] = {{3,3,5,5,3,3},{2,6,6,1,1,5}};
 	char buffer[STRING_SIZE+1];
 	int i,j;
 	
@@ -224,12 +226,6 @@ void _Draw(int _type,Field * _fields,Player * _players,int _players_number,Blink
 		
 		/** Draws cube */
 		glNewList(List_Name+2,GL_COMPILE);
-			glPushMatrix();
-			glLoadIdentity();
-			glTranslatef(CUBE_X,CUBE_Y,CUBE_Z);
-			
-			glRotatef(20.0f,1.0f,0.0f,0.0f);
-			glRotatef(40.0f,0.0f,1.0f,0.0f);
 			glBegin(GL_QUADS);/*
 				for(i=1;i<3;i++){
 					glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,-CUBE_SIZE/2*POW(-1,i));
@@ -282,8 +278,16 @@ void _Draw(int _type,Field * _fields,Player * _players,int _players_number,Blink
 					glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,CUBE_SIZE/2);
 					glVertex3f(CUBE_SIZE/2,CUBE_SIZE/2,CUBE_SIZE/2);
 			glEnd();
-			
-			glPopMatrix();
+			glColor3f(0.0f,0.0f,0.0f);
+			glBegin(GL_LINES);
+			glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,CUBE_SIZE/2);
+			glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,-CUBE_SIZE/2);
+			glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,CUBE_SIZE/2);
+			glVertex3f(CUBE_SIZE/2,CUBE_SIZE/2,CUBE_SIZE/2);
+			glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,CUBE_SIZE/2);
+			glVertex3f(-CUBE_SIZE/2,-CUBE_SIZE/2,CUBE_SIZE/2);
+			glEnd();
+			glColor3f(1.0f,1.0f,1.0f);
 		glEndList();
 				
 	}
@@ -295,6 +299,7 @@ void _Draw(int _type,Field * _fields,Player * _players,int _players_number,Blink
 			Fields = _fields;
 			Players = _players;
 			Number_of_Players = _players_number;
+			Randomized = _randomized;
 		}
 		else if(_info)
 		{
@@ -343,7 +348,7 @@ void _Draw(int _type,Field * _fields,Player * _players,int _players_number,Blink
 		glRotatef(Camera[1],0.0,1.0,0.0);
 		free(Camera);
 		
-	
+		glColor3f(1.0f,1.0f,1.0f);
 		/** Board */
 		if(_type == GL_SELECT)
 			glPushName(BOARD_HIT);
@@ -357,7 +362,7 @@ void _Draw(int _type,Field * _fields,Player * _players,int _players_number,Blink
 					glLoadName(i+1);
 				glColor3f(1.0f,1.0f,1.0f);
 				if(Fields[i].Radius)
-					Draw_Circle(Fields[i].Radius,Fields[i].Position[0],Fields[i].Position[1]);
+					Draw_Circle(Fields[i].Radius,Fields[i].Position[0],H/2+0.01,-Fields[i].Position[1]);
 			}
 		}
 		else
@@ -367,7 +372,7 @@ void _Draw(int _type,Field * _fields,Player * _players,int _players_number,Blink
 					glLoadName(i+1);
 				glColor3f(1.0f,1.0f,1.0f);
 				if(Fields[i].Radius && i != Blink_Field)
-					Draw_Circle(Fields[i].Radius,Fields[i].Position[0],Fields[i].Position[1]);
+					Draw_Circle(Fields[i].Radius,Fields[i].Position[0],H/2+0.01,-Fields[i].Position[1]);
 			}
 		}
 	
@@ -430,19 +435,33 @@ void _Draw(int _type,Field * _fields,Player * _players,int _players_number,Blink
 					glLoadName(Blink_Field+1);
 				//glColor3f(1.0f,1.0f,1.0f);
 				if(Fields[i].Radius)
-					Draw_Circle(Fields[Blink_Field].Radius,Fields[Blink_Field].Position[0],Fields[Blink_Field].Position[1]);
+					Draw_Circle(Fields[Blink_Field].Radius,Fields[Blink_Field].Position[0],H/2+0.01,-Fields[Blink_Field].Position[1]);
 				glPopMatrix();
 			}
 		}
-		
 		/** Cube */
 		if(_type == GL_SELECT)
 			glLoadName(CUBE_HIT);
 		glLoadIdentity();
 		glTranslatef(CUBE_X,CUBE_Y,CUBE_Z);
 		glRotatef(20.0f,1.0f,0.0f,0.0f);
-		glRotatef(40.0f,0.0f,1.0f,0.0f);
+		glRotatef(15.0f,0.0f,1.0f,0.0f);
 		glCallList(List_Name+2);
+		glColor3f(0.0f,0.0f,0.0f);
+		glPushMatrix();
+			glTranslatef(0.0f,CUBE_SIZE/2+0.01f,0.0f);
+			glRotatef(-90.0f,1.0f,0.0f,0.0f);
+			Draw_Cube_Pips(CUBE_SIZE/(float)10,*Randomized);
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(0.0f,0.0f,CUBE_SIZE/2+0.01f);
+			Draw_Cube_Pips(CUBE_SIZE/(float)10,Cube_Pips[1][*Randomized-1]);
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(-CUBE_SIZE/2-0.01f,0.0f,0.0f);
+			glRotatef(-90.0f,0.0f,1.0f,0.0f);
+			Draw_Cube_Pips(CUBE_SIZE/10,Cube_Pips[0][*Randomized-1]);
+		glPopMatrix();
 		
 		if(_type == GL_SELECT)
 			glPopName();
@@ -463,13 +482,13 @@ void _Draw(int _type,Field * _fields,Player * _players,int _players_number,Blink
 
 void Disable_Blink()
 {
-	_Draw(0,NULL,NULL,0,NULL);
+	_Draw(0,NULL,NULL,0,NULL,NULL);
 }
 
-void Draw_Init(Field * _fields,Player * _players,int _players_number)
+void Draw_Init(Field * _fields,Player * _players,int _players_number, int * _randomized)
 {
 	if(_fields != NULL && _players != NULL && _players_number >= 0)
-	_Draw(0,_fields,_players,_players_number,NULL);
+	_Draw(0,_fields,_players,_players_number,_randomized,NULL);
 }
 
 void Draw_Text(int _type)
@@ -497,7 +516,11 @@ void _Draw_Text(int _type,Text * _text,const char * _name,int _width,int _height
 	{
 		Iterator * it = Find_Element(Texts,_name);
 		if(it->Position)
-                    Erase(it);
+		{
+			if(((Text*)it->Position->Value)->String)
+				free(((Text*)it->Position->Value)->String);
+			Erase(it);
+		}
 		Delete_Iterator(it);
 	}
 	else if(_type == TEXT_CLEAN)
@@ -539,6 +562,7 @@ void _Draw_Text(int _type,Text * _text,const char * _name,int _width,int _height
 					Ptr = Get_Value(it);
 					if(_type == GL_SELECT)
 						glLoadName(Ptr->Select_Number);
+					glColor3f(1.0f,1.0f,1.0f);
 					glRasterPos2f(Ptr->X, Ptr->Y);
 					len = strlen(Ptr->String);
 					for (i = 0; i < len; i++) {
@@ -588,13 +612,13 @@ Text * Text_Create(int _x,int _y,int _select,const char * _string,void * _font)
 
 void Draw_Select()
 {
-	_Draw(GL_SELECT,NULL,NULL,0,NULL);
+	_Draw(GL_SELECT,NULL,NULL,0,NULL,NULL);
 	//_Draw_Text(GL_SELECT,NULL,NULL,0,0);
 }
 
 void Draw_Render()
 {
-	_Draw(GL_RENDER,NULL,NULL,0,NULL);
+	_Draw(GL_RENDER,NULL,NULL,0,NULL,NULL);
 	//_Draw_Text(GL_RENDER,NULL,NULL,0,0);
 }
 
@@ -693,7 +717,7 @@ void Blink_Set_Pawn(int _number,int * _pawns)
 	ptr->Player_Number = _number;
 	ptr->Pawns_Numbers = _pawns;
 	ptr->Field_Number = -1;
-	_Draw(0,NULL,NULL,0,ptr);
+	_Draw(0,NULL,NULL,0,NULL,ptr);
 	free(ptr);
 }
 
@@ -703,7 +727,7 @@ void Blink_Set_Field(int _number, int _pawn, int _field)
 	ptr->Player_Number = _number;
 	ptr->Pawns_Numbers = &_pawn;
 	ptr->Field_Number = _field;
-	_Draw(0,NULL,NULL,0,ptr);
+	_Draw(0,NULL,NULL,0,NULL,ptr);
 	free(ptr);
 }
 
@@ -831,11 +855,11 @@ void Close(Field * Pointer)
 }
 
 
-void Draw_Circle(float _radius, float _x, float _y)
+void Draw_Circle(float _radius, float _x, float _y,float _z)
 {
 	int i;
 	glPushMatrix();
-	glTranslatef(_x,H/2+0.01,-_y);
+	glTranslatef(_x,_y,_z);//H/2+0.01,-_y);
     glBegin(GL_LINES);
     float theta;
     for (i = 0; i < 180; i++)
@@ -882,4 +906,73 @@ void Text_Create_FPS(int _fps)
     Text_Remove(FPS_MSG);
     Text_Add(ptr,FPS_MSG);
     Set_Change();
+}
+
+
+void Draw_Cube_Pips(float _radius, int _number)
+{
+	int i;
+	switch(_number){
+		
+		case 1:
+			glRotatef(90.0f,1.0f,0.0f,0.0f);
+			Draw_Circle(_radius,0.0f,0.0f,0.0f);
+		break;
+		case 2:
+			for(i = 0;i < 2;i++){
+				glPushMatrix();
+					glTranslatef(2*_radius*POW(-1,i),2*_radius*POW(-1,i),0.0f);
+					glRotatef(90.0f,1.0f,0.0f,0.0f);
+					Draw_Circle(_radius,0.0f,0.0f,0.0f);
+				glPopMatrix();
+			}
+		break;
+		case 3:
+			for(i = 0;i < 2;i++){
+				glPushMatrix();
+					glTranslatef(2*_radius*POW(-1,i),2*_radius*POW(-1,i),0.0f);
+					glRotatef(90.0f,1.0f,0.0f,0.0f);
+					Draw_Circle(_radius,0.0f,0.0f,0.0f);
+				glPopMatrix();
+			}
+			glRotatef(90.0f,1.0f,0.0f,0.0f);
+			Draw_Circle(_radius,0.0f,0.0f,0.0f);
+		break;
+		case 4:
+			for(i = 0;i < 4;i++){
+				glPushMatrix();
+					glTranslatef(3*_radius*(!(i % 2) ? -1 : 1),3*_radius*(i > 1 ? -1 : 1),0.0f);
+					glRotatef(90.0f,1.0f,0.0f,0.0f);
+					Draw_Circle(_radius,0.0f,0.0f,0.0f);
+				glPopMatrix();
+			}
+		break;
+		case 5:
+			for(i = 0;i < 4;i++){
+				glPushMatrix();
+					glTranslatef(2*_radius*(!(i % 2) ? -1 : 1),2*_radius*(i > 1 ? -1 : 1),0.0f);
+					glRotatef(90.0f,1.0f,0.0f,0.0f);
+					Draw_Circle(_radius,0.0f,0.0f,0.0f);
+				glPopMatrix();
+			}
+			glRotatef(90.0f,1.0f,0.0f,0.0f);
+			Draw_Circle(_radius,0.0f,0.0f,0.0f);
+		break;
+		case 6:
+			for(i = 0;i < 4;i++){
+				glPushMatrix();
+					glTranslatef(2*_radius*(!(i % 2) ? -1 : 1),3*_radius*(i > 1 ? -1 : 1),0.0f);
+					glRotatef(90.0f,1.0f,0.0f,0.0f);
+					Draw_Circle(_radius,0.0f,0.0f,0.0f);
+				glPopMatrix();
+			}
+			for(i = 0;i < 2;i++){
+				glPushMatrix();
+				glTranslatef(2*_radius*POW(-1,i),0.0f,0.0f);
+				glRotatef(90.0f,1.0f,0.0f,0.0f);
+				Draw_Circle(_radius,0.0f,0.0f,0.0f);
+				glPopMatrix();
+			}
+		break;
+	}
 }

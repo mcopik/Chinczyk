@@ -25,7 +25,7 @@
 #define PI 3.1415926f
 #define NUMBER_OF_TEXTURES 1
 #define CUBE_X	1.2f
-#define CUBE_Y	-0.9f
+#define CUBE_Y	-0.8f
 #define CUBE_Z	-3.0f
 #define CUBE_SIZE 0.4f
 
@@ -39,6 +39,16 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
+#define ROTATE \
+if(_axis)	\
+{	\
+	if(_axis == 1)	\
+		glRotatef(_angle,1.0f,0.0f,0.0f);	\
+	else if(_axis == 2)	\
+		glRotatef(_angle,0.0f,1.0f,0.0f);	\
+	else \
+		glRotatef(_angle,0.0f,0.0f,1.0f);	\
+}	\
     
 enum{
     LEFT,
@@ -99,14 +109,14 @@ void Interval(float * number, int min,int max);
 int Init_GL(int _width, int _height, char * _label,int _fullscr);
 void Draw_Render();
 void Draw_Select();
-void Draw_Init(Field * fields,Player * players,int players_number);
+void Draw_Init(Field * fields,Player * players,int players_number,int * _randomized);
 void Blink_Set_Pawn(int _number,int * _pawns);
 void Blink_Set_Field(int _number,int _pawn,int _field);
 void Disable_Blink();
 void Enable_FullScr(int _width,int _height);
 void Disable_FullScr(int _width,int _height);
 void Reshape_Window(int Width, int Height);
-void Draw_Circle(float radius, float x, float y);
+void Draw_Circle(float radius, float x, float y,float _z);
 void Draw_Pawn(float x,float z,float * colors,int _blink);
 void Text_Init(int _width,int _height);
 void Text_Add(Text * _text,const char * _name);
@@ -121,7 +131,8 @@ Field * Generate_6_Players();
 void Close(Field * Pointer);
 void Text_Create_Player(const char * _name);
 void Text_Create_Draw(int _size,int * _tab);
-
+void Text_Create_FPS(int _fps);
+void Draw_Cube_Pips(float _radius, int _number);
 #ifdef	__cplusplus
 }
 #endif
