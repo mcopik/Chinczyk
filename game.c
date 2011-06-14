@@ -158,7 +158,7 @@ void Main_Loop(int _type)
 	static Key_Action * k_event;
 	static int Width = 0,Height = 0;
 	static char * Label;
-	static LIFO * Randomized = NULL;
+	static FIFO * Randomized = NULL;
 	static int Accumulator = 0;
 	static int Frame_Length = 0;
 	static int FPS_Time = 0.0f;
@@ -222,9 +222,8 @@ void Main_Loop(int _type)
 		FPS_Counter++;
 		if(FPS_Time >= 1000)
 		{
-			printf("%d\n",FPS_Time);
 			FPS_Time -= 1000;
-			printf("FPS: %d\n",FPS_Counter);
+                        Text_Create_FPS(FPS_Counter);
 			FPS_Counter = 0;
 		}
 		//Accumulator -= Frame_Length;
@@ -250,8 +249,9 @@ void Main_Loop(int _type)
 				Init_Game(&game_it,&Players,&Fields,&Number_of_Players,&First_Move);
 				Draw_Init(Fields,Players,Number_of_Players);
 				Text_Init(Width,Height);
-				Text_Add(Text_Create(50,50,200,Players[Active_Player].Name,FONT1),NAME_MSG);
-				Text_Add(Text_Create(50,75,200,DRAWING,FONT1),DRAW_MSG);
+				Text_Create_Draw(0,NULL);
+                                Text_Create_Player(Players[Active_Player].Name);
+                                Text_Create_FPS(0);
 				Set_Change();
 				Previous_State = START;
 				Game_Status = WAIT;
@@ -283,20 +283,23 @@ void Main_Loop(int _type)
 			
 			case RANDOMIZE:
 				if(!Randomized)
-					Randomized = LIFO_Create();
+					Randomized = FIFO_Create();
 				srand(time(NULL));
 				temp = 6;
-				LIFO_Push(Randomized,temp);//rand()%6);//6);
-				if(LIFO_Check(Randomized) == 6 || First_Move[Active_Player])
+				FIFO_Push(Randomized,temp);//rand()%6);
+				if(FIFO_Check(Randomized) == 6 || First_Move[Active_Player])
 				{
 					Next_Draw = 1;
 					First_Move[Active_Player] ? First_Move[Active_Player]-- : 0;
 				}
 				else
 					Next_Draw = 0;
+				FIFO_Get_All(Randomized,&temp,&tab);
+				Text_Create_Draw(temp,tab);
+				free(tab);
 				tab = malloc(sizeof(*tab)*NUMBER_OF_PAWNS);
 				for(i=0;i < NUMBER_OF_PAWNS;i++){
-					temp = Check_Move(Players[Active_Player].Position[i],LIFO_Check(Randomized), \
+					temp = Check_Move(Players[Active_Player].Position[i],FIFO_Check(Randomized), \
 							Number_of_Players,Active_Player);
 					if(temp >= 0 &&\
 					Check_Occupied(Players,temp,Active_Player,Number_of_Players) != -1)
@@ -324,7 +327,7 @@ void Main_Loop(int _type)
 							{
 								Selected_Pawn = i;
 								temp = Check_Move(Players[Active_Player].Position[Selected_Pawn],\
-										LIFO_Check(Randomized),\
+										FIFO_Check(Randomized),\
 										Number_of_Players,Active_Player);
 								if(temp >= 0 &&\
 								Check_Occupied(Players,temp,Active_Player,Number_of_Players) != -1)
@@ -352,17 +355,20 @@ void Main_Loop(int _type)
 						{	Game_Status = QUIT;break;}
 						Selected_Pawn = -1;
 						Available_Move = -1;
-						temp = LIFO_Pop(Randomized);
-						if(LIFO_Check(Randomized) == -1 && Next_Draw)
+						temp = FIFO_Pop(Randomized);
+						FIFO_Get_All(Randomized,&temp,&tab);
+                                                Text_Create_Draw(temp,tab);
+                                                if(FIFO_Check(Randomized) == -1 && Next_Draw)
 						{
 							Game_Status = QUIT;//WAIT;
 							Set_Change();
 							Disable_Blink();
 						}
-						else if(LIFO_Check(Randomized) == -1)
+						else if(FIFO_Check(Randomized) == -1)
 						{	
 							Active_Player = ++Active_Player % Number_of_Players;
-							Game_Status = WAIT;
+                                                        Text_Create_Player(Players[Active_Player].Name);
+                                                        Game_Status = WAIT;
 							Set_Change();
 							Disable_Blink();
 						}
@@ -370,7 +376,7 @@ void Main_Loop(int _type)
 						{
 							tab = malloc(sizeof(*tab)*NUMBER_OF_PAWNS);
 							for(i=0;i < NUMBER_OF_PAWNS;i++){
-								temp = Check_Move(Players[Active_Player].Position[i],LIFO_Check(Randomized), \
+								temp = Check_Move(Players[Active_Player].Position[i],FIFO_Check(Randomized), \
 								Number_of_Players,Active_Player);
 								if(temp >= 0 &&\
 								Check_Occupied(Players,temp,Active_Player,Number_of_Players) != -1)
@@ -397,7 +403,7 @@ void Main_Loop(int _type)
 								{
 									Selected_Pawn = i;
 									temp = Check_Move(Players[Active_Player].Position[Selected_Pawn],\
-											LIFO_Check(Randomized),\
+											FIFO_Check(Randomized),\
 											Number_of_Players,Active_Player);
 									if(temp >= 0 &&\
 									Check_Occupied(Players,temp,Active_Player,Number_of_Players) != -1)
@@ -429,7 +435,7 @@ void Main_Loop(int _type)
 				if(Label)
 					free(Label);
 				if(Randomized)
-					LIFO_Delete(Randomized);
+					FIFO_Delete(Randomized);
 				Text_Clean();
 				Event_Clean();
 				Delete_Iterator(graph_it);
@@ -491,61 +497,79 @@ int Check_Change()
 	return _Change(CHECK_CHANGE);
 }
 
-LIFO * LIFO_Create()
+FIFO * FIFO_Create()
 {
-	LIFO * ret = malloc(sizeof(*ret));
+	FIFO * ret = malloc(sizeof(*ret));
 	ret->Top = NULL;
 	ret->Bottom = NULL;
 	return ret;
 }
 
-void LIFO_Push(LIFO * _LIFO, int _value)
+void FIFO_Push(FIFO * _FIFO, int _value)
 {
-	LIFO_Element * ptr;
+	FIFO_Element * ptr;
 	ptr = malloc(sizeof(*ptr));
 	ptr->Value = _value;
 	ptr->Next = NULL;
-	if(_LIFO->Top)
-		_LIFO->Top->Next = ptr;
+	if(_FIFO->Top)
+		_FIFO->Top->Next = ptr;
 	else
-		_LIFO->Bottom = ptr;
-	_LIFO->Top = ptr;
+		_FIFO->Bottom = ptr;
+	_FIFO->Top = ptr;
 }
 
-int LIFO_Pop(LIFO * _LIFO)
+int FIFO_Pop(FIFO * _FIFO)
 {
-	if(_LIFO->Bottom)
+	if(_FIFO->Bottom)
 	{
-		int ret = _LIFO->Bottom->Value;
-		LIFO_Element * ptr;
-		ptr = _LIFO->Bottom;
-		_LIFO->Bottom = ptr->Next;
-		if(!_LIFO->Bottom)
-			_LIFO->Top = NULL;
+		int ret = _FIFO->Bottom->Value;
+		FIFO_Element * ptr;
+		ptr = _FIFO->Bottom;
+		_FIFO->Bottom = ptr->Next;
+		if(!_FIFO->Bottom)
+			_FIFO->Top = NULL;
 		free(ptr);
 		return ret;
 	}
 	return -1;
 }
 
-int LIFO_Check(LIFO * _LIFO)
+int FIFO_Check(FIFO * _FIFO)
 {
-	if(_LIFO->Bottom)
-		return _LIFO->Bottom->Value;
+	if(_FIFO->Bottom)
+		return _FIFO->Bottom->Value;
 	return -1;
 }
 
-void LIFO_Delete(LIFO * _LIFO)
+void FIFO_Delete(FIFO * _FIFO)
 {
-	LIFO_Element * ptr;
-	while(_LIFO->Bottom){
-		ptr = _LIFO->Bottom;
-		_LIFO->Bottom = ptr->Next;
+	FIFO_Element * ptr;
+	while(_FIFO->Bottom){
+		ptr = _FIFO->Bottom;
+		_FIFO->Bottom = ptr->Next;
 		free(ptr);
 	}
-	free(_LIFO);
+	free(_FIFO);
 }
 
+void FIFO_Get_All(FIFO * _queue,int * _size,int ** _tab)
+{
+	int i;
+	*_size = 0;
+	FIFO_Element * ptr;
+	ptr = _queue->Bottom;
+	while(ptr != NULL){
+		(*_size)++;
+		ptr = ptr->Next;
+	}
+	*_tab = malloc(sizeof(**_tab)*(*_size));
+	ptr = _queue->Bottom;
+	for(i = 0;i < *_size;i++){
+		(*_tab)[i] = ptr->Value;
+		ptr = ptr->Next;
+	}
+}
+		
 int Check_Move(int _position,int _value,int _number_of_players,int _player_number)
 {
 	int shift = NUMBER_OF_PAWNS*_number_of_players*2;
@@ -634,3 +658,6 @@ void Close_Game()
 {
 	Main_Loop(CLOSE);
 }
+
+
+	

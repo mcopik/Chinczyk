@@ -180,7 +180,9 @@ Iterator * Find_Element(Array * _array,const char * _name)
 		for(i=0;i<position;i++)
 			Get_Next(it);
 	}
-	return it;
+        if(it->Position && Compare_Strings(it->Position->Key,_name) != -1)
+            it->Position = NULL;
+        return it;
 }
 
 int Insert_Value(Array * _array,const char * _name,void * _value)
@@ -265,7 +267,9 @@ void Erase(Iterator * _it)
 		else
 			_it->Object->First = _it->Object->Last = NULL;
 			
-		_it->Object->Size -= _it->Position->Size;
+		_it->Object->Size -= Type_Size(_it->Position->Type)*_it->Position->Size \
+                        + sizeof(_it->Position->Size) \
+			+ sizeof(*(_it->Position->Key))*STRING_SIZE + sizeof(_it->Position->Type);
 		_it->Object->Length--;
 		free(_it->Position->Key);
 		free(_it->Position->Value);

@@ -176,22 +176,22 @@ void Check_Mouse_Event(Mouse_Action ** _pointer)
 
 int _Event(int _type)
 {
-	static LIFO * Buffer = NULL;
+	static FIFO * Buffer = NULL;
 	if(!Buffer)
 	{
-		Buffer = LIFO_Create();
+		Buffer = FIFO_Create();
 	}
 	if(_type == EVENT_GET)
 	{
-		if(LIFO_Check(Buffer) != -1)
-			return LIFO_Pop(Buffer);
+		if(FIFO_Check(Buffer) != -1)
+			return FIFO_Pop(Buffer);
 	}
 	else if(_type == EVENT_CLEAN)
 	{
-		LIFO_Delete(Buffer);
+		FIFO_Delete(Buffer);
 	}
 	else
-		LIFO_Push(Buffer,_type);
+		FIFO_Push(Buffer,_type);
 }
 int Event_Get()
 {

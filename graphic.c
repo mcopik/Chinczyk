@@ -497,7 +497,7 @@ void _Draw_Text(int _type,Text * _text,const char * _name,int _width,int _height
 	{
 		Iterator * it = Find_Element(Texts,_name);
 		if(it->Position)
-			Erase(it);
+                    Erase(it);
 		Delete_Iterator(it);
 	}
 	else if(_type == TEXT_CLEAN)
@@ -846,4 +846,40 @@ void Draw_Circle(float _radius, float _x, float _y)
     }
     glEnd();
 	glPopMatrix();
+}
+
+void Text_Create_Draw(int _size,int * _tab)
+{
+    int i;
+    char * buffer;
+    Text * ptr;
+    buffer = malloc(sizeof(*buffer)*(strlen(DRAWING_TEXT)+1+_size*2));
+    strcpy(buffer,DRAWING_TEXT);
+    for(i = 0;i < _size;i++)
+            sprintf(buffer,"%s %d",buffer,_tab[i]);
+    ptr = Text_Create(50,75,200,buffer,FONT1);
+    free(buffer);
+    Text_Remove(DRAW_MSG);
+    Text_Add(ptr,DRAW_MSG);
+    Set_Change();
+}
+
+void Text_Create_Player(const char * _name)
+{
+    Text * ptr = Text_Create(50,50,200,_name,FONT1);
+    Text_Remove(NAME_MSG);
+    Text_Add(ptr,NAME_MSG);
+    Set_Change();
+}
+
+void Text_Create_FPS(int _fps)
+{
+    //5 digits for FPS. everything can happen
+    char * buffer = malloc(sizeof(*buffer)*(strlen(DRAWING_TEXT)+6));
+    sprintf(buffer,"%s %d",FPS_TEXT,_fps);
+    Text * ptr = Text_Create(50,25,200,buffer,FONT1);
+    free(buffer);
+    Text_Remove(FPS_MSG);
+    Text_Add(ptr,FPS_MSG);
+    Set_Change();
 }

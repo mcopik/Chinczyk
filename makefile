@@ -8,7 +8,7 @@ EXECUTABLE=bin/game
 all: $(SOURCES) $(EXECUTABLE)
 	
 $(EXECUTABLE): $(OBJECTS) 
-	$(CC) $(LDFLAGS) /lib64/libm.so.6 $(OBJECTS) -o $@
+	$(CC) $(LDFLAGS)  $(OBJECTS) -o $@
 
 .c.o:
 	$(CC) $(CFLAGS) $(LDFLAGS) $< -c -o $@

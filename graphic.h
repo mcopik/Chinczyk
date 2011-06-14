@@ -119,7 +119,8 @@ Field * Generate_4_Players();
 Field * Generate_5_Players();
 Field * Generate_6_Players();
 void Close(Field * Pointer);
-
+void Text_Create_Player(const char * _name);
+void Text_Create_Draw(int _size,int * _tab);
 
 #ifdef	__cplusplus
 }

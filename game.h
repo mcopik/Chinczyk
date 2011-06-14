@@ -15,6 +15,7 @@ extern "C" {
 #include <GL/gl.h>
 #include "array.h"
 #include "input.h"
+
 #define MAX_PLAYERS 3
 #define DEFAULT_ARGUMENT "--default"
 #define ERROR(ret,...)		\
@@ -35,7 +36,9 @@ extern "C" {
 #define FONT1 GLUT_BITMAP_9_BY_15
 #define DRAW_MSG "Draw_Msg"
 #define NAME_MSG "Name_Msg"
-#define DRAWING "Wylosowano: "
+#define FPS_MSG "FPS_Msg"
+#define FPS_TEXT "FPS: "
+#define DRAWING_TEXT "Wylosowano:"
 	enum{
 		CONFIG,
 		START,
@@ -70,18 +73,18 @@ typedef struct{
 } Player;
 
 
-typedef struct _LIFO_Element LIFO_Element;
+typedef struct _FIFO_Element FIFO_Element;
 typedef struct{
-	struct _LIFO_Element{
+	struct _FIFO_Element{
 		int Value;
-		LIFO_Element * Next;
+		FIFO_Element * Next;
 	} * Top,*Bottom;
-}LIFO;
-LIFO * LIFO_Create();
-void LIFO_Push(LIFO * _LIFO, int _value);
-int LIFO_Pop(LIFO * _LIFO);
-int LIFO_Check(LIFO * _LIFO);
-void LIFO_Delete(LIFO * _LIFO);
+}FIFO;
+FIFO * FIFO_Create();
+void FIFO_Push(FIFO * _FIFO, int _value);
+int FIFO_Pop(FIFO * _FIFO);
+int FIFO_Check(FIFO * _FIFO);
+void FIFO_Delete(FIFO * _FIFO);
 	/**
 	 */
 void Create_Player(Player * _player,const char * _name,float * _colors,int _type);
