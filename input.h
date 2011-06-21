@@ -46,6 +46,8 @@ int Event_Get();
 void Event_Set(int _type);
 void Event_Clean();
 int Find_Hit(int _value,int _hits,unsigned int * _buffer);
+void Clean_Key_Event();
+void Clean_Mouse_Event();
 #ifdef	__cplusplus
 }
 #endif

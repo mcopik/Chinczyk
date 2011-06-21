@@ -105,7 +105,7 @@ void Init_Game(Iterator ** _it,Player ** _players,Field ** _fields,int * _number
 	*_players = malloc(*_number_of_players*sizeof(**_players));
 	*_first_move = malloc(sizeof(**_first_move)*(*_number_of_players));
 	for(i = 0;i < *_number_of_players;i++)
-		(*_first_move)[i] = 3;
+		(*_first_move)[i] = 2;
 	char * buffer = malloc(STRING_SIZE*sizeof(char));
 	char * buffer2;
 	for(i = 0;i < *_number_of_players;i++)
@@ -149,7 +149,7 @@ void Main_Loop(int _type)
 	static int Available_Move = -1;
 	static Array * Game_Options = NULL;
 	static Array * Graphic_Options = NULL;
-	static int i;
+	static int i,j;
 	static int Window_Number;
 	static int Next_Draw = 0;
 	static int Previous_State = 0;
@@ -168,9 +168,9 @@ void Main_Loop(int _type)
 	static int * First_Move;
 	int Next_Time;
 	int Buffer;
-	int * tab;
-	int temp;
-	
+	int * tab,*tab2;
+	int temp,temp2;
+	int flag = 0;
 	if(Game_Status == CONFIG)
 	{
 		if(_type == INIT_DEF)
@@ -282,45 +282,80 @@ void Main_Loop(int _type)
 			break;
 			
 			case RANDOMIZE:
+				
 				if(!Randomized)
 					Randomized = FIFO_Create();
 				srand(time(NULL));
-				temp = 6;
+				temp = rand() % 6 + 1;
 				FIFO_Push(Randomized,temp);//rand()%6);
-				Last_Randomized = 6;
-				if(FIFO_Check(Randomized) == 6 || First_Move[Active_Player])
+				Last_Randomized = temp;
+				
+				if(Previous_State == WAIT_DEC || Previous_State == WAIT_SELECT)
 				{
+					Game_Status = Previous_State;
+				}
+				else
+				{
+					FIFO_Get_All(Randomized,&temp,&tab);
+					flag = 0;
+					tab2 = malloc(sizeof(*tab)*NUMBER_OF_PAWNS);
+					for(i = 0;i < temp;i++){
+						for(j=0;j < NUMBER_OF_PAWNS;j++){
+							temp2 = Check_Move(Players[Active_Player].Position[j],tab[i],\
+								Number_of_Players,Active_Player);
+							if(temp2 >= 0 &&\
+							Check_Occupied(Players,temp2,Active_Player,Number_of_Players) != -1)
+							{
+								tab2[j] = 1;	
+								flag = 1;
+							}
+							else
+								tab2[j] = 0;
+						}
+						if(flag)
+						{
+							for(j = 0;j < i;j++)
+								FIFO_Pop(Randomized);
+							Blink_Set_Pawn(Active_Player,tab2);
+							Game_Status = WAIT_SELECT;
+							break;
+						}
+					}
+					if(!flag)
+					{
+						if(Last_Randomized == 6 || First_Move[Active_Player])
+							Game_Status = WAIT;
+						else
+							Game_Status = NEXT_PLAYER;
+					}
+					free(tab2);
+					free(tab);
+				}
+				if(Last_Randomized == 6)
 					Next_Draw = 1;
-					First_Move[Active_Player] ? First_Move[Active_Player]-- : 0;
+				else if(First_Move[Active_Player] > 0)
+				{	
+					First_Move[Active_Player]--;
+					Next_Draw = 1;
 				}
 				else
 					Next_Draw = 0;
-				FIFO_Get_All(Randomized,&temp,&tab);
-				Text_Create_Draw(temp,tab);
-				free(tab);
-				tab = malloc(sizeof(*tab)*NUMBER_OF_PAWNS);
-				for(i=0;i < NUMBER_OF_PAWNS;i++){
-					temp = Check_Move(Players[Active_Player].Position[i],FIFO_Check(Randomized), \
-							Number_of_Players,Active_Player);
-					if(temp >= 0 &&\
-					Check_Occupied(Players,temp,Active_Player,Number_of_Players) != -1)
-							tab[i] = 1;
-					else
-						tab[i] = 0;
+				if(Game_Status != NEXT_PLAYER)
+				{
+					FIFO_Get_All(Randomized,&temp,&tab);
+					Text_Create_Draw(temp,tab);
+					free(tab);
 				}
-				Blink_Set_Pawn(Active_Player,tab);
-				free(tab);
-				if(Previous_State == WAIT || Previous_State == WAIT_SELECT)
-					Game_Status = WAIT_SELECT;
-				else
-					Game_Status = WAIT_DEC;
 			break;
 			
 			case WAIT_SELECT:
 				if(m_event)
 				{
 					if(Next_Draw && Find_Hit(CUBE_HIT,m_event->Hits,m_event->Buffer))
+					{	
 						Game_Status = RANDOMIZE;
+						Previous_State = WAIT_SELECT;
+					}
 					else
 					{
 						for(i=0;i<NUMBER_OF_PAWNS;i++){
@@ -330,6 +365,7 @@ void Main_Loop(int _type)
 								temp = Check_Move(Players[Active_Player].Position[Selected_Pawn],\
 										FIFO_Check(Randomized),\
 										Number_of_Players,Active_Player);
+										printf("AM: %d\n",temp);
 								if(temp >= 0 &&\
 								Check_Occupied(Players,temp,Active_Player,Number_of_Players) != -1)
 								{
@@ -351,9 +387,18 @@ void Main_Loop(int _type)
 				{
 					if(Find_Hit(Available_Move+1,m_event->Hits,m_event->Buffer))
 					{
+						
+						temp = Check_Occupied(Players,Available_Move,Active_Player,Number_of_Players);
+						if(temp > 0)
+						{
+							Players[(temp-1)/10].Position[(temp-1)%10] = Find_First_Free(Players,(temp-1)/10,Number_of_Players);
+						}
 						Players[Active_Player].Position[Selected_Pawn] = Available_Move;
 						if(Check_All_Base(&Players[Active_Player],Active_Player,Number_of_Players))
-						{	Game_Status = QUIT;break;}
+						{	
+							Game_Status = QUIT;
+							break;
+						}
 						Selected_Pawn = -1;
 						Available_Move = -1;
 						temp = FIFO_Pop(Randomized);
@@ -362,18 +407,12 @@ void Main_Loop(int _type)
 						free(tab);
 						if(FIFO_Check(Randomized) == -1 && Next_Draw)
 						{
-							Game_Status = QUIT;//WAIT;
+							Game_Status = WAIT;
 							Set_Change();
 							Disable_Blink();
 						}
 						else if(FIFO_Check(Randomized) == -1)
-						{	
-							Active_Player = ++Active_Player % Number_of_Players;
-                                                        Text_Create_Player(Players[Active_Player].Name);
-                                                        Game_Status = WAIT;
-							Set_Change();
-							Disable_Blink();
-						}
+							Game_Status = NEXT_PLAYER;
 						else
 						{
 							tab = malloc(sizeof(*tab)*NUMBER_OF_PAWNS);
@@ -427,6 +466,15 @@ void Main_Loop(int _type)
 				Draw_Render();
 				Game_Status = QUIT;
 			break;
+			case NEXT_PLAYER:
+				Active_Player = ++Active_Player % Number_of_Players;
+				Text_Create_Player(Players[Active_Player].Name);
+				FIFO_Clean(Randomized);
+				Text_Create_Draw(0,NULL);
+				Game_Status = WAIT;
+				Set_Change();
+				Disable_Blink();
+			break;
 			case QUIT:
 				if(Fields)
 					free(Fields);
@@ -441,13 +489,15 @@ void Main_Loop(int _type)
 				if(Randomized)
 					FIFO_Delete(Randomized);
 				Text_Clean();
-				Event_Clean();
 				Delete_Iterator(graph_it);
 				Delete_Iterator(game_it);
 				Save(Game_Options,"GAME_OPTIONS",PATH);
 				Save(Graphic_Options,"GRAPHIC_OPTIONS",PATH);
 				Free_Array(Game_Options);
 				Free_Array(Graphic_Options);
+				Clean_Mouse_Event();
+				Clean_Key_Event();
+				Event_Clean();
 				glutDestroyWindow(Window_Number);
 			break;
 		}
@@ -573,6 +623,11 @@ void FIFO_Get_All(FIFO * _queue,int * _size,int ** _tab)
 		ptr = ptr->Next;
 	}
 }
+
+void FIFO_Clean(FIFO * _queue)
+{
+	while(FIFO_Pop(_queue) != -1);
+}
 		
 int Check_Move(int _position,int _value,int _number_of_players,int _player_number)
 {
@@ -603,7 +658,7 @@ int Check_Move(int _position,int _value,int _number_of_players,int _player_numbe
 		if( _position - base >= 0)
 		{	
 			if( (_value+_position) - base < length )
-				return _value+_position;
+				return ((_value+_position-shift) % length)+shift;
 			else
 			{
 				//if pawn can go to "home"
@@ -631,6 +686,24 @@ int Check_Move(int _position,int _value,int _number_of_players,int _player_numbe
 	}
 }
 
+int Find_First_Free(Player * _player,int _number_of_player,int _number_of_players)
+{
+	int i;
+	int tab[NUMBER_OF_PAWNS];
+	for(i = 0;i < NUMBER_OF_PAWNS;i++)
+		tab[i] = 0;
+	int shift = NUMBER_OF_PAWNS*2*_number_of_player;
+	for(i = 0;i < NUMBER_OF_PAWNS;i++){
+		if(_player[_number_of_player].Position[i] >= shift &&\
+		_player[_number_of_player].Position[i] < shift + NUMBER_OF_PAWNS)
+			tab[i] = 1;
+	}
+	for(i = 0;i < NUMBER_OF_PAWNS;i++)
+		if(!tab[i])
+			return shift + i;
+	return -1;
+}
+
 int Check_Occupied(Player * _players, int _move, int _active_player, int _number_of_players)
 {
 	int i,j;
@@ -641,7 +714,7 @@ int Check_Occupied(Player * _players, int _move, int _active_player, int _number
 				if(i == _active_player)
 					return -1;
 				else
-					return 10*i + j;
+					return 10*i + j + 1;
 			}
 		}
 	}

@@ -49,6 +49,7 @@ extern "C" {
 		WAIT_DEC,
 		WAIT_SELECT,
 		END,
+		NEXT_PLAYER,
 		QUIT
 	};
 	enum{
@@ -86,6 +87,7 @@ int FIFO_Pop(FIFO * _FIFO);
 int FIFO_Check(FIFO * _FIFO);
 void FIFO_Delete(FIFO * _FIFO);
 void FIFO_Get_All(FIFO * _queue,int * _size,int ** _tab);
+void FIFO_Clean(FIFO * _queue);
 	/**
 	 */
 void Create_Player(Player * _player,const char * _name,float * _colors,int _type);
@@ -101,6 +103,7 @@ int Check_Move(int _position,int _value,int _number_of_players,int _player_numbe
 Array * Default_Game_Options();
 Array * Default_Graphic_Options();
 int Check_All_Base(Player * _player,int _active_player,int _number_of_players);
+int Find_First_Free(Player * _player,int _number_of_player,int _number_of_players);
 void Close_Game();
 #ifdef	__cplusplus
 }

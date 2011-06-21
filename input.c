@@ -74,6 +74,16 @@ void Check_Key_Event(Key_Action ** _pointer)
 	_Key_Pressed(GET,_pointer);
 }
 
+void Clean_Key_Event()
+{
+	Key_Action * pointer;
+	_Key_Pressed(GET,&pointer);
+	while(pointer){
+		free(pointer);
+		_Key_Pressed(GET,&pointer);
+	}
+}
+
 void Special_Key_Pressed(int key,int x,int y){
 
     switch(key){
@@ -173,7 +183,15 @@ void Check_Mouse_Event(Mouse_Action ** _pointer)
 	_Mouse_Event(GET,_pointer);
 }
 
-
+void Clean_Mouse_Event()
+{
+	Mouse_Action * pointer;
+	_Mouse_Event(GET,&pointer);
+	while(pointer){
+		free(pointer);
+		_Mouse_Event(GET,&pointer);
+	}
+}
 int _Event(int _type)
 {
 	static FIFO * Buffer = NULL;
@@ -183,8 +201,7 @@ int _Event(int _type)
 	}
 	if(_type == EVENT_GET)
 	{
-		if(FIFO_Check(Buffer) != -1)
-			return FIFO_Pop(Buffer);
+		return FIFO_Pop(Buffer);
 	}
 	else if(_type == EVENT_CLEAN)
 	{
