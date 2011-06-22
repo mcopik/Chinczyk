@@ -13,7 +13,7 @@
 
 /**
  * Main function
- * Initialization all OpenGL's systems and loading data
+ * Initialization of all OpenGL's systems and loading data
 */
 int main(int argc, char** argv) 
 {
@@ -33,7 +33,11 @@ int main(int argc, char** argv)
     glutKeyboardFunc(&Key_Pressed);
     glutSpecialFunc(&Special_Key_Pressed);
 	glutMouseFunc(&Mouse_Event);
-	//glutCloseFunc(&Close_Game);
+	/* this gives a lot of memory leaks in Valgrind
+	 * i'm not sure if they aren't false alarms
+	 * which should be supressed
+	 * glutCloseFunc(&Close_Game);
+	 */
     glutMainLoop();
     return (EXIT_SUCCESS);
 }

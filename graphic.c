@@ -312,7 +312,7 @@ void _Draw(int _type,Field * _fields,Player * _players,int _players_number,int *
 			else
 			{
 				for(i = 0;i < NUMBER_OF_PAWNS;i++){
-					if(_info->Pawns_Numbers[i])
+					if(_info->Pawns_Numbers[i] != -1)
 						Blink_Pawns[i] = 1;
 					else
 						Blink_Pawns[i] = 0;
