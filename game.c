@@ -2,6 +2,8 @@
 #include "graphic.h"
 #include "array.h"
 #include "input.h"
+#include "fifo.h"
+#include "ai.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -167,9 +169,10 @@ void Main_Loop(int _type)
 	static int FPS_Counter = 0;
 	static int Time;
 	static int * First_Move;
+	static int Delay = 0;
 	int Next_Time;
 	int Buffer;
-	int * tab,*tab2;
+	int * tab;
 	int temp,temp2;
 	int flag = 0;
 	if(Game_Status == CONFIG)
@@ -203,6 +206,7 @@ void Main_Loop(int _type)
 			
 		/** Gettin game options */
 		//Menu_Config(graph_it,game_it);
+		Randomized = FIFO_Create();
 		Text_Init(Width,Height);
 		Game_Status = START;
 	}
@@ -220,7 +224,7 @@ void Main_Loop(int _type)
 	Accumulator += Buffer;
 	FPS_Time += Buffer;
 	
-	//while(Accumulator >= Frame_Length){
+	while(Accumulator >= Frame_Length){
 		FPS_Counter++;
 		if(FPS_Time >= 1000)
 		{
@@ -228,41 +232,62 @@ void Main_Loop(int _type)
 			Text_Create_FPS(FPS_Counter);
 			FPS_Counter = 0;
 		}
-		//Accumulator -= Frame_Length;
-		//if(Players[Active_Player].Type == HUMAN)
-		//{
-			temp = Event_Get();
-			if(temp == EVENT_MOUSE)
-				Check_Mouse_Event(&m_event);
-			else if(temp == EVENT_KEY)
-				Check_Key_Event(&k_event);
-			
-			if(k_event)
+		Accumulator -= Frame_Length;
+		if(Delay)
+		{
+			Delay--;
+			Draw_Render();
+			return;
+		}
+		if(Game_Status != START && Game_Status != MENU && Game_Status != NEXT_PLAYER)
+		{
+			if(Players[Active_Player].Type == HUMAN)
 			{
-				if(k_event->Key == KEY_ESCAPE)
+				temp = Event_Get();
+				if(temp == EVENT_MOUSE)
+					Check_Mouse_Event(&m_event);
+				else if(temp == EVENT_KEY)
+					Check_Key_Event(&k_event);
+				
+				if(k_event)
 				{
-					free(k_event);
-					k_event = NULL;
-					//Game_Status = RANDOMIZE;
+					if(k_event->Key == KEY_ESCAPE)
+					{
+						free(k_event);
+						k_event = NULL;
+					}
 				}
 			}
-		/*}
-		else
-		{
-			switch(Game_Status){
-				case WAIT:
-					while(Next_Draw)
-						Game_Status = RANDOMIZE;
-				break;
-				case WAIT_SELECT:
-					if(Next_Draw)
-						while(Next_Draw)
+			else
+			{
+				switch(Game_Status){
+					case WAIT:
+						if(Next_Draw)
+						{
 							Game_Status = RANDOMIZE;
-					else
-						AI_Process()
+							Previous_State = WAIT;
+							Delay = FPS/2;
+						}
+					break;
+					case WAIT_SELECT:
+						if(Next_Draw)
+						{	
+							Game_Status = RANDOMIZE;
+							Previous_State = WAIT;
+							Delay = FPS/2;
+						}
+						else
+						{
+							AI_Process_Select(&m_event,Active_Player);
+							Delay = FPS/2;
+						}
+					break;
+					case WAIT_DEC:
+						AI_Process_Decision(&m_event);
+					break;
+				}
 			}
-			AI_Process(&m_event,Players,Active_Player,)
-		}*/
+		}
 		switch(Game_Status){
 			
 			case START:
@@ -272,10 +297,12 @@ void Main_Loop(int _type)
 				Text_Create_Draw(0,NULL);
 				Text_Create_Player(Players[Active_Player].Name);
 				Text_Create_FPS(0);
+				AI_Init(Randomized,Players,Active_Pawns,&Available_Move,Number_of_Players,AI_EASY);
 				Set_Change();
 				Previous_State = START;
 				Game_Status = WAIT;
 				
+				srand(time(NULL));
 			case MENU:/*
 				if(m_event)
 					Menu(m_event);
@@ -298,14 +325,10 @@ void Main_Loop(int _type)
 						Previous_State = WAIT;
 					}
 				}
-				Draw_Render();
 			break;
 			
 			case RANDOMIZE:
-				
-				if(!Randomized)
-					Randomized = FIFO_Create();
-				srand(time(NULL));
+			
 				temp = rand() % 6 + 1;
 				FIFO_Push(Randomized,temp);
 				Last_Randomized = temp;
@@ -325,7 +348,7 @@ void Main_Loop(int _type)
 							if(temp2 >= 0 &&\
 							Check_Occupied(Players,temp2,Active_Player,Number_of_Players) != -1)
 							{
-								Active_Pawns[j] = temp2;	
+								Active_Pawns[j] = temp2;
 								flag = 1;
 							}
 							else
@@ -358,12 +381,13 @@ void Main_Loop(int _type)
 				}
 				else
 					Next_Draw = 0;
-				if(Game_Status != NEXT_PLAYER)
-				{
+				//if(Game_Status != NEXT_PLAYER)
+				//{
 					FIFO_Get_All(Randomized,&temp,&tab);
 					Text_Create_Draw(temp,tab);
+					Set_Change();
 					free(tab);
-				}
+				//}
 			break;
 			
 			case WAIT_SELECT:
@@ -389,7 +413,6 @@ void Main_Loop(int _type)
 						}
 					}
 				}
-				Draw_Render();
 			break;
 			case WAIT_DEC:
 				if(m_event)
@@ -452,14 +475,12 @@ void Main_Loop(int _type)
 									Selected_Pawn = i;
 										
 									Available_Move = Active_Pawns[i];
-											Blink_Set_Field(Active_Player,Selected_Pawn,Available_Move);
-								
+									Blink_Set_Field(Active_Player,Selected_Pawn,Available_Move);
 								}
 							}
 						}
 					}
 				}
-				Draw_Render();
 			break;
 			case INGAME_MENU:
 				Draw_Render();
@@ -480,22 +501,27 @@ void Main_Loop(int _type)
 							{
 								Check_Mouse_Event(&m_event);
 								free(m_event);
+								m_event = NULL;
 							}
 							else if(temp == EVENT_KEY)
 							{
 								Check_Key_Event(&k_event);
 								free(k_event);
+								k_event = NULL;
 							}
 							temp = Event_Get();
 						}
 					}
 				}
 				else
-					Active_Player = ++Active_Player % Number_of_Players;
+				Active_Player = ++Active_Player % Number_of_Players;
+				if(Players[Active_Player].Type == AI)
+					Delay = FPS;
 				Text_Create_Player(Players[Active_Player].Name);
-				FIFO_Clean(Randomized);
 				Text_Create_Draw(0,NULL);
+				FIFO_Clean(Randomized);
 				Game_Status = WAIT;
+				Next_Draw = 1;
 				Set_Change();
 				Disable_Blink();
 			break;
@@ -530,7 +556,8 @@ void Main_Loop(int _type)
 			free(m_event);
 			m_event = NULL;
 		}
-	//}
+		Draw_Render();
+	}
 }
 
 void Process()
@@ -573,84 +600,6 @@ void Set_Change()
 int Check_Change()
 {
 	return _Change(CHECK_CHANGE);
-}
-
-FIFO * FIFO_Create()
-{
-	FIFO * ret = malloc(sizeof(*ret));
-	ret->Top = NULL;
-	ret->Bottom = NULL;
-	return ret;
-}
-
-void FIFO_Push(FIFO * _FIFO, int _value)
-{
-	FIFO_Element * ptr;
-	ptr = malloc(sizeof(*ptr));
-	ptr->Value = _value;
-	ptr->Next = NULL;
-	if(_FIFO->Top)
-		_FIFO->Top->Next = ptr;
-	else
-		_FIFO->Bottom = ptr;
-	_FIFO->Top = ptr;
-}
-
-int FIFO_Pop(FIFO * _FIFO)
-{
-	if(_FIFO->Bottom)
-	{
-		int ret = _FIFO->Bottom->Value;
-		FIFO_Element * ptr;
-		ptr = _FIFO->Bottom;
-		_FIFO->Bottom = ptr->Next;
-		if(!_FIFO->Bottom)
-			_FIFO->Top = NULL;
-		free(ptr);
-		return ret;
-	}
-	return -1;
-}
-
-int FIFO_Check(FIFO * _FIFO)
-{
-	if(_FIFO->Bottom)
-		return _FIFO->Bottom->Value;
-	return -1;
-}
-
-void FIFO_Delete(FIFO * _FIFO)
-{
-	FIFO_Element * ptr;
-	while(_FIFO->Bottom){
-		ptr = _FIFO->Bottom;
-		_FIFO->Bottom = ptr->Next;
-		free(ptr);
-	}
-	free(_FIFO);
-}
-
-void FIFO_Get_All(FIFO * _queue,int * _size,int ** _tab)
-{
-	int i;
-	*_size = 0;
-	FIFO_Element * ptr;
-	ptr = _queue->Bottom;
-	while(ptr != NULL){
-		(*_size)++;
-		ptr = ptr->Next;
-	}
-	*_tab = malloc(sizeof(**_tab)*(*_size));
-	ptr = _queue->Bottom;
-	for(i = 0;i < *_size;i++){
-		(*_tab)[i] = ptr->Value;
-		ptr = ptr->Next;
-	}
-}
-
-void FIFO_Clean(FIFO * _queue)
-{
-	while(FIFO_Pop(_queue) != -1);
 }
 		
 int Check_Move(int _position,int _value,int _number_of_players,int _player_number)
@@ -728,6 +677,19 @@ int Find_First_Free(Player * _player,int _number_of_player,int _number_of_player
 	return -1;
 }
 
+int Get_Distance(int _position,int _player_number,int _number_of_players)
+{
+	int shift = NUMBER_OF_PAWNS*_number_of_players*2;
+	int base = _player_number*NUMBER_OF_FIELDS_PER_PLAYER + shift;
+	int length = NUMBER_OF_FIELDS_PER_PLAYER*_number_of_players;
+	if(_position < shift)
+			return 0;
+	if(_position >= base)
+			return (base-shift) + length - (_position-shift+1);
+	else
+			return base - _position;
+}
+
 int Check_Occupied(Player * _players, int _move, int _active_player, int _number_of_players)
 {
 	int i,j;
@@ -744,6 +706,7 @@ int Check_Occupied(Player * _players, int _move, int _active_player, int _number
 	}
 	return 0;
 }
+
 int Check_All_Base(Player * _player,int _active_player,int _number_of_players)
 {
 	int i;

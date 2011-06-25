@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "input.h"
 #include "graphic.h"
+#include "fifo.h"
 
 
 
@@ -209,6 +210,7 @@ int _Event(int _type)
 	}
 	else
 		FIFO_Push(Buffer,_type);
+	return;
 }
 int Event_Get()
 {

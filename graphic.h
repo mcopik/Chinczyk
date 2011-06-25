@@ -33,7 +33,7 @@
 #define BOARD_HIT 0
 
 #define MIN(a,b) a < b ? a : b
-#define FREQUENCY 12
+#define FREQUENCY 5
 #define TEXT_BUFFER_SIZE 10
 
 #ifdef	__cplusplus

@@ -15,6 +15,7 @@ extern "C" {
 #include <GL/gl.h>
 #include "array.h"
 #include "input.h"
+#include "fifo.h"
 
 #define MAX_PLAYERS 3
 #define DEFAULT_ARGUMENT "--default"
@@ -57,13 +58,11 @@ extern "C" {
 		AI
 	};
 	/**
-	 * Position gets a value calculated in two ways:
-	 * i*8 + [0..7] - where 'i' is player's number(between 0-[3..5]) and second value depends on position in start and final point
-	 * 8*[4..6] + [0..([4..6]*(8-([4..6]-6)))] - 1 - it looks quite complicated, but.. it's not. first part is 32, 40 or 48 fields for start and final positions for every player.
-	 * second part is number of fields in game - 32, 35 or 36; number of fields for each player is decreasing from 8 to 6, when number of players is increasing.
-	 *
-	 *	Player's color is made from three values(RGB)
-	 * Values for shine:
+	 * 
+	 * value of field 'Position':
+	 * 0 <-> _number_of_players*NUMBER_OF_PAWNS*2 - 1 -> start and final positions
+	 * _number_of_players*NUMBER_OF_PAWNS*2 <-> NUM.._PER_PLAYER*_number_of_players - 1 -> 
+	 * for all positions in game
 	 * 
 	 */
 typedef struct{
@@ -74,20 +73,7 @@ typedef struct{
 } Player;
 
 
-typedef struct _FIFO_Element FIFO_Element;
-typedef struct{
-	struct _FIFO_Element{
-		int Value;
-		FIFO_Element * Next;
-	} * Top,*Bottom;
-}FIFO;
-FIFO * FIFO_Create();
-void FIFO_Push(FIFO * _FIFO, int _value);
-int FIFO_Pop(FIFO * _FIFO);
-int FIFO_Check(FIFO * _FIFO);
-void FIFO_Delete(FIFO * _FIFO);
-void FIFO_Get_All(FIFO * _queue,int * _size,int ** _tab);
-void FIFO_Clean(FIFO * _queue);
+
 	/**
 	 */
 void Create_Player(Player * _player,const char * _name,float * _colors,int _type);
@@ -104,6 +90,7 @@ Array * Default_Game_Options();
 Array * Default_Graphic_Options();
 int Check_All_Base(Player * _player,int _active_player,int _number_of_players);
 int Find_First_Free(Player * _player,int _number_of_player,int _number_of_players);
+int Get_Distance(int _position,int _player_number,int _number_of_players);
 void Close_Game();
 #ifdef	__cplusplus
 }
