@@ -116,7 +116,7 @@ void Get_First(Iterator * _it);
 void Get_Next(Iterator * _it);
 void Get_Previous(Iterator * _it);
 void Get_Last(Iterator * _it);
-void Find(Iterator ** _it,const char * _label);
+void Find(Iterator * _it,const char * _label);
 void Delete_Iterator(Iterator * _it);
 unsigned short int Get_Type(Iterator * _it);
 void * Get_Value(Iterator * _it);

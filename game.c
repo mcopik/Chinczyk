@@ -4,6 +4,7 @@
 #include "input.h"
 #include "fifo.h"
 #include "ai.h"
+#include "menu.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -97,12 +98,12 @@ void Delete_Player(Player * _player)
 	free(_player->Name);
 }
 
-void Init_Game(Iterator ** _it,Player ** _players,Field ** _fields,int * _number_of_players,int ** _first_move)
+void Init_Game(Iterator * _it,Player ** _players,Field ** _fields,int * _number_of_players,int ** _first_move)
 {
 	int i;
 	float * temp2;
 	Find(_it,"NUMBER_OF_PLAYERS");
-	*_number_of_players = Get_ValueI(*_it);
+	*_number_of_players = Get_ValueI(_it);
 	*_fields = Generate(*_number_of_players);
 	*_players = malloc(*_number_of_players*sizeof(**_players));
 	*_first_move = malloc(sizeof(**_first_move)*(*_number_of_players));
@@ -114,21 +115,21 @@ void Init_Game(Iterator ** _it,Player ** _players,Field ** _fields,int * _number
 	{
 		sprintf(buffer,"PLAYER%d_COLOR",i);
 		Find(_it,buffer);
-		temp2 = Get_Value_ArrayF(*_it);
+		temp2 = Get_Value_ArrayF(_it);
 		sprintf(buffer,"PLAYER%d_AI",i);
 		Find(_it,buffer);
-		if(Get_ValueB(*_it))
+		if(Get_ValueB(_it))
 		{
 			sprintf(buffer,"PLAYER%d_NAME",i);
 			Find(_it,buffer);
-			buffer2 = Get_Value_ArrayC(*_it);
+			buffer2 = Get_Value_ArrayC(_it);
 			Create_Player(*_players,buffer2,temp2,AI);
 		}
 		else
 		{
 			sprintf(buffer,"PLAYER%d_NAME",i);
 			Find(_it,buffer);
-			buffer2 = Get_Value_ArrayC(*_it);
+			buffer2 = Get_Value_ArrayC(_it);
 			Create_Player(*_players,buffer2,temp2,HUMAN);
 		}
 		Set_Positions(*_players,i,*_number_of_players);
@@ -156,7 +157,7 @@ void Main_Loop(int _type)
 	static int Window_Number;
 	static int Next_Draw = 0;
 	static int Previous_State = 0;
-	static Iterator * game_it,* graph_it = NULL;
+	static Iterator * Game_Iterator,* Graph_Iterator = NULL;
 	static Mouse_Action * m_event;
 	static Key_Action * k_event;
 	static int Width = 0,Height = 0;
@@ -170,12 +171,16 @@ void Main_Loop(int _type)
 	static int Time;
 	static int * First_Move;
 	static int Delay = 0;
+	static int Quit = 0;
+	static int Fullscreen = 0;
 	int Next_Time;
 	int Buffer;
 	int * tab;
 	int temp,temp2;
 	int flag = 0;
-	if(Game_Status == CONFIG)
+	char * buffer;
+	
+	if(Game_Status == LOOP_CONFIG)
 	{
 		if(_type == INIT_DEF)
 		{
@@ -187,34 +192,39 @@ void Main_Loop(int _type)
 			Game_Options = Load("GAME_OPTIONS",PATH);
 			Graphic_Options = Load("GRAPHIC_OPTIONS",PATH);
 		}
-		game_it = Create_Iterator(Game_Options);
-		graph_it = Create_Iterator(Graphic_Options);
+		Game_Iterator = Create_Iterator(Game_Options);
+		Graph_Iterator = Create_Iterator(Graphic_Options);
 		Frame_Length = 1000/FPS;
 		Time = glutGet(GLUT_ELAPSED_TIME);
 		/** Gettin' basic info about window */
-		Find(&graph_it,"WIDTH");
-		Width = Get_ValueI(graph_it);
-		Find(&graph_it,"HEIGHT");
-		Height = Get_ValueI(graph_it);
-		Find(&graph_it,"LABEL");
-		Label = Get_Value_ArrayC(graph_it);
-		Find(&graph_it,"FULLSCREEN");
-		if(Get_ValueB(graph_it))
+		Find(Graph_Iterator,"WIDTH");
+		Width = Get_ValueI(Graph_Iterator);
+		Find(Graph_Iterator,"HEIGHT");
+		Height = Get_ValueI(Graph_Iterator);
+		Find(Graph_Iterator,"LABEL");
+		Label = Get_Value_ArrayC(Graph_Iterator);
+		Find(Graph_Iterator,"FULLSCREEN");
+		if(Get_ValueB(Graph_Iterator))
+		{	
 			Window_Number = Init_GL(Width,Height,Label,FULLSCREEN);
+			Fullscreen = 1;
+		}
 		else
+		{
 			Window_Number = Init_GL(Width,Height,Label,FULL_NOT);
-			
+			Fullscreen = 0;
+		}	
 		/** Gettin game options */
-		//Menu_Config(graph_it,game_it);
+		Menu_Config(Game_Iterator,Graph_Iterator);
 		Randomized = FIFO_Create();
 		Text_Init(Width,Height);
-		Game_Status = START;
+		Game_Status = LOOP_START;
 	}
 	
-	if(_type == CLOSE)
+	if(_type == CLOSE || Game_Status == LOOP_QUIT)
 	{
-		Game_Status = QUIT;
-		Next_Time = Frame_Length;
+		Game_Status = LOOP_QUIT;
+		Next_Time = Frame_Length+Time;
 	}
 	else
 		Next_Time = glutGet(GLUT_ELAPSED_TIME);
@@ -224,12 +234,13 @@ void Main_Loop(int _type)
 	Accumulator += Buffer;
 	FPS_Time += Buffer;
 	
-	while(Accumulator >= Frame_Length){
+	while(Accumulator >= Frame_Length && !Quit){
+		
 		FPS_Counter++;
 		if(FPS_Time >= 1000)
 		{
 			FPS_Time -= 1000;
-			Text_Create_FPS(FPS_Counter);
+			TEXT_DRAW_FPS;
 			FPS_Counter = 0;
 		}
 		Accumulator -= Frame_Length;
@@ -239,9 +250,9 @@ void Main_Loop(int _type)
 			Draw_Render();
 			return;
 		}
-		if(Game_Status != START && Game_Status != MENU && Game_Status != NEXT_PLAYER)
+		if(Game_Status != LOOP_START && Game_Status != LOOP_NEXT_PLAYER && Game_Status != LOOP_QUIT)
 		{
-			if(Players[Active_Player].Type == HUMAN)
+			if(Players[Active_Player].Type == HUMAN || Game_Status == LOOP_MENU)
 			{
 				temp = Event_Get();
 				if(temp == EVENT_MOUSE)
@@ -261,19 +272,19 @@ void Main_Loop(int _type)
 			else
 			{
 				switch(Game_Status){
-					case WAIT:
+					case LOOP_WAIT:
 						if(Next_Draw)
 						{
-							Game_Status = RANDOMIZE;
-							Previous_State = WAIT;
+							Game_Status = LOOP_RANDOMIZE;
+							Previous_State = LOOP_WAIT;
 							Delay = FPS/2;
 						}
 					break;
-					case WAIT_SELECT:
+					case LOOP_WAIT_SELECT:
 						if(Next_Draw)
 						{	
-							Game_Status = RANDOMIZE;
-							Previous_State = WAIT;
+							Game_Status = LOOP_RANDOMIZE;
+							Previous_State = LOOP_WAIT;
 							Delay = FPS/2;
 						}
 						else
@@ -282,58 +293,70 @@ void Main_Loop(int _type)
 							Delay = FPS/2;
 						}
 					break;
-					case WAIT_DEC:
+					case LOOP_WAIT_DEC:
 						AI_Process_Decision(&m_event);
 					break;
 				}
 			}
 		}
+		
 		switch(Game_Status){
 			
-			case START:
-			
-				Init_Game(&game_it,&Players,&Fields,&Number_of_Players,&First_Move);
+			case LOOP_START:
+				Init_Game(Game_Iterator,&Players,&Fields,&Number_of_Players,&First_Move);
 				Draw_Init(Fields,Players,Number_of_Players,&Last_Randomized);
-				Text_Create_Draw(0,NULL);
-				Text_Create_Player(Players[Active_Player].Name);
-				Text_Create_FPS(0);
-				AI_Init(Randomized,Players,Active_Pawns,&Available_Move,Number_of_Players,AI_EASY);
-				Set_Change();
-				Previous_State = START;
-				Game_Status = WAIT;
-				
 				srand(time(NULL));
-			case MENU:/*
-				if(m_event)
-					Menu(m_event);
-				switch(Menu_Action()){
-					case START_GAME:
-					break;
-					case CHANGE_GRAPH;
-					case QUIT_GAME:
-					Game_Status = QUIT;
-					break;
-				}*/
+				AI_Init(Randomized,Players,Active_Pawns,&Available_Move,Number_of_Players,AI_EASY);
+				TEXT_DRAW_FPS;
+				Menu_Active();
+				Set_Change();
+				Game_Status = LOOP_MENU;
 			break;
-			
-			case WAIT:
+			case LOOP_MENU:
+				if(m_event)
+				{ 
+					switch(Menu_Click(m_event)){
+						case MENU_NEW_GAME:
+							Menu_Disactive();
+							TEXT_DRAW_PLAYER;
+							TEXT_DRAW_RAND(buffer,0,tab);
+							//TEXT_DRAW_MENU_BUTTON;
+							Set_Change();
+							Game_Status = LOOP_WAIT;
+						break;
+						case MENU_GRAPH_CHANGE:
+							printf("CHANGE!\n");
+						break;
+						case MENU_GAME_CHANGE:
+						break;
+						case MENU_CLOSE:
+							Game_Status = LOOP_QUIT;
+						break;
+					}
+				}
+			break;
+			case LOOP_WAIT:
 				if(m_event)
 				{
 					if(Find_Hit(CUBE_HIT,m_event->Hits,m_event->Buffer))
 					{	
-						Game_Status = RANDOMIZE;
-						Previous_State = WAIT;
+						Game_Status = LOOP_RANDOMIZE;
+						Previous_State = LOOP_WAIT;
+					}
+					else if(Find_Hit(MENU_BUTTON_HIT,m_event->Hits,m_event->Buffer))
+					{
+						Game_Status = LOOP_INGAME_MENU;
+						Previous_State = LOOP_WAIT;
 					}
 				}
 			break;
-			
-			case RANDOMIZE:
+			case LOOP_RANDOMIZE:
 			
 				temp = rand() % 6 + 1;
 				FIFO_Push(Randomized,temp);
 				Last_Randomized = temp;
 				
-				if(Previous_State == WAIT_DEC || Previous_State == WAIT_SELECT)
+				if(Previous_State == LOOP_WAIT_DEC || Previous_State == LOOP_WAIT_SELECT)
 				{
 					Game_Status = Previous_State;
 				}
@@ -359,16 +382,16 @@ void Main_Loop(int _type)
 							for(j = 0;j < i;j++)
 								FIFO_Pop(Randomized);
 							Blink_Set_Pawn(Active_Player,Active_Pawns);
-							Game_Status = WAIT_SELECT;
+							Game_Status = LOOP_WAIT_SELECT;
 							break;
 						}
 					}
 					if(!flag)
 					{
 						if(Last_Randomized == 6 || First_Move[Active_Player])
-							Game_Status = WAIT;
+							Game_Status = LOOP_WAIT;
 						else
-							Game_Status = NEXT_PLAYER;
+							Game_Status = LOOP_NEXT_PLAYER;
 					}
 					free(tab);
 				}
@@ -381,22 +404,24 @@ void Main_Loop(int _type)
 				}
 				else
 					Next_Draw = 0;
-				//if(Game_Status != NEXT_PLAYER)
-				//{
-					FIFO_Get_All(Randomized,&temp,&tab);
-					Text_Create_Draw(temp,tab);
-					Set_Change();
-					free(tab);
-				//}
+				FIFO_Get_All(Randomized,&temp,&tab);
+				TEXT_DRAW_RAND(buffer,temp,tab);
+				Set_Change();
+				free(tab);
 			break;
 			
-			case WAIT_SELECT:
+			case LOOP_WAIT_SELECT:
 				if(m_event)
 				{
 					if(Next_Draw && Find_Hit(CUBE_HIT,m_event->Hits,m_event->Buffer))
 					{	
-						Game_Status = RANDOMIZE;
-						Previous_State = WAIT_SELECT;
+						Game_Status = LOOP_RANDOMIZE;
+						Previous_State = LOOP_WAIT_SELECT;
+					}
+					else if(Find_Hit(MENU_BUTTON_HIT,m_event->Hits,m_event->Buffer))
+					{
+						Game_Status = LOOP_INGAME_MENU;
+						Previous_State = LOOP_WAIT_SELECT;
 					}
 					else
 					{
@@ -407,14 +432,14 @@ void Main_Loop(int _type)
 									Selected_Pawn = i;
 									Available_Move = Active_Pawns[i];
 									Blink_Set_Field(Active_Player,Selected_Pawn,Available_Move);
-									Game_Status = WAIT_DEC;
+									Game_Status = LOOP_WAIT_DEC;
 								}
 							}
 						}
 					}
 				}
 			break;
-			case WAIT_DEC:
+			case LOOP_WAIT_DEC:
 				if(m_event)
 				{
 					if(Find_Hit(Available_Move+1,m_event->Hits,m_event->Buffer))
@@ -428,7 +453,7 @@ void Main_Loop(int _type)
 						Players[Active_Player].Position[Selected_Pawn] = Available_Move;
 						if(Check_All_Base(&Players[Active_Player],Active_Player,Number_of_Players))
 						{	
-							Game_Status = QUIT;
+							Game_Status = LOOP_START;
 							break;
 						}
 						Selected_Pawn = -1;
@@ -439,12 +464,12 @@ void Main_Loop(int _type)
 						free(tab);
 						if(FIFO_Check(Randomized) == -1 && Next_Draw)
 						{
-							Game_Status = WAIT;
+							Game_Status = LOOP_WAIT;
 							Set_Change();
 							Disable_Blink();
 						}
 						else if(FIFO_Check(Randomized) == -1)
-							Game_Status = NEXT_PLAYER;
+							Game_Status = LOOP_NEXT_PLAYER;
 						else
 						{
 							for(i=0;i < NUMBER_OF_PAWNS;i++){
@@ -457,13 +482,18 @@ void Main_Loop(int _type)
 									Active_Pawns[i] = -1;
 							}
 							Blink_Set_Pawn(Active_Player,Active_Pawns);
-							Game_Status = WAIT_SELECT;
+							Game_Status = LOOP_WAIT_SELECT;
 						}
 					}
 					else if(Next_Draw && Find_Hit(CUBE_HIT,m_event->Hits,m_event->Buffer))
 					{
-						Previous_State = WAIT_DEC;	
-						Game_Status = RANDOMIZE;
+						Previous_State = LOOP_WAIT_DEC;	
+						Game_Status = LOOP_RANDOMIZE;
+					}
+					else if(Find_Hit(MENU_BUTTON_HIT,m_event->Hits,m_event->Buffer))
+					{
+						Game_Status = LOOP_INGAME_MENU;
+						Previous_State = LOOP_WAIT_DEC;
 					}
 					else
 					{
@@ -482,11 +512,11 @@ void Main_Loop(int _type)
 					}
 				}
 			break;
-			case INGAME_MENU:
+			case LOOP_INGAME_MENU:
 				Draw_Render();
-				Game_Status = QUIT;
+				Game_Status = LOOP_QUIT;
 			break;
-			case NEXT_PLAYER:
+			case LOOP_NEXT_PLAYER:
 				if(Players[Active_Player].Type == AI)
 				{
 					Active_Player = ++Active_Player % Number_of_Players;
@@ -517,15 +547,15 @@ void Main_Loop(int _type)
 				Active_Player = ++Active_Player % Number_of_Players;
 				if(Players[Active_Player].Type == AI)
 					Delay = FPS;
-				Text_Create_Player(Players[Active_Player].Name);
-				Text_Create_Draw(0,NULL);
+				TEXT_DRAW_PLAYER;
+				TEXT_DRAW_RAND(buffer,0,tab);
 				FIFO_Clean(Randomized);
-				Game_Status = WAIT;
+				Game_Status = LOOP_WAIT;
 				Next_Draw = 1;
 				Set_Change();
 				Disable_Blink();
 			break;
-			case QUIT:
+			case LOOP_QUIT:
 				if(Fields)
 					free(Fields);
 				for(i=0;i<Number_of_Players;i++)
@@ -539,8 +569,9 @@ void Main_Loop(int _type)
 				if(Randomized)
 					FIFO_Delete(Randomized);
 				Text_Clean();
-				Delete_Iterator(graph_it);
-				Delete_Iterator(game_it);
+				Menu_Clean();
+				Delete_Iterator(Game_Iterator);
+				Delete_Iterator(Graph_Iterator);
 				Save(Game_Options,"GAME_OPTIONS",PATH);
 				Save(Graphic_Options,"GRAPHIC_OPTIONS",PATH);
 				Free_Array(Game_Options);
@@ -548,7 +579,9 @@ void Main_Loop(int _type)
 				Clean_Mouse_Event();
 				Clean_Key_Event();
 				Event_Clean();
-				glutDestroyWindow(Window_Number);
+				Quit = 1;
+				if(_type != CLOSE)
+					glutDestroyWindow(Window_Number);
 			break;
 		}
 		if(m_event)
@@ -556,7 +589,8 @@ void Main_Loop(int _type)
 			free(m_event);
 			m_event = NULL;
 		}
-		Draw_Render();
+		if(Game_Status != LOOP_QUIT)
+			Draw_Render();
 	}
 }
 

@@ -26,18 +26,13 @@ int main(int argc, char** argv)
 	}
     glutInit(&argc, argv);
 	Init_Process(Default_Flag);
-	//Process();
     glutDisplayFunc(&Draw_Render);
     glutIdleFunc(&Process);
     glutReshapeFunc(&Reshape_Window);
     glutKeyboardFunc(&Key_Pressed);
     glutSpecialFunc(&Special_Key_Pressed);
 	glutMouseFunc(&Mouse_Event);
-	/* this gives a lot of memory leaks in Valgrind
-	 * i'm not sure if they aren't false alarms
-	 * which should be supressed
-	 * glutCloseFunc(&Close_Game);
-	 */
+	glutCloseFunc(&Close_Game);
     glutMainLoop();
     return (EXIT_SUCCESS);
 }

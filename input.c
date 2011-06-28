@@ -15,6 +15,7 @@ int Find_Hit(int _value,int _hits,unsigned int * _buffer)
  
  	for (i = 0; i < _hits; i++)
  		printf(	"Number: %d\n"
+		
  				"Min Z: %d\n"
  				"Max Z: %d\n"
  				"Name on stack: %d\n",

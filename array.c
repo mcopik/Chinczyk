@@ -30,7 +30,14 @@ int Compare_Strings(const char * _str1,const char * _str2)
 	while(*_str1 != '\0' && *_str2 != '\0' && *_str1++ == *_str2++);
 
 	if(*_str1 == '\0' && *_str2 == '\0')
-		return -1;
+	{
+		_str1--;
+		_str2--;
+		if(*_str1 == *_str2)
+			return -1;
+		else
+			return *_str1 < *_str2 ? 0 : 1;
+	}
 	else if(*_str1 == '\0' || *_str2 == '\0')
 		return *_str1 == '\0' ? 0 : 1;
 	_str1--;
@@ -299,11 +306,12 @@ void Get_Last(Iterator * _it)
 	_it->Position = _it->Object->Last;
 }
 
-void Find(Iterator ** _it,const char * _label)
+void Find(Iterator * _it,const char * _label)
 {
-	Array * arr = (*_it)->Object;
-	Delete_Iterator(*_it);
-	*_it = Find_Element(arr,_label);
+	Iterator * it;
+	it = Find_Element(_it->Object,_label);
+	_it->Position = it->Position;
+	Delete_Iterator(it);
 }
 
 void Delete_Iterator(Iterator * _it)

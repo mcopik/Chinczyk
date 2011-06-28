@@ -1,27 +1,29 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 #include <GL/glut.h>
 #include <math.h>
 #include <assert.h>
 #include "graphic.h"
 #include "game.h"
 
-void _Draw_Text(int _type,Text * _text,const char * _name,int _width,int _height);
+void Text_Draw(int _x,int _y,int _select_name,void *_font,int _position_type,\
+				const char * _name,const char * _format,...);
 
 float * Camera_Action(int _type,float * _camera,int _action)
 {
 	static float Camera[3];
 	static float * pt;
 	switch(_type){
-		case SET:
+		case CAMERA_SET:
 			memcpy(Camera,_camera,sizeof(*Camera)*3);
 		break;
-		case GET:
+		case CAMERA_GET:
 			pt = malloc(sizeof(*pt)*3);
 			memcpy(pt,Camera,sizeof(*Camera)*3);
 			return pt;
 		break;
-		case CHANGE:
+		case CAMERA_CHANGE:
 			switch(_action){
 				case UP:
 					Camera[0] += CAMERA_SPEED;
@@ -54,17 +56,17 @@ float * Camera_Action(int _type,float * _camera,int _action)
 
 void Change_Camera(int _change)
 {
-	Camera_Action(CHANGE,NULL,_change);
+	Camera_Action(CAMERA_CHANGE,NULL,_change);
 }
 
 void Set_Camera(float * _camera)
 {
-	Camera_Action(SET,_camera,0);
+	Camera_Action(CAMERA_SET,_camera,0);
 }
 
 float * Get_Camera()
 {
-	return Camera_Action(GET,NULL,0);
+	return Camera_Action(CAMERA_GET,NULL,0);
 }
 
 void Interval(float * number, int min,int max){
@@ -501,6 +503,9 @@ void _Draw_Text(int _type,Text * _text,const char * _name,int _width,int _height
 	static int Width = 0;
 	static int Height = 0;
 	static Array * Texts = NULL;
+	Iterator * it;
+	Text * Ptr;
+	int len,bitmap_w,bitmap_h,i;
 	if(_type == TEXT_INIT)
 	{
 		Width = _width;
@@ -541,9 +546,7 @@ void _Draw_Text(int _type,Text * _text,const char * _name,int _width,int _height
 	{
 		if(Texts)
 		{
-			Iterator * it = Create_Iterator(Texts);
-			Text * Ptr;
-			int len,i;
+			it = Create_Iterator(Texts);
 			Get_First(it);
 			if(it->Position)
 			{
@@ -552,19 +555,49 @@ void _Draw_Text(int _type,Text * _text,const char * _name,int _width,int _height
 					glMatrixMode(GL_PROJECTION);
 					glPushMatrix();
 					glLoadIdentity();
+					
 				}
 				gluOrtho2D(0, Width, Height, 0);
 				glMatrixMode(GL_MODELVIEW);
+				glPushMatrix();
 				glLoadIdentity();
 				if(_type == GL_SELECT)
 					glPushName(0);
 				while(1){
 					Ptr = Get_Value(it);
-					if(_type == GL_SELECT)
-						glLoadName(Ptr->Select_Number);
-					glColor3f(1.0f,1.0f,1.0f);
-					glRasterPos2f(Ptr->X, Ptr->Y);
 					len = strlen(Ptr->String);
+					if(_type == GL_SELECT || Ptr->Position == TEXT_CENTER)
+					{
+						bitmap_h = Font_Height(Ptr->Font);
+						bitmap_w = 0;
+						for(i = 0;i < len;i++)
+							bitmap_w += glutBitmapWidth(Ptr->Font,Ptr->String[i]);
+					}
+					if(_type == GL_SELECT)
+					{
+						glLoadName(Ptr->Select_Number);
+						glBegin(GL_TRIANGLE_STRIP);
+						if(Ptr->Position == TEXT_CENTER)
+						{
+							glVertex2f(Ptr->X-bitmap_w/2, Ptr->Y);
+							glVertex2f(Ptr->X-bitmap_w/2, Ptr->Y-bitmap_h);
+							glVertex2f(Ptr->X+bitmap_w/2, Ptr->Y);
+							glVertex2f(Ptr->X+bitmap_w/2, Ptr->Y-bitmap_h);
+						}
+						else
+						{
+							glVertex2f(Ptr->X, Ptr->Y);
+							glVertex2f(Ptr->X, Ptr->Y-bitmap_h);
+							glVertex2f(Ptr->X+bitmap_w, Ptr->Y);
+							glVertex2f(Ptr->X+bitmap_w, Ptr->Y-bitmap_h);
+						}
+						glEnd();
+					}
+					glColor3f(1.0f,1.0f,1.0f);
+					if(Ptr->Position == TEXT_CENTER)
+						glRasterPos2f(Ptr->X-bitmap_w/2, Ptr->Y);
+					else
+						glRasterPos2f(Ptr->X-bitmap_w/2, Ptr->Y);
 					for (i = 0; i < len; i++) {
 						glutBitmapCharacter(Ptr->Font, Ptr->String[i]);
 					}
@@ -575,6 +608,7 @@ void _Draw_Text(int _type,Text * _text,const char * _name,int _width,int _height
 				glMatrixMode(GL_PROJECTION);
 				glPopMatrix();
 				glMatrixMode(GL_MODELVIEW);
+				glPopMatrix();
 			}
 			Delete_Iterator(it);
 		}
@@ -598,12 +632,14 @@ void Text_Clean()
 	_Draw_Text(TEXT_CLEAN,NULL,NULL,0,0);
 }
 
+
 Text * Text_Create(int _x,int _y,int _select,const char * _string,void * _font)
 {
 	Text * ret = malloc(sizeof(*ret));
 	ret->X = _x;
 	ret->Y = _y;
 	ret->Select_Number = _select;
+	ret->Position = TEXT_NORMAL;
 	ret->String = malloc(sizeof(*ret->String)*(strlen(_string)+1));
 	strcpy(ret->String,_string);
 	ret->Font = _font;
@@ -859,7 +895,7 @@ void Draw_Circle(float _radius, float _x, float _y,float _z)
 {
 	int i;
 	glPushMatrix();
-	glTranslatef(_x,_y,_z);//H/2+0.01,-_y);
+	glTranslatef(_x,_y,_z);
     glBegin(GL_LINES);
     float theta;
     for (i = 0; i < 180; i++)
@@ -870,6 +906,45 @@ void Draw_Circle(float _radius, float _x, float _y,float _z)
     }
     glEnd();
 	glPopMatrix();
+}
+
+void Text_Draw(int _x,int _y,int _select_name,void *_font,int _position_type,\
+				const char * _name,const char * _format,...)
+{
+	char * buffer;
+	Text * ptr;
+	va_list ap;
+	buffer = (char*) malloc(sizeof(*buffer)*2*STRING_SIZE);
+	memset(buffer,0,sizeof(*buffer)*2*STRING_SIZE);
+	va_start(ap,_format);
+	while(*_format != '\0'){
+		if(*_format != '%')
+			sprintf(buffer,"%s%c",buffer,*_format);
+		else
+		{
+			switch(*++_format){
+				case 's':
+					sprintf(buffer,"%s%s",buffer,va_arg(ap,char *));
+				break;
+				case 'd':
+					sprintf(buffer,"%s%d",buffer,va_arg(ap,int));
+				break;
+				case 'c':
+					sprintf(buffer,"%s%c",buffer,va_arg(ap,int));
+				break;
+				case 'f':
+					sprintf(buffer,"%s%f",buffer,va_arg(ap,double));
+				break;
+			}
+		}
+		_format++;
+	}
+	ptr = Text_Create(_x,_y,_select_name,buffer,_font);
+	ptr->Position = _position_type;
+	free(buffer);
+	Text_Remove(_name);
+	Text_Add(ptr,_name);
+	Set_Change();
 }
 
 void Text_Create_Draw(int _size,int * _tab)
@@ -975,4 +1050,14 @@ void Draw_Cube_Pips(float _radius, int _number)
 			}
 		break;
 	}
+}
+
+int Font_Height(void * _font)
+{
+	if(_font ==GLUT_BITMAP_9_BY_15)
+		return 15;
+	else if(_font == GLUT_BITMAP_TIMES_ROMAN_24)
+		return 24;
+	else
+		return -1;
 }

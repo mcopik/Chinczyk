@@ -39,16 +39,6 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-#define ROTATE \
-if(_axis)	\
-{	\
-	if(_axis == 1)	\
-		glRotatef(_angle,1.0f,0.0f,0.0f);	\
-	else if(_axis == 2)	\
-		glRotatef(_angle,0.0f,1.0f,0.0f);	\
-	else \
-		glRotatef(_angle,0.0f,0.0f,1.0f);	\
-}	\
     
 enum{
     LEFT,
@@ -63,16 +53,19 @@ enum{
 	FULLSCREEN
 };
 enum{
-	SET,
-	GET,
-	CHANGE
+	CAMERA_SET,
+	CAMERA_GET,
+	CAMERA_CHANGE
 };
 enum{
 	TEXT_INIT,
 	TEXT_ADD,
 	TEXT_REMOVE,
-	TEXT_CLEAN
+	TEXT_CLEAN,
+	TEXT_NORMAL,
+	TEXT_CENTER
 };
+
 
 typedef struct {
 	unsigned int Width, Height;
@@ -92,7 +85,8 @@ typedef struct{
 
 typedef struct{
 	char * String;
-	int X,Y,Select_Number;
+	int X,Y,Select_Number,Position;
+	//float Size;
 	void * Font;
 }Text;
 /**
@@ -124,15 +118,19 @@ void Text_Remove(const char * _name);
 void Text_Clean();
 Text * Text_Create(int _x,int _y,int _select,const char * _string,void * _font);
 void Draw_Fields(int _type, Field * array,int players_number,int _blink);
+void Draw_Text(int _type);
 Field * Generate(int Players_Number);
 Field * Generate_4_Players();
 Field * Generate_5_Players();
 Field * Generate_6_Players();
 void Close(Field * Pointer);
+void Text_Draw(int _x,int _y,int _select_name,void *_font,int _position_type,\
+				const char * _name,const char * _format,...);
 void Text_Create_Player(const char * _name);
 void Text_Create_Draw(int _size,int * _tab);
 void Text_Create_FPS(int _fps);
 void Draw_Cube_Pips(float _radius, int _number);
+int Font_Height(void * _font);
 #ifdef	__cplusplus
 }
 #endif
