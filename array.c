@@ -316,7 +316,8 @@ void Find(Iterator * _it,const char * _label)
 
 void Delete_Iterator(Iterator * _it)
 {
-	free(_it);
+	if(_it)
+		free(_it);
 }
 
 #define GET(name,type,variable,err)		\
@@ -335,8 +336,8 @@ GET(Get_Name,char *,Key,NULL);
 
 void Set_Value(Iterator * _it,void * _value)
 {
-	free(_it->Position->Value);
-	_it->Position->Value = _value;
+	//free(_it->Position->Value);
+	memcpy(_it->Position->Value,_value,_it->Position->Size*Type_Size(_it->Position->Type));
 }
 
 Array * Load(const char * _label,const char * _path)

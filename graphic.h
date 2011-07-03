@@ -85,7 +85,8 @@ typedef struct{
 
 typedef struct{
 	char * String;
-	int X,Y,Select_Number,Position;
+	float X,Y;
+	int Select_Number,Position;
 	//float Size;
 	void * Font;
 }Text;
@@ -107,7 +108,8 @@ void Draw_Init(Field * fields,Player * players,int players_number,int * _randomi
 void Blink_Set_Pawn(int _number,int * _pawns);
 void Blink_Set_Field(int _number,int _pawn,int _field);
 void Disable_Blink();
-void Enable_FullScr(int _width,int _height);
+void Change_Display(int _width,int _height);
+void Enable_FullScr();//(int _width,int _height);
 void Disable_FullScr(int _width,int _height);
 void Reshape_Window(int Width, int Height);
 void Draw_Circle(float radius, float x, float y,float _z);
@@ -116,7 +118,7 @@ void Text_Init(int _width,int _height);
 void Text_Add(Text * _text,const char * _name);
 void Text_Remove(const char * _name);
 void Text_Clean();
-Text * Text_Create(int _x,int _y,int _select,const char * _string,void * _font);
+Text * Text_Create(float _x,float _y,int _select,const char * _string,void * _font);
 void Draw_Fields(int _type, Field * array,int players_number,int _blink);
 void Draw_Text(int _type);
 Field * Generate(int Players_Number);
@@ -124,7 +126,7 @@ Field * Generate_4_Players();
 Field * Generate_5_Players();
 Field * Generate_6_Players();
 void Close(Field * Pointer);
-void Text_Draw(int _x,int _y,int _select_name,void *_font,int _position_type,\
+void Text_Draw(float _x,float _y,int _select_name,void *_font,int _position_type,\
 				const char * _name,const char * _format,...);
 void Text_Create_Player(const char * _name);
 void Text_Create_Draw(int _size,int * _tab);

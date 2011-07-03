@@ -35,23 +35,29 @@ int Menu_Graph_Resolution_Change(Iterator * _game_it,Iterator * _graph_it,\
 	int width,height,i;
 	const char * label = "Rozdzielczosc: ";
 	char * buffer;
-	static int Display[4][2] = {{640,480},{800,600},{1024,768},{1280,960}};
-	Find(_graph_it,"WIDTH");
-	width = Get_ValueI(_graph_it);
-	for(i = 0;i < 4;i++)
-		if(width == Display[0][i])
-			break;
-	i = ++i % 4;
-	width = Display[0][i];
-	Set_Value(_graph_it,(void*)&width);
-	Find(_graph_it,"HEIGHT");
-	height = Display[1][i];
-	Set_Value(_graph_it,(void*)&height);
-	buffer = (char*) malloc(sizeof(*buffer)*(STRING_SIZE+1));
-	sprintf(buffer,"%s %dx%d",label,width,height);
-	strcpy((*_menu_active)->Captions[_position],buffer);
-	free(buffer);
-	return MENU_GRAPH_CHANGE;
+	static int Display[3][2] = {{640,480},{800,600},{1024,768}};
+	Find(_graph_it,"FULLSCREEN");
+	if(!Get_ValueB(_graph_it))
+	{
+		Find(_graph_it,"WIDTH");
+		width = Get_ValueI(_graph_it);
+		for(i = 0;i < 3;i++)
+			if(width == Display[i][0])
+				break;
+		i = ++i % 3;
+		width = Display[i][0];
+		Set_Value(_graph_it,(void*)&width);
+		Find(_graph_it,"HEIGHT");
+		height = Display[i][1];
+		Set_Value(_graph_it,(void*)&height);
+		buffer = (char*) malloc(sizeof(*buffer)*(STRING_SIZE+1));
+		sprintf(buffer,"%s %dx%d",label,width,height);
+		strcpy((*_menu_active)->Captions[_position],buffer);
+		free(buffer);
+		return MENU_GRAPH_CHANGE_RES;
+	}
+	else
+		return MENU_NO_CHANGE;
 }
 
 int Menu_Graph_Fullscr_Change(Iterator * _game_it,Iterator * _graph_it,\
@@ -77,7 +83,7 @@ int Menu_Graph_Fullscr_Change(Iterator * _game_it,Iterator * _graph_it,\
 	
 	strcpy((*_menu_active)->Captions[_position],buffer);
 	free(buffer);
-	return MENU_GRAPH_CHANGE;
+	return MENU_GRAPH_CHANGE_FULL;
 }
 
 void Menu_Draw(Iterator * _graph_it,Menu * _menu)
@@ -90,11 +96,11 @@ void Menu_Draw(Iterator * _graph_it,Menu * _menu)
 	width = Get_ValueI(_graph_it);
     Find(_graph_it,"HEIGHT");
 	height = Get_ValueI(_graph_it);
-	Text_Draw(0.85*width,0.05*height,MENU_BUTTON_HIT,FONT2,TEXT_CENTER,MENU_MSG,MENU_TEXT);
+	Text_Draw(0.8,0.05,MENU_BUTTON_HIT,FONT2,TEXT_CENTER,MENU_MSG,MENU_TEXT);
     for(i = 0;i < _menu->Number_of_Positions;i++)
 	{
 		sprintf(buffer,"MENU_TEXT_%d",i);
-		Text_Draw(0.85*width,(0.1+0.05*i)*height,200+i,FONT1,TEXT_CENTER,buffer,_menu->Captions[i]);
+		Text_Draw(0.8,0.1+0.05*i,200+i,FONT1,TEXT_CENTER,buffer,_menu->Captions[i]);
 	}
 	free(buffer);
     Set_Change();

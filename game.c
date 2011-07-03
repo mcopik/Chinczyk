@@ -180,6 +180,13 @@ void Main_Loop(int _type)
 	int flag = 0;
 	char * buffer;
 	
+	if(Fullscreen == -1)
+	{
+		Change_Display(Width,Height);
+		Set_Change();
+		Draw_Render();
+		Fullscreen = 0;
+	}
 	if(Game_Status == LOOP_CONFIG)
 	{
 		if(_type == INIT_DEF)
@@ -324,8 +331,39 @@ void Main_Loop(int _type)
 							Set_Change();
 							Game_Status = LOOP_WAIT;
 						break;
-						case MENU_GRAPH_CHANGE:
-							printf("CHANGE!\n");
+						case MENU_GRAPH_CHANGE_RES:
+							Find(Graph_Iterator,"WIDTH");
+							Width = Get_ValueI(Graph_Iterator);
+							Find(Graph_Iterator,"HEIGHT");
+							Height = Get_ValueI(Graph_Iterator);
+							//Find(Graph_Iterator,"FULLSCREEN");
+							//if(!Get_ValueB(Graph_Iterator))
+								//Change_Display(640,480);
+								//Set_Change();
+								//Draw_Render();
+								Change_Display(Width,Height);
+								Set_Change();
+						break;
+						case MENU_GRAPH_CHANGE_FULL:
+							Find(Graph_Iterator,"FULLSCREEN");
+							if(Get_ValueB(Graph_Iterator) != Fullscreen)
+							{
+								Fullscreen = !Fullscreen;
+								if(Fullscreen)
+									Enable_FullScr();
+								else
+								{
+									Find(Graph_Iterator,"WIDTH");
+									Width = Get_ValueI(Graph_Iterator);
+									Find(Graph_Iterator,"HEIGHT");
+									Height = Get_ValueI(Graph_Iterator);
+									//Disable_FullScr(800,600);
+									Change_Display(800,600);
+									//Change_Display(Width,Height);
+									Set_Change();
+									Fullscreen = -1;
+								}
+							}
 						break;
 						case MENU_GAME_CHANGE:
 						break;
@@ -590,7 +628,9 @@ void Main_Loop(int _type)
 			m_event = NULL;
 		}
 		if(Game_Status != LOOP_QUIT)
+		{
 			Draw_Render();
+		}
 	}
 }
 

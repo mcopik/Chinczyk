@@ -7,8 +7,7 @@
 #include "graphic.h"
 #include "game.h"
 
-void Text_Draw(int _x,int _y,int _select_name,void *_font,int _position_type,\
-				const char * _name,const char * _format,...);
+
 
 float * Camera_Action(int _type,float * _camera,int _action)
 {
@@ -493,23 +492,18 @@ void Draw_Init(Field * _fields,Player * _players,int _players_number, int * _ran
 	_Draw(0,_fields,_players,_players_number,_randomized,NULL);
 }
 
-void Draw_Text(int _type)
+void _Draw_Text(int _type,Text * _text,const char * _name)//int * _width,int *_height)
 {
-	_Draw_Text(_type,NULL,NULL,0,0);
-}
-
-void _Draw_Text(int _type,Text * _text,const char * _name,int _width,int _height)
-{
-	static int Width = 0;
-	static int Height = 0;
+	//static int * Width;
+	//static int * Height;
 	static Array * Texts = NULL;
 	Iterator * it;
 	Text * Ptr;
-	int len,bitmap_w,bitmap_h,i;
+	int len,bitmap_w,bitmap_h,i,width,height;
 	if(_type == TEXT_INIT)
 	{
-		Width = _width;
-		Height = _height;
+		//Width = _width;
+		//Height = _height;
 		Texts = Create_Array();
 	}
 	else if(_type == TEXT_ADD)
@@ -557,7 +551,9 @@ void _Draw_Text(int _type,Text * _text,const char * _name,int _width,int _height
 					glLoadIdentity();
 					
 				}
-				gluOrtho2D(0, Width, Height, 0);
+				width = glutGet(GLUT_WINDOW_WIDTH);
+				height = glutGet(GLUT_WINDOW_HEIGHT);
+				gluOrtho2D(0, width,height, 0);
 				glMatrixMode(GL_MODELVIEW);
 				glPushMatrix();
 				glLoadIdentity();
@@ -579,25 +575,25 @@ void _Draw_Text(int _type,Text * _text,const char * _name,int _width,int _height
 						glBegin(GL_TRIANGLE_STRIP);
 						if(Ptr->Position == TEXT_CENTER)
 						{
-							glVertex2f(Ptr->X-bitmap_w/2, Ptr->Y);
-							glVertex2f(Ptr->X-bitmap_w/2, Ptr->Y-bitmap_h);
-							glVertex2f(Ptr->X+bitmap_w/2, Ptr->Y);
-							glVertex2f(Ptr->X+bitmap_w/2, Ptr->Y-bitmap_h);
+							glVertex2f(Ptr->X*width-bitmap_w/2, Ptr->Y*height);
+							glVertex2f(Ptr->X*width-bitmap_w/2, Ptr->Y*height-bitmap_h);
+							glVertex2f(Ptr->X*width+bitmap_w/2, Ptr->Y*height);
+							glVertex2f(Ptr->X*width+bitmap_w/2, Ptr->Y*height-bitmap_h);
 						}
 						else
 						{
-							glVertex2f(Ptr->X, Ptr->Y);
-							glVertex2f(Ptr->X, Ptr->Y-bitmap_h);
-							glVertex2f(Ptr->X+bitmap_w, Ptr->Y);
-							glVertex2f(Ptr->X+bitmap_w, Ptr->Y-bitmap_h);
+							glVertex2f(Ptr->X*width, Ptr->Y*height);
+							glVertex2f(Ptr->X*width, Ptr->Y*height-bitmap_h);
+							glVertex2f(Ptr->X*width+bitmap_w, Ptr->Y*height);
+							glVertex2f(Ptr->X*width+bitmap_w, Ptr->Y*height-bitmap_h);
 						}
 						glEnd();
 					}
 					glColor3f(1.0f,1.0f,1.0f);
 					if(Ptr->Position == TEXT_CENTER)
-						glRasterPos2f(Ptr->X-bitmap_w/2, Ptr->Y);
+						glRasterPos2f(Ptr->X*width-bitmap_w/2, Ptr->Y*height);
 					else
-						glRasterPos2f(Ptr->X-bitmap_w/2, Ptr->Y);
+						glRasterPos2f(Ptr->X*width-bitmap_w/2, Ptr->Y*height);
 					for (i = 0; i < len; i++) {
 						glutBitmapCharacter(Ptr->Font, Ptr->String[i]);
 					}
@@ -615,25 +611,30 @@ void _Draw_Text(int _type,Text * _text,const char * _name,int _width,int _height
 	}
 }
 
+void Draw_Text(int _type)
+{
+	_Draw_Text(_type,NULL,NULL);//,0,0);
+}
+
 void Text_Init(int _width,int _height)
 {
-	_Draw_Text(TEXT_INIT,NULL,NULL,_width,_height);
+	_Draw_Text(TEXT_INIT,NULL,NULL);//,_width,_height);
 }
 void Text_Add(Text * _text,const char * _name)
 {
-	_Draw_Text(TEXT_ADD,_text,_name,0,0);
+	_Draw_Text(TEXT_ADD,_text,_name);//,0,0);
 }
 void Text_Remove(const char * _name)
 {
-	_Draw_Text(TEXT_REMOVE,NULL,_name,0,0);
+	_Draw_Text(TEXT_REMOVE,NULL,_name);//,0,0);
 }
 void Text_Clean()
 {
-	_Draw_Text(TEXT_CLEAN,NULL,NULL,0,0);
+	_Draw_Text(TEXT_CLEAN,NULL,NULL);//,0,0);
 }
 
 
-Text * Text_Create(int _x,int _y,int _select,const char * _string,void * _font)
+Text * Text_Create(float _x,float _y,int _select,const char * _string,void * _font)
 {
 	Text * ret = malloc(sizeof(*ret));
 	ret->X = _x;
@@ -718,8 +719,47 @@ int Init_GL(int _width, int _height, char * _label,int _fullscr)
 
 void Reshape_Window(int _width, int _height)
 {
+	printf("RWX %d %d\n",_width,_height);
+	glViewport(0, 0, _width, _height);		
 
-    glViewport(0, 0, _width, _height);		
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+
+    gluPerspective(45.0f,(GLfloat)_width/(GLfloat)_height,0.1f,100.0f);
+    glMatrixMode(GL_MODELVIEW);
+	
+	//_Reshape_Window(0,_width,_height);
+}
+
+void Change_Display(int _width,int _height)
+{
+	
+	glutPositionWindow(0,0);
+	glutReshapeWindow(_width,_height);
+	glutPostRedisplay();
+	Reshape_Window(_width,_height);
+	//glFlush();
+	//glutSwapBuffers();
+	//_Reshape_Window(1,_width,_height);
+}
+void _Reshape_Window(int _type,int _width,int _height)
+{
+	printf("RW %d %d %d\n",_type,_width,_height);
+	static int Width = 0;
+	static int Height = 0;
+	if(_type || !Width)
+	{
+		Width = _width;
+		Height = _height;
+	
+	//printf("%d %d\n",Width,Height);
+	glutReshapeWindow(Width,Height);
+	//glutPositionWindow(0,0);
+	glutPostRedisplay();
+	}
+	//Width != _width ? _width = Width : 0;
+	//Height != _height ? _height = Height : 0;
+	glViewport(0, 0, _width, _height);		
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -727,19 +767,32 @@ void Reshape_Window(int _width, int _height)
     gluPerspective(45.0f,(GLfloat)_width/(GLfloat)_height,0.1f,100.0f);
     glMatrixMode(GL_MODELVIEW);
 }
-
-void Enable_FullScr(int _width,int _height)
+void Enable_FullScr()//int _width,int _height)
 {
-	if(_width && _height)
-	Reshape_Window(_width,_height);
+	
+	//glutPostRedisplay();
+	//if(_width && _height)
+		//Reshape_Window(_width,_height);
+	//glutReshapeWindow(_width,_height);
+//	glutPostRedisplay();
+	
 	glutFullScreen();
 }
 
 void Disable_FullScr(int _width,int _height)
 {
-	if(_width && _height)
-	Reshape_Window(_width,_height);
 	glutPositionWindow(0,0);
+	//glutReshapeWindow(800,600);
+	//glutPostRedisplay();
+	//Reshape_Window(800,600);
+	//glutSwapBuffers();
+	glutReshapeWindow(_width,_height);
+	//glutPostRedisplay();
+	Reshape_Window(_width,_height);
+	glutPostRedisplay();
+	//if(_width && _height)
+		//Reshape_Window(_width,_height);
+	//glutPositionWindow(0,0);
 }
 
 void Draw_Fields(int _type,Field * array,int players_number,int _blink)
@@ -908,7 +961,7 @@ void Draw_Circle(float _radius, float _x, float _y,float _z)
 	glPopMatrix();
 }
 
-void Text_Draw(int _x,int _y,int _select_name,void *_font,int _position_type,\
+void Text_Draw(float _x,float _y,int _select_name,void *_font,int _position_type,\
 				const char * _name,const char * _format,...)
 {
 	char * buffer;

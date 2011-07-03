@@ -20,6 +20,7 @@ extern "C" {
 enum{
 	EVENT_KEY = 0,
 	EVENT_MOUSE,
+	EVENT_SET,
 	EVENT_GET,
 	EVENT_CLEAN
 };

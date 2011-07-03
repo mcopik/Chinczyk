@@ -48,11 +48,11 @@ extern "C" {
 #define DRAWING_TEXT "Wylosowano:"
 
 #define TEXT_DRAW_PLAYER 									\
-Text_Draw(0.05*Width,0.1*Height,255,FONT1,TEXT_NORMAL,		\
+Text_Draw(0.05,0.1,255,FONT1,TEXT_NORMAL,		\
 			NAME_MSG,"%s",Players[Active_Player].Name);
 		
 #define TEXT_DRAW_FPS 										\
-Text_Draw(0.05*Width,0.05*Height,255,FONT1,TEXT_NORMAL,		\
+Text_Draw(0.05,0.05,255,FONT1,TEXT_NORMAL,					\
 			FPS_MSG,"%s %d",FPS_TEXT,FPS_Counter);
 		
 #define TEXT_DRAW_RAND(buffer,number,tab) 					\
@@ -61,12 +61,12 @@ strcpy(buffer,DRAWING_TEXT);								\
 for(i = 0;i < number;i++){									\
 	sprintf(buffer,"%s %d",buffer,tab[i]);					\
 }															\
-Text_Draw(0.05*Width,0.15*Height,255,(void*)FONT1,FPS_MSG,	\
-			DRAW_MSG,"%s",buffer);							\
+Text_Draw(0.05,0.15,255,(void*)FONT1,			\
+			TEXT_NORMAL,FPS_MSG,DRAW_MSG,"%s",buffer);		\
 free(buffer);
 		
 #define TEXT_DRAW_MENU_BUTTON								\
-Text_Draw(0.85*Width,0.05*Height,MENU_BUTTON_HIT,			\
+Text_Draw(0.85,0.05,MENU_BUTTON_HIT,			\
 			(void*)FONT2,MENU_MSG,"%s",MENU_TEXT);		
 	
 	enum{

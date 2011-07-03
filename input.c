@@ -44,13 +44,13 @@ void _Key_Pressed(int _type, Key_Action ** _pointer)
 	static Key_Action * Events[EVENTS_BUFFER];
 	static int Position = -1;
 	
-	if(_type == SET && Position < EVENTS_BUFFER)
+	if(_type == EVENT_SET && Position < EVENTS_BUFFER)
 	{
 		Position++;
 		Events[Position] = *_pointer;
 		Event_Set(EVENT_KEY);
 	}
-	else if(_type == GET)
+	else if(_type == EVENT_GET)
 	{
 		if(Position >= 0)
 		{
@@ -68,21 +68,21 @@ void Key_Pressed(unsigned char _key,int _x,int _y)
 	Action->Key = _key;
 	Action->X = _x;
 	Action->Y = _y;
-	_Key_Pressed(SET,&Action);
+	_Key_Pressed(EVENT_SET,&Action);
 }
 
 void Check_Key_Event(Key_Action ** _pointer)
 {
-	_Key_Pressed(GET,_pointer);
+	_Key_Pressed(EVENT_GET,_pointer);
 }
 
 void Clean_Key_Event()
 {
 	Key_Action * pointer;
-	_Key_Pressed(GET,&pointer);
+	_Key_Pressed(EVENT_GET,&pointer);
 	while(pointer){
 		free(pointer);
-		_Key_Pressed(GET,&pointer);
+		_Key_Pressed(EVENT_GET,&pointer);
 	}
 }
 
@@ -117,7 +117,7 @@ void _Mouse_Event(int _type, Mouse_Action ** _pointer)
 	static Mouse_Action * Events[EVENTS_BUFFER];
 	static int Position = -1;
 	
-	if(_type == SET)
+	if(_type == EVENT_SET)
 	{
 		unsigned int Buffer[BUFFER_SIZE];
 		int Hits;
@@ -176,22 +176,22 @@ void Mouse_Event(int _button,int _state,int _x,int _y)
 		Action->Button = _button;
 		Action->X = _x;
 		Action->Y = _y;
-		_Mouse_Event(SET,&Action);
+		_Mouse_Event(EVENT_SET,&Action);
 	}
 }
 
 void Check_Mouse_Event(Mouse_Action ** _pointer)
 {
-	_Mouse_Event(GET,_pointer);
+	_Mouse_Event(EVENT_GET,_pointer);
 }
 
 void Clean_Mouse_Event()
 {
 	Mouse_Action * pointer;
-	_Mouse_Event(GET,&pointer);
+	_Mouse_Event(EVENT_GET,&pointer);
 	while(pointer){
 		free(pointer);
-		_Mouse_Event(GET,&pointer);
+		_Mouse_Event(EVENT_GET,&pointer);
 	}
 }
 int _Event(int _type)
