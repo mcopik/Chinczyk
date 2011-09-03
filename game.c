@@ -46,16 +46,20 @@ Array * Default_Game_Options()
 	Add_Element(array,"NUMBER_OF_PLAYERS",&temp,1,INTEGER);
 	temp = 0;
 	Add_Element(array,"PLAYER0_AI",&temp,1,BOOLEAN);
-	Add_Element(array,"PLAYER0_NAME","Gracz",6,CHAR);
+	sprintf(buffer,"Gracz %d",1);
+	Add_Element(array,"PLAYER0_NAME",buffer,6,CHAR);
 	Add_Element(array,"PLAYER0_COLOR",&temp2,3,FLOAT);
 	temp = 1;
-	for(i = 1;i < 4;i++){
+	for(i = 1;i < MAX_PLAYERS;i++){
 		sprintf(buffer,"PLAYER%d_AI",i);
 		Add_Element(array,buffer,&temp,1,BOOLEAN);
 		sprintf(buffer,"PLAYER%d_NAME",i);
-		sprintf(buffer2,"Komputer %d",i);
+		sprintf(buffer2,"Gracz %d",i);
 		Add_Element(array,buffer,buffer2,11,CHAR);
-		temp2[i-1] = 0.43f;
+		if(i < 4)
+			temp2[i-1] = 0.43f;
+		else
+			temp2[i-3] = 0.6f;
 		sprintf(buffer,"PLAYER%d_COLOR",i);
 		Add_Element(array,buffer,&temp2,3,FLOAT);
 	}
@@ -327,10 +331,11 @@ void Main_Loop(int _type)
 							Menu_Disactive();
 							TEXT_DRAW_PLAYER;
 							TEXT_DRAW_RAND(buffer,0,tab);
-							//TEXT_DRAW_MENU_BUTTON;
 							Set_Change();
 							Game_Status = LOOP_WAIT;
 						break;
+
+
 						case MENU_GRAPH_CHANGE_RES:
 							Find(Graph_Iterator,"WIDTH");
 							Width = Get_ValueI(Graph_Iterator);
@@ -343,6 +348,7 @@ void Main_Loop(int _type)
 								//Draw_Render();
 								Change_Display(Width,Height);
 								Set_Change();
+
 						break;
 						case MENU_GRAPH_CHANGE_FULL:
 							Find(Graph_Iterator,"FULLSCREEN");

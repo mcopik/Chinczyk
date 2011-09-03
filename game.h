@@ -33,6 +33,8 @@ extern "C" {
 }
 #define PATH "options.txt"
 #define NUMBER_OF_PAWNS 4
+#define MAX_PLAYERS 6
+#define MIN_PLAYERS 4
 #define NUMBER_OF_FIELDS_PER_PLAYER 8
 #define FONT1 GLUT_BITMAP_9_BY_15
 #define FONT1_SIZE 9
@@ -61,8 +63,13 @@ strcpy(buffer,DRAWING_TEXT);								\
 for(i = 0;i < number;i++){									\
 	sprintf(buffer,"%s %d",buffer,tab[i]);					\
 }															\
+<<<<<<< .mine
+Text_Draw(0.05,0.15,255,(void*)FONT1,			\
+			TEXT_NORMAL,DRAW_MSG,"%s",buffer);		\
+=======
 Text_Draw(0.05,0.15,255,(void*)FONT1,			\
 			TEXT_NORMAL,FPS_MSG,DRAW_MSG,"%s",buffer);		\
+>>>>>>> .r9
 free(buffer);
 		
 #define TEXT_DRAW_MENU_BUTTON								\

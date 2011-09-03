@@ -4,6 +4,7 @@
 #include "menu.h"
 #include "input.h"
 #include "graphic.h"
+#include "game.h"
 
 void _Menu(Iterator * _game_it,Iterator * _graph_it,Mouse_Action * _m_event,int * flag);
 
@@ -85,6 +86,56 @@ int Menu_Graph_Fullscr_Change(Iterator * _game_it,Iterator * _graph_it,\
 	free(buffer);
 	return MENU_GRAPH_CHANGE_FULL;
 }
+int Menu_Game_Number_Change(Iterator * _game_it,Iterator * _graph_it,\
+								Menu ** _menu_active,int _position)
+{
+	int temp,i;
+	char buffer[STRING_SIZE+1];
+	Find(_game_it,"NUMBER_OF_PLAYERS");
+	temp = Get_ValueI(_game_it);
+	temp = ++temp;
+	if(temp > MAX_PLAYERS)
+	{
+		temp = MIN_PLAYERS;
+		for(i = MIN_PLAYERS+2;i < MAX_PLAYERS+2;i++)
+			strcpy((*_menu_active)->Captions[i],"");
+	}
+	else
+	{
+		sprintf(buffer,"PLAYER%d_AI",temp-1);
+		if(Get_ValueB(_game_it))
+			sprintf(buffer,"Gracz %d: Czlowiek",temp);
+		else
+			sprintf(buffer,"Gracz %d: Komputer",temp);
+		strcpy((*_menu_active)->Captions[temp+1],buffer);
+	}
+	Set_Value(_game_it,&temp);
+	sprintf(buffer,"Liczba graczy: %d",temp);
+	strcpy((*_menu_active)->Captions[_position],buffer);
+	return MENU_NO_CHANGE;
+}
+
+int Menu_Game_Player_Change(Iterator * _game_it,Iterator * _graph_it,\
+								Menu ** _menu_active,int _position)
+{
+	int temp;
+	char buffer[STRING_SIZE+1];
+	sprintf(buffer,"PLAYER%d_AI",_position-2);
+	Find(_game_it,buffer);
+	if(Get_ValueB(_game_it))
+	{
+		temp = 0;
+		sprintf(buffer,"Gracz %d: Czlowiek",_position-1);
+	}
+	else
+	{
+		temp = 1;
+		sprintf(buffer,"Gracz %d: Komputer",_position-1);
+	}
+	Set_Value(_game_it,&temp);
+	strcpy((*_menu_active)->Captions[_position],buffer);
+	return MENU_NO_CHANGE;
+}
 
 void Menu_Draw(Iterator * _graph_it,Menu * _menu)
 {
@@ -99,6 +150,11 @@ void Menu_Draw(Iterator * _graph_it,Menu * _menu)
 	Text_Draw(0.8,0.05,MENU_BUTTON_HIT,FONT2,TEXT_CENTER,MENU_MSG,MENU_TEXT);
     for(i = 0;i < _menu->Number_of_Positions;i++)
 	{
+		if(strcmp(_menu->Captions[i],""))
+		{
+			sprintf(buffer,"MENU_TEXT_%d",i);
+			Text_Draw(0.8,0.1+0.05*i,200+i,FONT1,TEXT_CENTER,buffer,_menu->Captions[i]);
+		}
 		sprintf(buffer,"MENU_TEXT_%d",i);
 		Text_Draw(0.8,0.1+0.05*i,200+i,FONT1,TEXT_CENTER,buffer,_menu->Captions[i]);
 	}
@@ -156,14 +212,52 @@ void Menu_Init(Menu ** _main,Iterator * _game_it,Iterator * _graph_it)
 	strcpy(ptr->Captions[2],"Opcje grafiki");
 	strcpy(ptr->Captions[3],"Wyjscie");
 	ptr->Children = (Menu**) malloc(ptr->Number_of_Positions*sizeof(*(ptr->Children)));
-	ptr->Action = (int (**)(Iterator*,Iterator*,Menu *,int)) \
+	ptr->Action = (int (**)(Iterator*,Iterator*,Menu **,int)) \
 					malloc(ptr->Number_of_Positions*sizeof(*(ptr->Action)));
 	
 	ptr->Children[0] = NULL;
 	ptr->Action[0] = &Menu_New_Game;
 	
-	ptr->Children[1] = NULL;
-	ptr->Action[1] = NULL;
+	
+	ptr->Children[1] = (Menu*) malloc(sizeof(*ptr->Children[1]));
+	ptr->Children[1]->Parent = ptr;
+	Find(_game_it,"NUMBER_OF_PLAYERS");
+	ptr->Children[1]->Number_of_Positions = Get_ValueI(_game_it) + 2;
+	ptr->Children[1]->Captions = (char**) malloc((MAX_PLAYERS+2)*\
+									sizeof(*(ptr->Children[1]->Captions)));
+	ptr->Children[1]->Children = (Menu**) malloc((MAX_PLAYERS+2)*\
+									sizeof(*(ptr->Children[1]->Children)));
+	ptr->Children[1]->Action = (int (**)(Iterator*,Iterator*,Menu **,int)) \
+	malloc((MAX_PLAYERS+2)*sizeof(*(ptr->Children[1]->Action)));
+	
+	for(i = 0;i < MAX_PLAYERS+2;i++)
+		ptr->Children[1]->Captions[i] = (char*) malloc((STRING_SIZE+1)*\
+									sizeof(ptr->Children[1]->Captions[i]));
+	sprintf(buffer,"Liczba graczy: %d",ptr->Children[1]->Number_of_Positions-2);
+	strcpy(ptr->Children[1]->Captions[0],buffer);
+	strcpy(ptr->Children[1]->Captions[1],"Wroc");
+	ptr->Children[1]->Action[0] = &Menu_Game_Number_Change;
+	ptr->Children[1]->Children[0] = NULL;
+	ptr->Children[1]->Action[1] = &Menu_Go_Previous;
+	ptr->Children[1]->Children[1] = NULL;
+	for(i = 1;i < ptr->Children[1]->Number_of_Positions;i++){
+		sprintf(buffer,"PLAYER%d_AI",i-1);
+		Find(_game_it,buffer);
+		if(Get_ValueB(_game_it))
+			sprintf(buffer,"Gracz %d: Komputer",i);
+		else
+			sprintf(buffer,"Gracz %d: Czlowiek",i);
+		strcpy(ptr->Children[1]->Captions[i+1],buffer);
+		ptr->Children[1]->Children[i+1] = NULL;
+		ptr->Children[1]->Action[i+1] = &Menu_Game_Player_Change;
+	}
+	for(i = ptr->Children[1]->Number_of_Positions;i < MAX_PLAYERS+2;i++){
+		ptr->Children[1]->Children[i] = NULL;
+		ptr->Children[1]->Action[i] = &Menu_Game_Player_Change;
+		strcpy(ptr->Children[1]->Captions[i],"");
+	}
+	ptr->Children[1]->Number_of_Positions = MAX_PLAYERS+2;
+	ptr->Action[1] = &Menu_Go_Next;
 	
 	ptr->Children[2] = (Menu*) malloc(sizeof(*ptr->Children[2]));
 	ptr->Children[2]->Parent = ptr;
@@ -172,11 +266,12 @@ void Menu_Init(Menu ** _main,Iterator * _game_it,Iterator * _graph_it)
 									sizeof(*(ptr->Children[2]->Captions)));
 	ptr->Children[2]->Children = (Menu**) malloc(ptr->Children[2]->Number_of_Positions*\
 									sizeof(*(ptr->Children[2]->Children)));
-	ptr->Children[2]->Action = (int (**)(Iterator*,Iterator*,Menu *,int)) \
+	ptr->Children[2]->Action = (int (**)(Iterator*,Iterator*,Menu **,int)) \
 	malloc(ptr->Children[2]->Number_of_Positions*sizeof(*(ptr->Children[2]->Action)));
 	for(i = 0;i < ptr->Children[2]->Number_of_Positions;i++)
 		ptr->Children[2]->Captions[i] = (char*) malloc((STRING_SIZE+1)*\
 										sizeof(ptr->Children[2]->Captions[i]));
+	
 	Find(_graph_it,"WIDTH");
 	width = Get_ValueI(_graph_it);
 	Find(_graph_it,"HEIGHT");
@@ -185,9 +280,9 @@ void Menu_Init(Menu ** _main,Iterator * _game_it,Iterator * _graph_it)
 	strcpy(ptr->Children[2]->Captions[0],buffer);
 	Find(_graph_it,"FULLSCREEN");
 	if(Get_ValueB(_graph_it))
-		sprintf(buffer,"%s TAK",fullscr_label);
+		sprintf(buffer,"%s: TAK",fullscr_label);
 	else
-		sprintf(buffer,"%s NIE",fullscr_label);
+		sprintf(buffer,"%s: NIE",fullscr_label);
 	strcpy(ptr->Children[2]->Captions[1],buffer);
 	strcpy(ptr->Children[2]->Captions[2],"Wroc");
 	
@@ -196,7 +291,7 @@ void Menu_Init(Menu ** _main,Iterator * _game_it,Iterator * _graph_it)
 	ptr->Children[2]->Action[0] = &Menu_Graph_Resolution_Change;
 	ptr->Children[2]->Action[1] = &Menu_Graph_Fullscr_Change;
 	ptr->Children[2]->Action[2] = &Menu_Go_Previous;
-	ptr->Action[2] = Menu_Go_Next;
+	ptr->Action[2] = &Menu_Go_Next;
 	
 	ptr->Children[3] = NULL;
 	ptr->Action[3] = &Menu_Close_Game;

@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session Name="/home/mcopik/Pulpit/Projekt/Projekt.workspace">
-  <int Value="12" Name="m_selectedTab"/>
+  <int Value="9" Name="m_selectedTab"/>
   <wxString Value="/home/mcopik/Pulpit/Projekt/Projekt.workspace" Name="m_workspaceName"/>
   <TabInfoArray Name="TabInfoArray">
     <TabInfo>
       <wxString Value="/home/mcopik/Pulpit/Projekt/main.c" Name="FileName"/>
-      <int Value="16" Name="FirstVisibleLine"/>
-      <int Value="34" Name="CurrentLine"/>
+      <int Value="0" Name="FirstVisibleLine"/>
+      <int Value="7" Name="CurrentLine"/>
       <wxArrayString Name="Bookmarks"/>
     </TabInfo>
     <TabInfo>
       <wxString Value="/home/mcopik/Pulpit/Projekt/input.c" Name="FileName"/>
-      <int Value="200" Name="FirstVisibleLine"/>
-      <int Value="213" Name="CurrentLine"/>
+      <int Value="22" Name="FirstVisibleLine"/>
+      <int Value="39" Name="CurrentLine"/>
+      <wxArrayString Name="Bookmarks"/>
+    </TabInfo>
+    <TabInfo>
+      <wxString Value="/home/mcopik/Pulpit/Projekt/input.h" Name="FileName"/>
+      <int Value="15" Name="FirstVisibleLine"/>
+      <int Value="22" Name="CurrentLine"/>
       <wxArrayString Name="Bookmarks"/>
     </TabInfo>
     <TabInfo>
       <wxString Value="/home/mcopik/Pulpit/Projekt/game.c" Name="FileName"/>
-      <int Value="232" Name="FirstVisibleLine"/>
-      <int Value="236" Name="CurrentLine"/>
-      <wxArrayString Name="Bookmarks"/>
-    </TabInfo>
-    <TabInfo>
-      <wxString Value="/home/mcopik/Pulpit/Projekt/fifo.h" Name="FileName"/>
-      <int Value="0" Name="FirstVisibleLine"/>
-      <int Value="5" Name="CurrentLine"/>
+      <int Value="561" Name="FirstVisibleLine"/>
+      <int Value="572" Name="CurrentLine"/>
       <wxArrayString Name="Bookmarks"/>
     </TabInfo>
     <TabInfo>
@@ -35,58 +35,96 @@
     </TabInfo>
     <TabInfo>
       <wxString Value="/home/mcopik/Pulpit/Projekt/ai.c" Name="FileName"/>
-      <int Value="76" Name="FirstVisibleLine"/>
+      <int Value="86" Name="FirstVisibleLine"/>
       <int Value="94" Name="CurrentLine"/>
       <wxArrayString Name="Bookmarks"/>
     </TabInfo>
     <TabInfo>
       <wxString Value="/home/mcopik/Pulpit/Projekt/ai.h" Name="FileName"/>
-      <int Value="0" Name="FirstVisibleLine"/>
+      <int Value="3" Name="FirstVisibleLine"/>
       <int Value="15" Name="CurrentLine"/>
       <wxArrayString Name="Bookmarks"/>
     </TabInfo>
     <TabInfo>
       <wxString Value="/home/mcopik/Pulpit/Projekt/array.c" Name="FileName"/>
-      <int Value="0" Name="FirstVisibleLine"/>
-      <int Value="12" Name="CurrentLine"/>
+      <int Value="243" Name="FirstVisibleLine"/>
+      <int Value="248" Name="CurrentLine"/>
       <wxArrayString Name="Bookmarks"/>
     </TabInfo>
     <TabInfo>
       <wxString Value="/home/mcopik/Pulpit/Projekt/array.h" Name="FileName"/>
-      <int Value="100" Name="FirstVisibleLine"/>
-      <int Value="118" Name="CurrentLine"/>
+      <int Value="32" Name="FirstVisibleLine"/>
+      <int Value="41" Name="CurrentLine"/>
       <wxArrayString Name="Bookmarks"/>
     </TabInfo>
     <TabInfo>
       <wxString Value="/home/mcopik/Pulpit/Projekt/menu.c" Name="FileName"/>
-      <int Value="16" Name="FirstVisibleLine"/>
-      <int Value="33" Name="CurrentLine"/>
+      <int Value="196" Name="FirstVisibleLine"/>
+      <int Value="206" Name="CurrentLine"/>
       <wxArrayString Name="Bookmarks"/>
     </TabInfo>
     <TabInfo>
       <wxString Value="/home/mcopik/Pulpit/Projekt/menu.h" Name="FileName"/>
-      <int Value="0" Name="FirstVisibleLine"/>
-      <int Value="10" Name="CurrentLine"/>
+      <int Value="13" Name="FirstVisibleLine"/>
+      <int Value="14" Name="CurrentLine"/>
       <wxArrayString Name="Bookmarks"/>
     </TabInfo>
     <TabInfo>
       <wxString Value="/home/mcopik/Pulpit/Projekt/game.h" Name="FileName"/>
-      <int Value="45" Name="FirstVisibleLine"/>
-      <int Value="63" Name="CurrentLine"/>
+      <int Value="51" Name="FirstVisibleLine"/>
+      <int Value="57" Name="CurrentLine"/>
       <wxArrayString Name="Bookmarks"/>
     </TabInfo>
     <TabInfo>
       <wxString Value="/home/mcopik/Pulpit/Projekt/graphic.h" Name="FileName"/>
-      <int Value="111" Name="FirstVisibleLine"/>
-      <int Value="126" Name="CurrentLine"/>
+      <int Value="71" Name="FirstVisibleLine"/>
+      <int Value="88" Name="CurrentLine"/>
+      <wxArrayString Name="Bookmarks"/>
+    </TabInfo>
+    <TabInfo>
+      <wxString Value="/home/mcopik/Pulpit/Projekt/graphic.c" Name="FileName"/>
+      <int Value="0" Name="FirstVisibleLine"/>
+      <int Value="7" Name="CurrentLine"/>
       <wxArrayString Name="Bookmarks"/>
     </TabInfo>
   </TabInfoArray>
   <SerializedObject Name="m_breakpoints">
-    <long Value="1" Name="Count"/>
+    <long Value="3" Name="Count"/>
     <SerializedObject Name="Breakpoint0">
       <wxString Value="/home/mcopik/Pulpit/Projekt/array.c" Name="file"/>
       <int Value="202" Name="lineno"/>
+      <wxString Value="" Name="function_name"/>
+      <wxString Value="" Name="memory_address"/>
+      <int Value="1" Name="bp_type"/>
+      <int Value="0" Name="watchpoint_type"/>
+      <wxString Value="" Name="watchpt_data"/>
+      <CData Name="commandlist"/>
+      <bool Value="0" Name="regex"/>
+      <bool Value="0" Name="is_temp"/>
+      <bool Value="1" Name="is_enabled"/>
+      <int Value="0" Name="ignore_number"/>
+      <wxString Value="" Name="conditions"/>
+      <int Value="0" Name="origin"/>
+    </SerializedObject>
+    <SerializedObject Name="Breakpoint1">
+      <wxString Value="/home/mcopik/Pulpit/Projekt/menu.c" Name="file"/>
+      <int Value="43" Name="lineno"/>
+      <wxString Value="" Name="function_name"/>
+      <wxString Value="" Name="memory_address"/>
+      <int Value="1" Name="bp_type"/>
+      <int Value="0" Name="watchpoint_type"/>
+      <wxString Value="" Name="watchpt_data"/>
+      <CData Name="commandlist"/>
+      <bool Value="0" Name="regex"/>
+      <bool Value="0" Name="is_temp"/>
+      <bool Value="1" Name="is_enabled"/>
+      <int Value="0" Name="ignore_number"/>
+      <wxString Value="" Name="conditions"/>
+      <int Value="0" Name="origin"/>
+    </SerializedObject>
+    <SerializedObject Name="Breakpoint2">
+      <wxString Value="/home/mcopik/Pulpit/Projekt/menu.c" Name="file"/>
+      <int Value="144" Name="lineno"/>
       <wxString Value="" Name="function_name"/>
       <wxString Value="" Name="memory_address"/>
       <int Value="1" Name="bp_type"/>
