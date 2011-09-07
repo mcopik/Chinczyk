@@ -1209,7 +1209,7 @@ void Fields_Generate_6_Players(Field * _pointer)
 		_pointer[shift+i].Radius = Radius;
 	}
 	shift += NUMBER_OF_FIELDS_PER_PLAYER;
-	//fifth player
+	//fifth& sixth player
 	_pointer[shift].Position[0] = 2*Radius*(NUMBER_OF_PAWNS+1)*-1;
 	_pointer[shift].Position[1] = Radius*(NUMBER_OF_PAWNS+1);
 	_pointer[shift].Radius = Radius;

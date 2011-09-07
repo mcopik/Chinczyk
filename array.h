@@ -13,7 +13,7 @@ typedef struct _Array_Element Array_Element;
 struct _Array_Element{
 	void * Value;
 	unsigned short int Type;
-	char * Key;
+	char Key[STRING_SIZE+1];//char * Key;
 	unsigned int Size; 
 	Array_Element *Next,*Previous;
 };

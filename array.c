@@ -127,9 +127,9 @@ int Add_Element(Array * _array,const char * _name,void * _value,int _size,int _t
 				_array->Last = ptr;
 		}
 	}
-	buffer = malloc(sizeof(*buffer)*(STRING_SIZE+1));
-	memset(buffer,0,sizeof(*buffer)*(STRING_SIZE+1));
-	strcpy(buffer,_name);
+	//buffer = malloc(sizeof(*buffer)*(STRING_SIZE+1));
+	//memset(buffer,0,sizeof(*buffer)*(STRING_SIZE+1));
+	//strcpy(buffer,_name);
 	if(_value)
 	{
 		value = malloc(Type_Size(_type)*_size);
@@ -138,7 +138,7 @@ int Add_Element(Array * _array,const char * _name,void * _value,int _size,int _t
 	ptr->Size = _size;
 	ptr->Type = _type;
 	ptr->Value = value;
-	ptr->Key = buffer;
+	strcpy(ptr->Key,_name);
 	_array->Size += Type_Size(_type)*_size + sizeof(ptr->Size) \
 				+ sizeof(*(ptr->Key))*STRING_SIZE + sizeof(ptr->Type);
 	_array->Length++;
@@ -216,17 +216,17 @@ void Free_Array(Array * _array)
 	{
 		while(it->Position != _array->Last){
 			Get_Next(it);
-			free(it->Position->Previous->Key);
+			//free(it->Position->Previous->Key);
 			free(it->Position->Previous->Value);
 			free(it->Position->Previous);
 		}
-		free(it->Position->Key);
+		//free(it->Position->Key);
 		free(it->Position->Value);
 		free(it->Position);
 	}
 	else
 	{
-		free(it->Position->Key);
+		//free(it->Position->Key);
 		free(it->Position->Value);
 		free(it->Position);
 	}
@@ -242,9 +242,9 @@ size_t Get_Size(Array * _array)
 Iterator * Create_Iterator(Array * _array)
 {
 	Iterator * ptr = NULL;
-	ptr = malloc(sizeof(*ptr));
-	if(ptr != NULL)
+	if(_array)
 	{
+		ptr = malloc(sizeof(*ptr));
 		ptr->Object = _array;
 		ptr->Position = _array->First;
 	}
@@ -278,7 +278,7 @@ void Erase(Iterator * _it)
                         + sizeof(_it->Position->Size) \
 			+ sizeof(*(_it->Position->Key))*STRING_SIZE + sizeof(_it->Position->Type);
 		_it->Object->Length--;
-		free(_it->Position->Key);
+		//free(_it->Position->Key);
 		free(_it->Position->Value);
 		free(_it->Position);
 	}
@@ -414,7 +414,7 @@ int Save(Array * _array,const char * _label,const char * _path)
 	unsigned short int type;
 	unsigned int size,i;
 	size_t size_1,size_2,size_b,position;
-	char buffer[17];
+	char buffer[STRING_SIZE+1];
 	Iterator * it;
 	
 	file = fopen(_path,"rb");
@@ -495,9 +495,13 @@ int Save(Array * _array,const char * _label,const char * _path)
 	{
 		type = Get_Type(it);
 		size = Get_Value_Size(it);
-		if(fwrite(Get_Name(it),sizeof(char),STRING_SIZE,file) != STRING_SIZE && \
-			fwrite(&type,sizeof(type),1,file) != 1 && fwrite(&size,sizeof(size),1,file) != 1 \
-			&& fwrite(Get_Value(it),Type_Size(type),size,file) != size)
+		if(fwrite(Get_Name(it),sizeof(char),STRING_SIZE,file) != STRING_SIZE)
+			ERROR(1,"Error during writing data");
+		if(fwrite(&type,sizeof(type),1,file) != 1)
+			ERROR(1,"Error during writing data");
+		if(fwrite(&size,sizeof(size),1,file) != 1)
+			ERROR(1,"Error during writing data");
+		if(fwrite(Get_Value(it),Type_Size(type),size,file) != size)
 			ERROR(1,"Error during writing data");
 		Get_Next(it);
 	}
