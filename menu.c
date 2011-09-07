@@ -240,16 +240,16 @@ void Menu_Init(Menu ** _main,Iterator * _game_it,Iterator * _graph_it)
 	ptr->Children[1]->Children[0] = NULL;
 	ptr->Children[1]->Action[1] = &Menu_Go_Previous;
 	ptr->Children[1]->Children[1] = NULL;
-	for(i = 1;i < ptr->Children[1]->Number_of_Positions;i++){
-		sprintf(buffer,"PLAYER%d_AI",i-1);
+	for(i = 0;i < ptr->Children[1]->Number_of_Positions-2;i++){
+		sprintf(buffer,"PLAYER%d_AI",i);
 		Find(_game_it,buffer);
 		if(Get_ValueB(_game_it))
-			sprintf(buffer,"Gracz %d: Komputer",i);
+			sprintf(buffer,"Gracz %d: Komputer",i+1);
 		else
-			sprintf(buffer,"Gracz %d: Czlowiek",i);
-		strcpy(ptr->Children[1]->Captions[i+1],buffer);
-		ptr->Children[1]->Children[i+1] = NULL;
-		ptr->Children[1]->Action[i+1] = &Menu_Game_Player_Change;
+			sprintf(buffer,"Gracz %d: Czlowiek",i+1);
+		strcpy(ptr->Children[1]->Captions[i+2],buffer);
+		ptr->Children[1]->Children[i+2] = NULL;
+		ptr->Children[1]->Action[i+2] = &Menu_Game_Player_Change;
 	}
 	for(i = ptr->Children[1]->Number_of_Positions;i < MAX_PLAYERS+2;i++){
 		ptr->Children[1]->Children[i] = NULL;

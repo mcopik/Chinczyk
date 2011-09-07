@@ -1068,7 +1068,170 @@ void Fields_Generate_5_Players(Field * _pointer)
 
 void Fields_Generate_6_Players(Field * _pointer)
 {
+	float Width,Radius;
+	int i,j,shift;
 	
+	Width = MIN(W,D)/2;
+	Radius = 0.03*Width*2;
+	for(i = 0;i < 72;i++)
+		_pointer[i].Radius = 0;
+	for(i = 0;i < 6;i++)
+	{
+			for(j = 0;j < NUMBER_OF_PAWNS;j++)
+			{
+				_pointer[i*2*NUMBER_OF_PAWNS+j].Position[0] = Width - Radius;
+				_pointer[i*2*NUMBER_OF_PAWNS+j].Position[1] = Width - Radius;
+				_pointer[i*2*NUMBER_OF_PAWNS+j].Radius = Radius;
+			}
+	}
+	for(i = 0;i < 6;i++)
+		_pointer[i*2*NUMBER_OF_PAWNS+1].Position[0] -= 2*Radius;
+	for(i = 0;i < 6;i++)
+		_pointer[i*2*NUMBER_OF_PAWNS+2].Position[1] -= 2*Radius;
+	for(i = 0;i < 6;i++)
+	{
+		_pointer[i*2*NUMBER_OF_PAWNS+3].Position[0] -= 2*Radius;
+		_pointer[i*2*NUMBER_OF_PAWNS+3].Position[1] -= 2*Radius;
+	}
+	
+	for(i = 0;i < NUMBER_OF_PAWNS;i++)
+		_pointer[2*NUMBER_OF_PAWNS+i].Position[1] *= -1;	
+	
+	for(i = 0;i < NUMBER_OF_PAWNS;i++)
+	{
+		_pointer[2*2*NUMBER_OF_PAWNS+i].Position[1] *= -1;	
+		_pointer[2*2*NUMBER_OF_PAWNS+i].Position[0] = Radius*POW(-1,i);
+	}
+	
+	for(i = 0;i < NUMBER_OF_PAWNS;i++)
+	{
+		_pointer[2*3*NUMBER_OF_PAWNS+i].Position[0] *= -1;	
+		_pointer[2*3*NUMBER_OF_PAWNS+i].Position[1] *= -1;	
+	}
+	for(i = 0;i < NUMBER_OF_PAWNS;i++)
+		_pointer[2*4*NUMBER_OF_PAWNS+i].Position[0] *= -1;
+	
+	for(i = 0;i < NUMBER_OF_PAWNS;i++)
+		_pointer[2*5*NUMBER_OF_PAWNS+i].Position[0] = Radius*POW(-1,i);
+		
+	//first and second player
+	for(i = 0;i < 2;i++)
+	{
+		for(j = 0;j < NUMBER_OF_PAWNS;j++)
+		{
+			_pointer[(2*i+2)*NUMBER_OF_PAWNS-j-1].Position[1] = POW(-1,i)*Radius*(j+1);
+			_pointer[(2*i+2)*NUMBER_OF_PAWNS-j-1].Position[0] = 2*Radius*(j+1);
+			_pointer[(2*i+2)*NUMBER_OF_PAWNS-j-1].Radius = Radius;
+		}
+	}
+	//third player
+	for(i = 0;i < NUMBER_OF_PAWNS;i++)
+	{
+			_pointer[(2*2+1)*NUMBER_OF_PAWNS+i].Position[0] = 0.0f;
+			_pointer[(2*2+1)*NUMBER_OF_PAWNS+i].Position[1] = -(0.7*Width - (2+i)*Radius*2);
+			_pointer[(2*2+1)*NUMBER_OF_PAWNS+i].Radius = Radius;
+	}
+	//fourth and fifth player
+	for(i = 0;i < 2;i++)
+	{
+		for(j = 0;j < NUMBER_OF_PAWNS;j++)
+		{
+			_pointer[(8+2*i)*NUMBER_OF_PAWNS-j-1].Position[0] = \
+					_pointer[(2*i+2)*NUMBER_OF_PAWNS-j-1].Position[0] * -1;
+			_pointer[(8+2*i)*NUMBER_OF_PAWNS-j-1].Position[1] = \
+						_pointer[(2*i+2)*NUMBER_OF_PAWNS-j-1].Position[1];
+			_pointer[(8+2*i)*NUMBER_OF_PAWNS-j-1].Radius = Radius;
+		}
+	}
+	//sixth player
+	for(i = 0;i < NUMBER_OF_PAWNS;i++)
+	{
+			_pointer[(2*5+1)*NUMBER_OF_PAWNS+i].Position[0] = 0.0f;
+			_pointer[(2*5+1)*NUMBER_OF_PAWNS+i].Position[1] = 0.7*Width - (2+i)*Radius*2;
+			_pointer[(2*5+1)*NUMBER_OF_PAWNS+i].Radius = Radius;
+	}
+	shift = 2*NUMBER_OF_PAWNS*6;
+	//first player
+	_pointer[shift].Position[0] = 2*Radius*(NUMBER_OF_PAWNS+1);
+	_pointer[shift].Position[1] = Radius*(NUMBER_OF_PAWNS+1);
+	_pointer[shift].Radius = Radius;
+	for(i = 1;i < 3;i++)
+	{
+		_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0] + 2*Radius;
+		_pointer[shift+i].Position[1] = _pointer[shift+i-1].Position[1];
+		_pointer[shift+i].Radius = Radius;
+	}
+	for(i = 3;i < 6;i++)
+	{
+		_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0];
+		_pointer[shift+i].Position[1] = _pointer[shift+i-1].Position[1] - 2.5*Radius;
+		_pointer[shift+i].Radius = Radius;
+	}
+	for(i = 6;i < 8;i++)
+	{
+		_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0] - 2*Radius;
+		_pointer[shift+i].Position[1] = _pointer[shift+i-1].Position[1];
+		_pointer[shift+i].Radius = Radius;
+	}
+	shift += NUMBER_OF_FIELDS_PER_PLAYER;
+	//second player
+	for(i = 0;i < 4;i++)
+	{
+		_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0];
+		_pointer[shift+i].Position[1] = _pointer[shift+i-1].Position[1] - 2*Radius;
+		_pointer[shift+i].Radius = Radius;
+	}
+	for(i = 4;i < 8;i++)
+	{
+		_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0] - 2*Radius;
+		_pointer[shift+i].Position[1] = _pointer[shift+i-1].Position[1];
+		_pointer[shift+i].Radius = Radius;
+	}
+	shift += NUMBER_OF_FIELDS_PER_PLAYER;
+	//third player
+	_pointer[shift].Position[0] = _pointer[shift-1].Position[0] - 2*Radius;
+	_pointer[shift].Position[1] = _pointer[shift-1].Position[1];
+	_pointer[shift].Radius = Radius;
+	for(i = 1;i < NUMBER_OF_FIELDS_PER_PLAYER;i++)
+	{
+		_pointer[shift+i].Position[0] = _pointer[shift-i].Position[0]*-1;
+		_pointer[shift+i].Position[1] = _pointer[shift-i].Position[1];
+		_pointer[shift+i].Radius = Radius;
+	}
+	shift += NUMBER_OF_FIELDS_PER_PLAYER;
+	//fourth player
+	for(i = 0;i < NUMBER_OF_FIELDS_PER_PLAYER;i++)
+	{
+		_pointer[shift+i].Position[0] = _pointer[shift - 2*NUMBER_OF_FIELDS_PER_PLAYER-i]\
+									.Position[0]*-1;
+		_pointer[shift+i].Position[1] = _pointer[shift - 2*NUMBER_OF_FIELDS_PER_PLAYER-i]\
+									.Position[1];
+		_pointer[shift+i].Radius = Radius;
+	}
+	shift += NUMBER_OF_FIELDS_PER_PLAYER;
+	//fifth player
+	_pointer[shift].Position[0] = 2*Radius*(NUMBER_OF_PAWNS+1)*-1;
+	_pointer[shift].Position[1] = Radius*(NUMBER_OF_PAWNS+1);
+	_pointer[shift].Radius = Radius;
+	for(i = 1;i < 4;i++)
+	{
+		_pointer[shift+i].Position[1] = _pointer[shift+i-1].Position[1] + 2*Radius;
+		_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0];
+		_pointer[shift+i].Radius = Radius;
+	}
+	for(i = 4;i < 2*NUMBER_OF_FIELDS_PER_PLAYER-2;i++)
+	{
+		_pointer[shift+i].Position[1] = _pointer[shift+i-1].Position[1];
+		_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0] + 2*Radius;
+		_pointer[shift+i].Radius = Radius;
+	}
+	for(i = 2*NUMBER_OF_FIELDS_PER_PLAYER-2;i < 2*NUMBER_OF_FIELDS_PER_PLAYER;i++)
+	{
+		_pointer[shift+i].Position[1] = _pointer[shift+i-1].Position[1] - 2*Radius;
+		_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0];
+		_pointer[shift+i].Radius = Radius;
+	}
+	shift += NUMBER_OF_FIELDS_PER_PLAYER;
 }
 
 Fields_Structure * Fields_Generate(int _number_of_players){

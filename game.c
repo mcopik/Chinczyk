@@ -42,7 +42,7 @@ Array * Default_Game_Options()
 	char buffer[STRING_SIZE+1],buffer2[STRING_SIZE+2];
 	remove(PATH);
 	Array * array = Create_Array();
-	temp = 5;//4;
+	temp = 6;//4;
 	Add_Element(array,"NUMBER_OF_PLAYERS",&temp,1,INTEGER);
 	temp = 0;
 	Add_Element(array,"PLAYER0_AI",&temp,1,BOOLEAN);
