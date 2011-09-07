@@ -21,7 +21,6 @@
 #define D 7.0f
 #define PAWN_RADIUS	0.21f
 #define PAWN_HEIGHT	0.3f
-#define FIELDS_NUMBER_4_PLAYERS 64
 #define PI 3.1415926f
 #define NUMBER_OF_TEXTURES 1
 #define CUBE_X	1.2f
@@ -71,11 +70,15 @@ typedef struct {
 	unsigned int Width, Height;
 	char * Data;
 } Image;
-
 typedef struct{
-		float Position[2];
-		float Radius;
+	float Position[2];
+	float Radius;
 } Field;
+typedef struct{
+	Field * Data;
+	int Number_of_Players;
+	int Number_of_Fields;
+} Fields_Structure;
 
 typedef struct{
 		int Player_Number;
@@ -89,7 +92,7 @@ typedef struct{
 	int Select_Number,Position;
 	//float Size;
 	void * Font;
-}Text;
+} Text;
 /**
  * 0 - Rotation X axis
  * 1 - Rotation Y axis
@@ -104,7 +107,7 @@ void Interval(float * number, int min,int max);
 int Init_GL(int _width, int _height, char * _label,int _fullscr);
 void Draw_Render();
 void Draw_Select();
-void Draw_Init(Field * fields,Player * players,int players_number,int * _randomized);
+void Draw_Init(Fields_Structure * _fields,Player * players,int players_number,int * _randomized);
 void Blink_Set_Pawn(int _number,int * _pawns);
 void Blink_Set_Field(int _number,int _pawn,int _field);
 void Disable_Blink();
@@ -119,13 +122,14 @@ void Text_Add(Text * _text,const char * _name);
 void Text_Remove(const char * _name);
 void Text_Clean();
 Text * Text_Create(float _x,float _y,int _select,const char * _string,void * _font);
-void Draw_Fields(int _type, Field * array,int players_number,int _blink);
+void Draw_Fields(int _type,Fields_Structure * _array,int players_number,int _blink);
 void Draw_Text(int _type);
-Field * Generate(int Players_Number);
-Field * Generate_4_Players();
-Field * Generate_5_Players();
-Field * Generate_6_Players();
-void Close(Field * Pointer);
+Fields_Structure * Fields_Generate(int Players_Number);
+float Fields_Get_Radius(Fields_Structure * _fields,int _number);
+float Fields_Get_X(Fields_Structure * _fields,int _number);
+float Fields_Get_Y(Fields_Structure * _fields,int _number);
+void Fields_Close(Fields_Structure * _fields);
+Fields_Structure * Fields_Generate(int _number_of_players);
 void Text_Draw(float _x,float _y,int _select_name,void *_font,int _position_type,\
 				const char * _name,const char * _format,...);
 void Text_Create_Player(const char * _name);

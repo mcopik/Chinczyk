@@ -28,7 +28,7 @@ extern "C" {
 	printf(__VA_ARGS__);		
 #define NOT_IMPLEMENTED		\
 {							\
-	printf("Feature not implemented yet");\
+	printf("Feature not implemented yet\n"); \
 	return;					\
 }
 #define PATH "options.txt"
@@ -63,13 +63,8 @@ strcpy(buffer,DRAWING_TEXT);								\
 for(i = 0;i < number;i++){									\
 	sprintf(buffer,"%s %d",buffer,tab[i]);					\
 }															\
-<<<<<<< .mine
 Text_Draw(0.05,0.15,255,(void*)FONT1,			\
 			TEXT_NORMAL,DRAW_MSG,"%s",buffer);		\
-=======
-Text_Draw(0.05,0.15,255,(void*)FONT1,			\
-			TEXT_NORMAL,FPS_MSG,DRAW_MSG,"%s",buffer);		\
->>>>>>> .r9
 free(buffer);
 		
 #define TEXT_DRAW_MENU_BUTTON								\

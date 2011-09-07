@@ -42,7 +42,7 @@ Array * Default_Game_Options()
 	char buffer[STRING_SIZE+1],buffer2[STRING_SIZE+2];
 	remove(PATH);
 	Array * array = Create_Array();
-	temp = 4;
+	temp = 5;//4;
 	Add_Element(array,"NUMBER_OF_PLAYERS",&temp,1,INTEGER);
 	temp = 0;
 	Add_Element(array,"PLAYER0_AI",&temp,1,BOOLEAN);
@@ -54,7 +54,7 @@ Array * Default_Game_Options()
 		sprintf(buffer,"PLAYER%d_AI",i);
 		Add_Element(array,buffer,&temp,1,BOOLEAN);
 		sprintf(buffer,"PLAYER%d_NAME",i);
-		sprintf(buffer2,"Gracz %d",i);
+		sprintf(buffer2,"Gracz %d",i+1);
 		Add_Element(array,buffer,buffer2,11,CHAR);
 		if(i < 4)
 			temp2[i-1] = 0.43f;
@@ -90,7 +90,7 @@ void Create_Player(Player * _player,const char * _name,float * _colors,int _type
 
 void Set_Positions(Player * _player,int _number_of_player,int _players_number)
 {
-	int temp = _number_of_player*_players_number*2;
+	int temp = _number_of_player*NUMBER_OF_PAWNS*2;
 	int i;
 	for(i=0;i < NUMBER_OF_PAWNS;i++){
 		_player->Position[i] = temp++;
@@ -102,13 +102,13 @@ void Delete_Player(Player * _player)
 	free(_player->Name);
 }
 
-void Init_Game(Iterator * _it,Player ** _players,Field ** _fields,int * _number_of_players,int ** _first_move)
+void Init_Game(Iterator * _it,Player ** _players,Fields_Structure ** _fields,int * _number_of_players,int ** _first_move)
 {
 	int i;
 	float * temp2;
 	Find(_it,"NUMBER_OF_PLAYERS");
 	*_number_of_players = Get_ValueI(_it);
-	*_fields = Generate(*_number_of_players);
+	*_fields = Fields_Generate(*_number_of_players);
 	*_players = malloc(*_number_of_players*sizeof(**_players));
 	*_first_move = malloc(sizeof(**_first_move)*(*_number_of_players));
 	for(i = 0;i < *_number_of_players;i++)
@@ -147,7 +147,7 @@ void Init_Game(Iterator * _it,Player ** _players,Field ** _fields,int * _number_
 
 void Main_Loop(int _type)
 {
-	static Field * Fields = NULL;
+	static Fields_Structure * Fields = NULL;
 	static Player * Players = NULL;
 	static int Number_of_Players = 0;
 	static int Game_Status = 0;
@@ -173,7 +173,7 @@ void Main_Loop(int _type)
 	static int FPS_Time = 0.0;
 	static int FPS_Counter = 0;
 	static int Time;
-	static int * First_Move;
+	static int * First_Move = NULL;
 	static int Delay = 0;
 	static int Quit = 0;
 	static int Fullscreen = 0;
@@ -328,6 +328,22 @@ void Main_Loop(int _type)
 				{ 
 					switch(Menu_Click(m_event)){
 						case MENU_NEW_GAME:
+							Find(Game_Iterator,"NUMBER_OF_PLAYERS");
+							temp = Get_ValueI(Game_Iterator);
+							if(temp != Number_of_Players)
+							{
+								if(Fields)
+									Fields_Close(Fields);
+								for(i=0;i<Number_of_Players;i++)
+									Delete_Player(&Players[i]);
+								if(Players)
+									free(Players);
+								if(First_Move)
+									free(First_Move);
+								Init_Game(Game_Iterator,&Players,&Fields,&Number_of_Players,&First_Move);
+								Draw_Init(Fields,Players,Number_of_Players,&Last_Randomized);
+								AI_Init(Randomized,Players,Active_Pawns,&Available_Move,Number_of_Players,AI_EASY);
+							}
 							Menu_Disactive();
 							TEXT_DRAW_PLAYER;
 							TEXT_DRAW_RAND(buffer,0,tab);
@@ -601,7 +617,7 @@ void Main_Loop(int _type)
 			break;
 			case LOOP_QUIT:
 				if(Fields)
-					free(Fields);
+					Fields_Close(Fields);
 				for(i=0;i<Number_of_Players;i++)
 					Delete_Player(&Players[i]);
 				if(Players)

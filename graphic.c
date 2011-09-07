@@ -127,9 +127,9 @@ void  Close_Image(Image * _image){
     free(_image->Data);
 }
 
-void _Draw(int _type,Field * _fields,Player * _players,int _players_number,int * _randomized,Blink_Info * _info)
+void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_number,int * _randomized,Blink_Info * _info)
 {
-	static Field * Fields = NULL;
+	static Fields_Structure * Fields = NULL;
 	static Player * Players = NULL;
 	static int Number_of_Players = 0;
 	static int init = 0;
@@ -358,22 +358,21 @@ void _Draw(int _type,Field * _fields,Player * _players,int _players_number,int *
 		/** Fields */
 		if(Active_Player == -1 || Frequency < FREQUENCY || Blink_Field == -1)
 		{			
-			for(i = 0;i < FIELDS_NUMBER_4_PLAYERS;i++){
+			for(i = 0;i < Fields->Number_of_Fields;i++){
 				if(_type == GL_SELECT)
 					glLoadName(i+1);
 				glColor3f(1.0f,1.0f,1.0f);
-				if(Fields[i].Radius)
-					Draw_Circle(Fields[i].Radius,Fields[i].Position[0],H/2+0.01,-Fields[i].Position[1]);
+				Draw_Circle(Fields_Get_Radius(Fields,i),Fields_Get_X(Fields,i),H/2+0.01,-Fields_Get_Y(Fields,i));
 			}
 		}
 		else
 		{
-			for(i = 0;i < FIELDS_NUMBER_4_PLAYERS;i++){
+			for(i = 0;i < Fields->Number_of_Fields;i++){
 				if(_type == GL_SELECT)
 					glLoadName(i+1);
 				glColor3f(1.0f,1.0f,1.0f);
-				if(Fields[i].Radius && i != Blink_Field)
-					Draw_Circle(Fields[i].Radius,Fields[i].Position[0],H/2+0.01,-Fields[i].Position[1]);
+				if(i != Blink_Field)
+					Draw_Circle(Fields_Get_Radius(Fields,i),Fields_Get_X(Fields,i),H/2+0.01,-Fields_Get_Y(Fields,i));
 			}
 		}
 	
@@ -390,7 +389,7 @@ void _Draw(int _type,Field * _fields,Player * _players,int _players_number,int *
 					if(_type == GL_SELECT)
 						glLoadName(100+i*10+j);
 					glColor3f(Players->Color[0],Players->Color[1],Players->Color[2]);
-					glTranslatef(Fields[Players->Position[j]].Position[0],0,-Fields[Players->Position[j]].Position[1]);
+					glTranslatef(Fields_Get_X(Fields,Players->Position[j]),0,-Fields_Get_Y(Fields,Players->Position[j]));
 					glCallList(List_Name+1);
 					glPopMatrix();
 				}
@@ -416,7 +415,7 @@ void _Draw(int _type,Field * _fields,Player * _players,int _players_number,int *
 							glLoadName(100+Active_Player*10+i);
 						glPushMatrix();
 						//glColor3f(Players[Active_Player].Color[0],Players[Active_Player].Color[1],Players[Active_Player].Color[2]);
-						glTranslatef(Fields[Players[Active_Player].Position[i]].Position[0],0,-Fields[Players[Active_Player].Position[i]].Position[1]);
+						glTranslatef(Fields_Get_X(Fields,Players[Active_Player].Position[i]),0,-Fields_Get_Y(Fields,Players[Active_Player].Position[i]));
 						glCallList(List_Name+1);
 						glPopMatrix();
 					}
@@ -428,15 +427,14 @@ void _Draw(int _type,Field * _fields,Player * _players,int _players_number,int *
 				if(_type == GL_SELECT)
 					glLoadName(100+Active_Player*10+*Blink_Pawns);
 				//glColor3f(Players[Active_Player].Color[0],Players[Active_Player].Color[1],Players[Active_Player].Color[2]);
-				glTranslatef(Fields[Players[Active_Player].Position[*Blink_Pawns]].Position[0],0,-Fields[Players[Active_Player].Position[*Blink_Pawns]].Position[1]);
+				glTranslatef(Fields_Get_X(Fields,Players[Active_Player].Position[*Blink_Pawns]),0,-Fields_Get_Y(Fields,Players[Active_Player].Position[*Blink_Pawns]));
 				glCallList(List_Name+1);
 				glPopMatrix();
 				glPushMatrix();
 				if(_type == GL_SELECT)
 					glLoadName(Blink_Field+1);
 				//glColor3f(1.0f,1.0f,1.0f);
-				if(Fields[i].Radius)
-					Draw_Circle(Fields[Blink_Field].Radius,Fields[Blink_Field].Position[0],H/2+0.01,-Fields[Blink_Field].Position[1]);
+				Draw_Circle(Fields_Get_Radius(Fields,Blink_Field),Fields_Get_X(Fields,Blink_Field),H/2+0.01,-Fields_Get_Y(Fields,Blink_Field));
 				glPopMatrix();
 			}
 		}
@@ -486,7 +484,7 @@ void Disable_Blink()
 	_Draw(0,NULL,NULL,0,NULL,NULL);
 }
 
-void Draw_Init(Field * _fields,Player * _players,int _players_number, int * _randomized)
+void Draw_Init(Fields_Structure * _fields,Player * _players,int _players_number, int * _randomized)
 {
 	if(_fields != NULL && _players != NULL && _players_number >= 0)
 	_Draw(0,_fields,_players,_players_number,_randomized,NULL);
@@ -795,7 +793,7 @@ void Disable_FullScr(int _width,int _height)
 	//glutPositionWindow(0,0);
 }
 
-void Draw_Fields(int _type,Field * array,int players_number,int _blink)
+void Draw_Fields(int _type,Fields_Structure * array,int players_number,int _blink)
 {
 	
 }
@@ -820,145 +818,324 @@ void Blink_Set_Field(int _number, int _pawn, int _field)
 	free(ptr);
 }
 
-Field * Generate(int Players_Number){
+void Fields_Generate_4_Players(Field * _pointer)
+{
+	float Width,Radius;
+	int i,j,shift;
 	
-	switch(Players_Number){
-		case 4:
-			return Generate_4_Players();
-		break;
-		case 5:
-			return Generate_5_Players();
-		break;
-		case 6:
-			return Generate_6_Players();
-		break;
-		default:
-			return NULL;
-		break;
-	}
-}
-
-
-
-
-Field * Generate_5_Players(){
-	NOT_IMPLEMENTED;
-}
-	
-Field * Generate_6_Players(){
-	NOT_IMPLEMENTED;
-}
-Field * Generate_4_Players(){
-	
-	float radius;
-	int i,j;
-	Field * pointer;
-	float Width;
 	Width = MIN(W,D)/2;
-
-	radius = 0.03*Width*2;
-	pointer = malloc(sizeof(Field)*64);
+	Radius = 0.03*Width*2;
+	
 	for(i = 0;i < 4;i++)
 	{
-			for(j = 0;j < 4;j++)
+			for(j = 0;j < NUMBER_OF_PAWNS;j++)
 			{
-				pointer[i*8+j].Position[0] = 0.9*Width - radius;
-				pointer[i*8+j].Position[1] = 0.9*Width - radius;
-				pointer[i*8+j].Radius = radius;
+				_pointer[i*2*NUMBER_OF_PAWNS+j].Position[0] = 0.9*Width - Radius;
+				_pointer[i*2*NUMBER_OF_PAWNS+j].Position[1] = 0.9*Width - Radius;
+				_pointer[i*2*NUMBER_OF_PAWNS+j].Radius = Radius;
 			}
 	}
 	for(i = 0;i < 4;i++)
-		pointer[i*8+1].Position[0] -= 2*radius;
+		_pointer[i*2*NUMBER_OF_PAWNS+1].Position[0] -= 2*Radius;
 	for(i = 0;i < 4;i++)
-		pointer[i*8+2].Position[1] -= 2*radius;
-	for(i = 0;i < 4;i++)
-	{
-		pointer[i*8+3].Position[0] -= 2*radius;
-		pointer[i*8+3].Position[1] -= 2*radius;
-	}
-	for(i = 0;i < 4;i++)
-		pointer[8+i].Position[1] *= -1;		
+		_pointer[i*2*NUMBER_OF_PAWNS+2].Position[1] -= 2*Radius;
 	for(i = 0;i < 4;i++)
 	{
-		pointer[16+i].Position[0] *= -1;
-		pointer[16+i].Position[1] *= -1;
+		_pointer[i*2*NUMBER_OF_PAWNS+3].Position[0] -= 2*Radius;
+		_pointer[i*2*NUMBER_OF_PAWNS+3].Position[1] -= 2*Radius;
 	}
-	for(i = 0;i < 4;i++)
-		pointer[24+i].Position[0] *= -1;
-	
-	for(i = 0;i < 2;i++)
+	for(i = 0;i < NUMBER_OF_PAWNS;i++)
+		_pointer[2*NUMBER_OF_PAWNS+i].Position[1] *= -1;		
+	for(i = 0;i < NUMBER_OF_PAWNS;i++)
 	{
-		for(j = 0;j < 4;j++)
-		{
-			pointer[16*i+4+j].Position[0] = 0.0f;
-			pointer[16*i+4+j].Position[1] = (0.9*Width - (2+j)*radius*2)*POW(-1,i);
-			pointer[16*i+4+j].Radius = radius;
-		}
+		_pointer[4*NUMBER_OF_PAWNS+i].Position[0] *= -1;
+		_pointer[4*NUMBER_OF_PAWNS+i].Position[1] *= -1;
 	}
-	
-	for(i = 0;i < 2;i++)
-	{
-		for(j = 0;j < 4;j++)
-		{
-			pointer[16*i+12+j].Position[0] = (0.9*Width - (2+j)*radius*2)*POW(-1,i);
-			pointer[16*i+12+j].Position[1] = 0.0f;
-			pointer[16*i+12+j].Radius = radius;
-		}
-	}
-	
-	for(i = 0;i < 4;i += 2)
-	{
-		for(j = 0;j < 8;j++)
-		{
-			pointer[32+i*8+j].Position[0] = 0.0f + j* (0.9*Width-radius)/8;
-			pointer[32+i*8+j].Position[1] = (0.9*Width - radius) - j* (0.9*Width-radius)/8;
-			pointer[32+i*8+j].Radius = radius;
-		}	
-	}
-	for(i = 0;i < 4;i += 2)
-	{
-		for(j = 0;j < 8;j++)
-		{
-			pointer[40+i*8+j].Position[0] = (0.9*Width-radius) - j*(0.9*Width-radius)/8;
-			pointer[40+i*8+j].Position[1] = 0.0f - j* (0.9*Width-radius)/8;
-			pointer[40+i*8+j].Radius = radius;
-		}	
-	}
+	for(i = 0;i < NUMBER_OF_PAWNS;i++)
+		_pointer[6*NUMBER_OF_PAWNS+i].Position[0] *= -1;
 		
-	for(i = 0;i < 8;i++)
+	
+	for(i = 0;i < 2;i++)
 	{
-		pointer[48+i].Position[0] *= -1;
-		pointer[48+i].Position[1] *= -1;
+		for(j = 0;j < NUMBER_OF_PAWNS;j++)
+		{
+			_pointer[2*2*NUMBER_OF_PAWNS*i+NUMBER_OF_PAWNS+j].Position[0] = 0.0f;
+			_pointer[2*2*NUMBER_OF_PAWNS*i+NUMBER_OF_PAWNS+j].Position[1] = (0.9*Width - (2+j)*Radius*2)*POW(-1,i);
+			_pointer[2*2*NUMBER_OF_PAWNS*i+NUMBER_OF_PAWNS+j].Radius = Radius;
+		}
+	}
+	for(i = 0;i < 2;i++)
+	{
+		for(j = 0;j < NUMBER_OF_PAWNS;j++)
+		{
+			_pointer[2*2*NUMBER_OF_PAWNS*i+3*NUMBER_OF_PAWNS+j].Position[0] = (0.9*Width - (2+j)*Radius*2)*POW(-1,i);
+			_pointer[2*2*NUMBER_OF_PAWNS*i+3*NUMBER_OF_PAWNS+j].Position[1] = 0.0f;
+			_pointer[2*2*NUMBER_OF_PAWNS*i+3*NUMBER_OF_PAWNS+j].Radius = Radius;
+		}
+	}
+	shift = NUMBER_OF_PAWNS*2*4;
+	for(i = 0;i < 4;i += 2)
+	{
+		for(j = 0;j < NUMBER_OF_FIELDS_PER_PLAYER;j++)
+		{
+			_pointer[shift+i*NUMBER_OF_FIELDS_PER_PLAYER+j].Position[0] = 0.0f + j* (0.9*Width-Radius)/8;
+			_pointer[shift+i*NUMBER_OF_FIELDS_PER_PLAYER+j].Position[1] = (0.9*Width - Radius) - j* (0.9*Width-Radius)/8;
+			_pointer[shift+i*NUMBER_OF_FIELDS_PER_PLAYER+j].Radius = Radius;
+		}	
+	}
+	for(i = 0;i < 4;i += 2)
+	{
+		for(j = 0;j < NUMBER_OF_FIELDS_PER_PLAYER;j++)
+		{
+			_pointer[shift+(i+1)*NUMBER_OF_FIELDS_PER_PLAYER+j].Position[0] = (0.9*Width-Radius) - j*(0.9*Width-Radius)/8;
+			_pointer[shift+(i+1)*NUMBER_OF_FIELDS_PER_PLAYER+j].Position[1] = 0.0f - j* (0.9*Width-Radius)/8;
+			_pointer[shift+(i+1)*NUMBER_OF_FIELDS_PER_PLAYER+j].Radius = Radius;
+		}	
 	}
 	
-	for(i = 0;i < 8;i++)
+	for(i = 0;i < NUMBER_OF_FIELDS_PER_PLAYER;i++)
 	{
-		pointer[56+i].Position[0] *= -1;
-		pointer[56+i].Position[1] *= -1;
+		_pointer[shift+NUMBER_OF_FIELDS_PER_PLAYER*2+i].Position[0] *= -1;
+		_pointer[shift+NUMBER_OF_FIELDS_PER_PLAYER*2+i].Position[1] *= -1;
 	}
-	return pointer;
-}	
-void Close(Field * Pointer)
-{
-	free(Pointer);
+	
+	for(i = 0;i < NUMBER_OF_FIELDS_PER_PLAYER;i++)
+	{
+		_pointer[shift+NUMBER_OF_FIELDS_PER_PLAYER*3+i].Position[0] *= -1;
+		_pointer[shift+NUMBER_OF_FIELDS_PER_PLAYER*3+i].Position[1] *= -1;
+	}
 }
 
+void Fields_Generate_5_Players(Field * _pointer)
+{
+	float Width,Radius;
+	int i,j,shift;
+	
+	Width = MIN(W,D)/2;
+	Radius = 0.03*Width*2;
+	for(i = 0;i < 72;i++)
+		_pointer[i].Radius = 0;
+	for(i = 0;i < 5;i++)
+	{
+			for(j = 0;j < NUMBER_OF_PAWNS;j++)
+			{
+				_pointer[i*2*NUMBER_OF_PAWNS+j].Position[0] = Width - Radius;
+				_pointer[i*2*NUMBER_OF_PAWNS+j].Position[1] = Width - Radius;
+				_pointer[i*2*NUMBER_OF_PAWNS+j].Radius = Radius;
+			}
+	}
+	for(i = 0;i < 5;i++)
+		_pointer[i*2*NUMBER_OF_PAWNS+1].Position[0] -= 2*Radius;
+	for(i = 0;i < 5;i++)
+		_pointer[i*2*NUMBER_OF_PAWNS+2].Position[1] -= 2*Radius;
+	for(i = 0;i < 5;i++)
+	{
+		_pointer[i*2*NUMBER_OF_PAWNS+3].Position[0] -= 2*Radius;
+		_pointer[i*2*NUMBER_OF_PAWNS+3].Position[1] -= 2*Radius;
+	}
+	
+	for(i = 0;i < NUMBER_OF_PAWNS;i++)
+	{
+		_pointer[2*NUMBER_OF_PAWNS+i].Position[1] *= -1;	
+		_pointer[2*NUMBER_OF_PAWNS+i].Position[1] += Radius*2*4;
+	}
+	
+	for(i = 0;i < NUMBER_OF_PAWNS;i++)
+	{
+		_pointer[2*2*NUMBER_OF_PAWNS+i].Position[1] *= -1;	
+		_pointer[2*2*NUMBER_OF_PAWNS+i].Position[0] = Radius*POW(-1,i);
+	}
+	
+	for(i = 0;i < NUMBER_OF_PAWNS;i++)
+	{
+		_pointer[2*3*NUMBER_OF_PAWNS+i].Position[0] *= -1;	
+		_pointer[2*3*NUMBER_OF_PAWNS+i].Position[1] *= -1;	
+		_pointer[2*3*NUMBER_OF_PAWNS+i].Position[1] += Radius*2*4;
+	}
+	
+	for(i = 0;i < NUMBER_OF_PAWNS;i++)
+	{
+		_pointer[2*4*NUMBER_OF_PAWNS+i].Position[0] *= -1;	
+	}
+	//second and fourth player
+	for(i = 1;i < 4;i += 2)
+	{
+		for(j = 0;j < NUMBER_OF_PAWNS;j++)
+		{
+			_pointer[(1+2*i)*NUMBER_OF_PAWNS+j].Position[1] = 0.0f;
+			_pointer[(1+2*i)*NUMBER_OF_PAWNS+j].Position[0] = (0.8*Width - (2+j)*Radius*2);
+			_pointer[(1+2*i)*NUMBER_OF_PAWNS+j].Radius = Radius;
+		}
+	}
+	for(j = 0;j < NUMBER_OF_PAWNS;j++)
+		_pointer[(1+3*2)*NUMBER_OF_PAWNS+j].Position[0] *= -1;
+	//third player
+	for(i = 0;i < NUMBER_OF_PAWNS;i++)
+	{
+			_pointer[2*2*(NUMBER_OF_PAWNS+1)+i].Position[0] = 0.0f;
+			_pointer[2*2*(NUMBER_OF_PAWNS+1)+i].Position[1] = -(0.7*Width - (2+i)*Radius*2);
+			_pointer[2*2*(NUMBER_OF_PAWNS+1)+i].Radius = Radius;
+	}
+	//first and fifth player
+	for(i = 0;i < 2;i++)
+	{
+		for(j = 0;j < NUMBER_OF_PAWNS;j++)
+		{
+			_pointer[(4*2*i+1)*NUMBER_OF_PAWNS+j].Position[0] = POW(-1,i)*Radius*(j+1);
+			_pointer[(4*2*i+1)*NUMBER_OF_PAWNS+j].Position[1] = 2*Radius*(j+1);
+			_pointer[(4*2*i+1)*NUMBER_OF_PAWNS+j].Radius = Radius;
+		}
+	}
+	shift = 2*NUMBER_OF_PAWNS*5;
+	//first player
+	for(i = 0;i < NUMBER_OF_FIELDS_PER_PLAYER;i++)
+	{
+		
+		if(i < 6)
+			_pointer[shift+i].Position[0] = Radius*(NUMBER_OF_PAWNS+1) + 2*Radius*i;
+		else
+			_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0] - Radius*(i-6);
+		if(i < 6)
+		_pointer[shift+i].Position[1] = 2*Radius*(NUMBER_OF_PAWNS+1)*\
+				(NUMBER_OF_FIELDS_PER_PLAYER-i)/NUMBER_OF_FIELDS_PER_PLAYER + Radius;
+		else
+			_pointer[shift+i].Position[1] = _pointer[shift+i-1].Position[1] - 2*Radius;
+		_pointer[shift+i].Radius = Radius;
+	}
+	shift += NUMBER_OF_FIELDS_PER_PLAYER;
+	//second player
+	_pointer[shift].Position[0] = _pointer[3*NUMBER_OF_PAWNS].Position[0] + 2.5*Radius;
+	_pointer[shift].Position[1] = 0.0f;
+	_pointer[shift].Radius = Radius;
+	for(i = 1;i < NUMBER_OF_FIELDS_PER_PLAYER;i++)
+	{
+		if(i < 6)
+			_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0] - Radius;
+		else
+			_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0] - 2*Radius;
+		if(i < 6)
+			_pointer[shift+i].Position[1] = _pointer[shift+i-1].Position[1] - 2*Radius;
+		else
+			_pointer[shift+i].Position[1] = _pointer[shift+i-1].Position[1];
+		_pointer[shift+i].Radius = Radius;
+	}
+	shift += NUMBER_OF_FIELDS_PER_PLAYER;
+	//third player
+	_pointer[shift].Position[0] = _pointer[shift-1].Position[0] - 3*Radius;
+	_pointer[shift].Position[1] = _pointer[shift-1].Position[1];
+	_pointer[shift].Radius = Radius;
+	for(i = 1;i < NUMBER_OF_FIELDS_PER_PLAYER;i++)
+	{
+		_pointer[shift+i].Position[0] = _pointer[shift-i].Position[0]*-1;
+		_pointer[shift+i].Position[1] = _pointer[shift-i].Position[1];
+		_pointer[shift+i].Radius = Radius;
+	}
+	shift += NUMBER_OF_FIELDS_PER_PLAYER;
+	//fourth player
+	_pointer[shift].Position[0] = _pointer[7*NUMBER_OF_PAWNS].Position[0] - 2.5*Radius;
+	_pointer[shift].Position[1] = 0.0f;
+	_pointer[shift].Radius = Radius;
+	for(i = 1;i < NUMBER_OF_FIELDS_PER_PLAYER;i++)
+	{
+		_pointer[shift+i].Position[0] = _pointer[shift-2*NUMBER_OF_FIELDS_PER_PLAYER-i].Position[0]*-1;
+		_pointer[shift+i].Position[1] = _pointer[shift-2*NUMBER_OF_FIELDS_PER_PLAYER-i].Position[1];
+		_pointer[shift+i].Radius = Radius;
+	}
+	shift += NUMBER_OF_FIELDS_PER_PLAYER;
+	//fifth player
+	_pointer[shift].Position[0] = _pointer[shift - 4*NUMBER_OF_FIELDS_PER_PLAYER].Position[0]*-1;
+	_pointer[shift].Position[1] = _pointer[shift - 4*NUMBER_OF_FIELDS_PER_PLAYER].Position[1];
+	_pointer[shift].Radius = Radius;
+	for(i = 1;i < 3;i++)
+	{
+		_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0];
+		_pointer[shift+i].Position[1] = _pointer[shift+i-1].Position[1] + 2*Radius;
+		_pointer[shift+i].Radius = Radius;
+	}
+	for(i = 3;i < 6;i++)
+	{
+		_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0] + 2.5*Radius;
+		_pointer[shift+i].Position[1] = _pointer[shift+i-1].Position[1];
+		_pointer[shift+i].Radius = Radius;
+	}
+	for(i = 6;i < 8;i++)
+	{
+		_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0];
+		_pointer[shift+i].Position[1] = _pointer[shift+i-1].Position[1] - 2*Radius;
+		_pointer[shift+i].Radius = Radius;
+	}
+}
+
+void Fields_Generate_6_Players(Field * _pointer)
+{
+	
+}
+
+Fields_Structure * Fields_Generate(int _number_of_players){
+	
+	Fields_Structure * ret;
+
+	if(!(_number_of_players >= 4 && _number_of_players <= 6))
+		return NULL;
+
+	ret = (Fields_Structure*) malloc(sizeof(*ret));
+	ret->Number_of_Fields = (NUMBER_OF_PAWNS*2*_number_of_players+\
+							_number_of_players*NUMBER_OF_FIELDS_PER_PLAYER);
+	ret->Number_of_Players = _number_of_players;
+	ret->Data = (Field*) malloc(sizeof(*(ret->Data))*ret->Number_of_Fields);
+	switch(_number_of_players){
+		case 4:
+			Fields_Generate_4_Players(ret->Data);
+		break;
+		case 5:
+			Fields_Generate_5_Players(ret->Data);
+		break;
+		case 6:
+			Fields_Generate_6_Players(ret->Data);
+		break;
+	}
+	
+	return ret;
+}	
+void Fields_Close(Fields_Structure * _fields)
+{
+	free(_fields->Data);
+	free(_fields);
+}
+
+float Fields_Get_Radius(Fields_Structure * _fields,int _number)
+{
+	return _fields->Data[_number].Radius;
+}
+
+float Fields_Get_X(Fields_Structure * _fields,int _number)
+{
+	return _fields->Data[_number].Position[0];
+}
+
+float Fields_Get_Y(Fields_Structure * _fields,int _number)
+{
+	return _fields->Data[_number].Position[1];
+}
 
 void Draw_Circle(float _radius, float _x, float _y,float _z)
 {
 	int i;
-	glPushMatrix();
-	glTranslatef(_x,_y,_z);
-    glBegin(GL_LINES);
-    float theta;
-    for (i = 0; i < 180; i++)
-    {
-		theta = 2.0f * PI * (float)i / 180.0f;
-		glVertex3f(_radius * cos(theta),0,_radius * sin(theta));
-		glVertex3f(_radius * cos(theta+PI),0,_radius * sin(theta+PI));
-    }
-    glEnd();
-	glPopMatrix();
+	if(_radius)
+	{
+		glPushMatrix();
+		glTranslatef(_x,_y,_z);
+		glBegin(GL_LINES);
+		float theta;
+		for (i = 0; i < 180; i++)
+		{
+			theta = 2.0f * PI * (float)i / 180.0f;
+			glVertex3f(_radius * cos(theta),0,_radius * sin(theta));
+			glVertex3f(_radius * cos(theta+PI),0,_radius * sin(theta+PI));
+		}
+		glEnd();
+		glPopMatrix();
+	}
 }
 
 void Text_Draw(float _x,float _y,int _select_name,void *_font,int _position_type,\
