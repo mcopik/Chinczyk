@@ -12,17 +12,6 @@
 #include <time.h>
 
 
-enum{
-	INIT,
-	INIT_DEF,
-	LOOP,
-	CLOSE
-};
-enum{
-	SET_CHANGE,
-	CHECK_CHANGE
-};
-
 inline int POW(int a, int b){
 		
 		int i;
@@ -356,8 +345,6 @@ void Main_Loop(int _type)
 							Set_Change();
 							Game_Status = LOOP_WAIT;
 						break;
-
-
 						case MENU_GRAPH_CHANGE_RES:
 							Find(Graph_Iterator,"WIDTH");
 							Width = Get_ValueI(Graph_Iterator);
@@ -365,7 +352,6 @@ void Main_Loop(int _type)
 							Height = Get_ValueI(Graph_Iterator);
 							Change_Display(Width,Height);
 							Set_Change();
-
 						break;
 						case MENU_GRAPH_CHANGE_FULL:
 							Find(Graph_Iterator,"FULLSCREEN");
@@ -380,9 +366,7 @@ void Main_Loop(int _type)
 									Width = Get_ValueI(Graph_Iterator);
 									Find(Graph_Iterator,"HEIGHT");
 									Height = Get_ValueI(Graph_Iterator);
-									//Disable_FullScr(800,600);
-									//Change_Display(800,600);
-									Change_Display(Width,Height);
+									Change_Display(800,600);//Change_Display(Width,Height);
 									Set_Change();
 									Fullscreen = -1;
 								}

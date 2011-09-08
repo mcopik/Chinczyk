@@ -173,11 +173,11 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 			sprintf(buffer,"texture%d.bmp",i+1);
 			Load_Image(Image1,buffer);
 			glGenTextures(1, &Texture[i]);
-			glBindTexture(GL_TEXTURE_2D, Texture[i]);   // 2d texture (x and y size)
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR); // cheap scaling when image bigger than texture
+			glBindTexture(GL_TEXTURE_2D, Texture[i]);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT); // cheap scaling when image bigger than texture
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT); // cheap scaling when image smalled than texture
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT); 
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
 			glTexImage2D(GL_TEXTURE_2D, 0, 3, Image1->Width, Image1->Height, 0, GL_RGB, GL_UNSIGNED_BYTE, Image1->Data);
 			Close_Image(Image1);
 		}
@@ -226,7 +226,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 			gluCylinder(quadratic,PAWN_RADIUS,PAWN_RADIUS*0.2,PAWN_HEIGHT,32,32);
 	
 			glRotatef(90.0f,1.0f,0.0f,0.0f);
-			glTranslatef(0.0f,PAWN_HEIGHT+PAWN_RADIUS/2,0.0f);//PAWN_RADIUS*3/2,0.0f);
+			glTranslatef(0.0f,PAWN_HEIGHT+PAWN_RADIUS/2,0.0f);
 	
 			glRotatef(-90.0f,1.0f,0.0f,0.0f);
 			gluSphere(quadratic,PAWN_RADIUS/2,32,32);
@@ -269,12 +269,12 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 			glEnd();
 			glColor3f(0.0f,0.0f,0.0f);
 			glBegin(GL_LINES);
-			glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,CUBE_SIZE/2);
-			glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,-CUBE_SIZE/2);
-			glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,CUBE_SIZE/2);
-			glVertex3f(CUBE_SIZE/2,CUBE_SIZE/2,CUBE_SIZE/2);
-			glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,CUBE_SIZE/2);
-			glVertex3f(-CUBE_SIZE/2,-CUBE_SIZE/2,CUBE_SIZE/2);
+				glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,CUBE_SIZE/2);
+				glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,-CUBE_SIZE/2);
+				glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,CUBE_SIZE/2);
+				glVertex3f(CUBE_SIZE/2,CUBE_SIZE/2,CUBE_SIZE/2);
+				glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,CUBE_SIZE/2);
+				glVertex3f(-CUBE_SIZE/2,-CUBE_SIZE/2,CUBE_SIZE/2);
 			glEnd();
 			glColor3f(1.0f,1.0f,1.0f);
 		glEndList();
@@ -601,24 +601,24 @@ void _Draw_Text(int _type,Text * _text,const char * _name)//int * _width,int *_h
 
 void Draw_Text(int _type)
 {
-	_Draw_Text(_type,NULL,NULL);//,0,0);
+	_Draw_Text(_type,NULL,NULL);
 }
 
 void Text_Init(int _width,int _height)
 {
-	_Draw_Text(TEXT_INIT,NULL,NULL);//,_width,_height);
+	_Draw_Text(TEXT_INIT,NULL,NULL);
 }
 void Text_Add(Text * _text,const char * _name)
 {
-	_Draw_Text(TEXT_ADD,_text,_name);//,0,0);
+	_Draw_Text(TEXT_ADD,_text,_name);
 }
 void Text_Remove(const char * _name)
 {
-	_Draw_Text(TEXT_REMOVE,NULL,_name);//,0,0);
+	_Draw_Text(TEXT_REMOVE,NULL,_name);
 }
 void Text_Clean()
 {
-	_Draw_Text(TEXT_CLEAN,NULL,NULL);//,0,0);
+	_Draw_Text(TEXT_CLEAN,NULL,NULL);
 }
 
 
@@ -638,36 +638,12 @@ Text * Text_Create(float _x,float _y,int _select,const char * _string,void * _fo
 void Draw_Select()
 {
 	_Draw(GL_SELECT,NULL,NULL,0,NULL,NULL);
-	//_Draw_Text(GL_SELECT,NULL,NULL,0,0);
 }
 
 void Draw_Render()
 {
 	_Draw(GL_RENDER,NULL,NULL,0,NULL,NULL);
-	//_Draw_Text(GL_RENDER,NULL,NULL,0,0);
 }
-/*
-void Draw_Pawn(float x,float z,float * colors,int _blink)
-{
-	glPushMatrix();
-	glColor3f(colors[0],colors[1],colors[2]);
-	GLUquadricObj *quadratic;
-	quadratic=gluNewQuadric();			
-	gluQuadricNormals(quadratic, GLU_SMOOTH);	
-	
-	glTranslatef(x,H/2+0.01f,-z);
-	
-	glRotatef(-90.0f,1.0f,0.0f,0.0f);
-	gluCylinder(quadratic,PAWN_RADIUS,0.0f,PAWN_HEIGHT,32,32);
-	
-	glRotatef(90.0f,1.0f,0.0f,0.0f);
-	glTranslatef(0.0f,PAWN_RADIUS*3/2,0.0f);
-	
-	glRotatef(-90.0f,1.0f,0.0f,0.0f);
-	gluSphere(quadratic,PAWN_RADIUS/2,32,32);
-	gluDeleteQuadric(quadratic);
-	glPopMatrix();
-}*/
 
 int Init_GL(int _width, int _height, char * _label,int _fullscr)
 {
@@ -678,16 +654,16 @@ int Init_GL(int _width, int _height, char * _label,int _fullscr)
     glutInitWindowPosition(0, 0);
     Window_Number = glutCreateWindow(_label);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);	// This Will Clear The Background Color To Black
-    glClearDepth(1.0);				// Enables Clearing Of The Depth Buffer
-    glDepthFunc(GL_LESS);			// The Type Of Depth Test To Do
-    glEnable(GL_DEPTH_TEST);			// Enables Depth Testing
-    glShadeModel(GL_SMOOTH);			// Enables Smooth Color Shading
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearDepth(1.0);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_DEPTH_TEST);
+    glShadeModel(GL_SMOOTH);
     glViewport(0, 0, _width, _height);
     glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();				// Reset The Projection Matrix
+    glLoadIdentity();
 
-    gluPerspective(45.0f,(GLfloat)_width/(GLfloat)_height,0.1f,100.0f);	// Calculate The Aspect Ratio Of The Window
+    gluPerspective(45.0f,(GLfloat)_width/(GLfloat)_height,0.1f,100.0f);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -699,9 +675,9 @@ int Init_GL(int _width, int _height, char * _label,int _fullscr)
     /*glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient);  // add lighting. (ambient)
     glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse);  // add lighting. (diffuse).
     glLightfv(GL_LIGHT1, GL_POSITION,LightPosition); // set light position.
-    glEnable(GL_LIGHT1);                             // turn light 1 on.
-    glBlendFunc(GL_SRC_ALPHA,GL_ONE);			// Set The Blending Function For Translucency
-    glColor4f(1.0f, 1.0f, 1.0f, 0.5);  */
+    glEnable(GL_LIGHT1);                            // turn light 1 on.
+    /*glBlendFunc(GL_SRC_ALPHA,GL_ONE);			// Set The Blending Function For Translucency
+    glColor4f(1.0f, 1.0f, 1.0f, 0.5); */  
 	return Window_Number;
 }
 
@@ -715,17 +691,16 @@ void Reshape_Window(int _width, int _height)
 
     gluPerspective(45.0f,(GLfloat)_width/(GLfloat)_height,0.1f,100.0f);
     glMatrixMode(GL_MODELVIEW);
-	
 }
 
 void Change_Display(int _width,int _height)
 {
-	
 	glutPositionWindow(0,0);
 	glutReshapeWindow(_width,_height);
 	glutPostRedisplay();
 	Reshape_Window(_width,_height);
 }
+/*
 void _Reshape_Window(int _type,int _width,int _height)
 {
 	printf("RW %d %d %d\n",_type,_width,_height);
@@ -746,7 +721,7 @@ void _Reshape_Window(int _type,int _width,int _height)
 
     gluPerspective(45.0f,(GLfloat)_width/(GLfloat)_height,0.1f,100.0f);
     glMatrixMode(GL_MODELVIEW);
-}
+}*/
 void Enable_FullScr()
 {
 	glutFullScreen();

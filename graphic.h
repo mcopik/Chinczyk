@@ -91,7 +91,6 @@ typedef struct{
 	char * String;
 	float X,Y;
 	int Select_Number,Position;
-	//float Size;
 	void * Font;
 } Text;
 /**
@@ -113,7 +112,7 @@ void Blink_Set_Pawn(int _number,int * _pawns);
 void Blink_Set_Field(int _number,int _pawn,int _field);
 void Disable_Blink();
 void Change_Display(int _width,int _height);
-void Enable_FullScr();//(int _width,int _height);
+void Enable_FullScr();
 void Disable_FullScr(int _width,int _height);
 void Reshape_Window(int Width, int Height);
 void Draw_Circle(float radius, float x, float y,float _z);

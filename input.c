@@ -11,7 +11,7 @@
 int Find_Hit(int _value,int _hits,unsigned int * _buffer)
 {
 	int i, j;
-	printf("%d hits:\n", _hits);
+	/*printf("%d hits:\n", _hits);
  
  	for (i = 0; i < _hits; i++)
  		printf(	"Number: %d\n"
@@ -25,7 +25,7 @@ int Find_Hit(int _value,int _hits,unsigned int * _buffer)
  				(GLubyte)_buffer[i * 4 + 3]
  				);
  
- 	printf("\n");
+ 	printf("\n");*/
 	int Number;
 	for (i = 0; i < _hits; i++){
 		Number = *_buffer;
@@ -211,7 +211,7 @@ int _Event(int _type)
 	}
 	else
 		FIFO_Push(Buffer,_type);
-	return;
+	return -1;
 }
 int Event_Get()
 {

@@ -57,6 +57,7 @@ int Menu_Level_Change(Iterator * _game_it,Iterator * _graph_it,Menu ** _menu_act
 		break;
 	}
 	strcpy((*_menu_active)->Captions[_position],buffer);
+	return MENU_NO_CHANGE;
 }
 
 int Menu_Graph_Resolution_Change(Iterator * _game_it,Iterator * _graph_it,\
@@ -171,13 +172,13 @@ int Menu_Game_Player_Change(Iterator * _game_it,Iterator * _graph_it,\
 void Menu_Draw(Iterator * _graph_it,Menu * _menu)
 {
 	int i;
-    int width,height;
+   // int width,height;
 	char * buffer;
 	buffer = malloc(sizeof(*buffer)*(STRING_SIZE+1));
-    Find(_graph_it,"WIDTH");
+   /* Find(_graph_it,"WIDTH");
 	width = Get_ValueI(_graph_it);
     Find(_graph_it,"HEIGHT");
-	height = Get_ValueI(_graph_it);
+	height = Get_ValueI(_graph_it);*/
 	Text_Draw(0.8,0.05,MENU_BUTTON_HIT,FONT2,TEXT_CENTER,MENU_MSG,MENU_TEXT);
     for(i = 0;i < _menu->Number_of_Positions;i++)
 	{

@@ -64,7 +64,6 @@ int Add_Element(Array * _array,const char * _name,void * _value,int _size,int _t
 	Array_Element * ptr = NULL;
 	Iterator * it = Create_Iterator(_array);
 	int position = 0,left = 0,right = 0,temp=0;
-	char * buffer;
 	void * value = NULL;
 	int i;
 	
@@ -253,7 +252,7 @@ Iterator * Create_Iterator(Array * _array)
 
 void Erase(Iterator * _it)
 {
-	Array_Element * temp;
+	//Array_Element * temp;
 	if(_it->Position)
 	{
 		if(_it->Position->Next && _it->Position->Previous)
@@ -278,7 +277,6 @@ void Erase(Iterator * _it)
                         + sizeof(_it->Position->Size) \
 			+ sizeof(*(_it->Position->Key))*STRING_SIZE + sizeof(_it->Position->Type);
 		_it->Object->Length--;
-		//free(_it->Position->Key);
 		free(_it->Position->Value);
 		free(_it->Position);
 	}
@@ -336,7 +334,6 @@ GET(Get_Name,char *,Key,NULL);
 
 void Set_Value(Iterator * _it,void * _value)
 {
-	//free(_it->Position->Value);
 	memcpy(_it->Position->Value,_value,_it->Position->Size*Type_Size(_it->Position->Type));
 }
 
