@@ -19,10 +19,11 @@
 #define W 7.0f
 #define H 0.5f
 #define D 7.0f
-#define PAWN_RADIUS	0.21f
+#define FIELD_RADIUS MIN(W,D)*0.03
+#define PAWN_RADIUS	(FIELD_RADIUS - 0.01f)
 #define PAWN_HEIGHT	0.3f
 #define PI 3.1415926f
-#define NUMBER_OF_TEXTURES 1
+#define NUMBER_OF_TEXTURES 2
 #define CUBE_X	1.2f
 #define CUBE_Y	-0.8f
 #define CUBE_Z	-3.0f

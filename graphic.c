@@ -127,6 +127,12 @@ void  Close_Image(Image * _image){
     free(_image->Data);
 }
 
+#define DRAW_PAWN(quadratic,array,number)	\
+glTranslatef(Fields_Get_X(array,number),H/2+0.01,-Fields_Get_Y(array,number));	\
+glRotatef(90.0f,1.0f,0.0f,0.0f); \
+gluDisk(quadratic, 0, Fields_Get_Radius(array,number), 50, 10);
+					
+
 void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_number,int * _randomized,Blink_Info * _info)
 {
 	static Fields_Structure * Fields = NULL;
@@ -166,8 +172,8 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 		for(i = 0;i < NUMBER_OF_TEXTURES;i++){
 			sprintf(buffer,"texture%d.bmp",i+1);
 			Load_Image(Image1,buffer);
-			glGenTextures(1, &Texture[0]);
-			glBindTexture(GL_TEXTURE_2D, Texture[0]);   // 2d texture (x and y size)
+			glGenTextures(1, &Texture[i]);
+			glBindTexture(GL_TEXTURE_2D, Texture[i]);   // 2d texture (x and y size)
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR); // cheap scaling when image bigger than texture
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT); // cheap scaling when image bigger than texture
@@ -211,6 +217,8 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 		
 		/** Draws pawn */
 		quadratic = gluNewQuadric();
+		gluQuadricDrawStyle(quadratic, GLU_FILL);
+		gluQuadricTexture(quadratic, GL_TRUE);
 		gluQuadricNormals(quadratic, GLU_SMOOTH);
 		glNewList(List_Name+1,GL_COMPILE);
 			glTranslatef(0,H/2+0.01f,0);
@@ -227,28 +235,8 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 		
 		/** Draws cube */
 		glNewList(List_Name+2,GL_COMPILE);
-			glBegin(GL_QUADS);/*
-				for(i=1;i<3;i++){
-					glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,-CUBE_SIZE/2*POW(-1,i));
-					glVertex3f(CUBE_SIZE/2,CUBE_SIZE/2,-CUBE_SIZE/2*POW(-1,i));
-					glVertex3f(CUBE_SIZE/2,-CUBE_SIZE/2,-CUBE_SIZE/2*POW(-1,i));
-					glVertex3f(-CUBE_SIZE/2,-CUBE_SIZE/2,-CUBE_SIZE/2*POW(-1,i));
-				}
-				for(i=1;i<3;i++){
-					glVertex3f(CUBE_SIZE/2*POW(-1,i+1),-CUBE_SIZE/2,-CUBE_SIZE/2);
-					glVertex3f(CUBE_SIZE/2*POW(-1,i+1),CUBE_SIZE/2,-CUBE_SIZE/2);
-					glVertex3f(CUBE_SIZE/2*POW(-1,i+1),CUBE_SIZE/2,CUBE_SIZE/2);
-					glVertex3f(CUBE_SIZE/2*POW(-1,i+1),-CUBE_SIZE/2,CUBE_SIZE/2);
-				}
-
-				
-				//glColor3f(0.5f,0.5f,0.5f);
-				for(i=1;i<3;i++){
-					glVertex3f(CUBE_SIZE/2,CUBE_SIZE/2*POW(-1,i),-CUBE_SIZE/2);
-					glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2*POW(-1,i),-CUBE_SIZE/2);
-					glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2*POW(-1,i),CUBE_SIZE/2);
-					glVertex3f(CUBE_SIZE/2,CUBE_SIZE/2*POW(-1,i),CUBE_SIZE/2);
-				}*///tył
+			glBegin(GL_QUADS);
+					//tył
 					glVertex3f(CUBE_SIZE/2,-CUBE_SIZE/2,-CUBE_SIZE/2);
 					glVertex3f(-CUBE_SIZE/2,-CUBE_SIZE/2,-CUBE_SIZE/2);
 					glVertex3f(-CUBE_SIZE/2,-CUBE_SIZE/2,CUBE_SIZE/2);
@@ -290,7 +278,6 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 			glEnd();
 			glColor3f(1.0f,1.0f,1.0f);
 		glEndList();
-				
 	}
 	
 	if(_type != GL_SELECT && _type != GL_RENDER)
@@ -338,12 +325,13 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 		glLoadIdentity();
 		quadratic = gluNewQuadric();
+		gluQuadricDrawStyle(quadratic, GLU_FILL);
+		gluQuadricTexture(quadratic, GL_TRUE);
 		gluQuadricNormals(quadratic, GLU_SMOOTH);
 		
 		
 		/** Camera */
 		Camera = Get_Camera();
-		//glTranslatef(0.0f,1.5f,0.0f);
 		glTranslatef(0.0f,0.0f,-Camera[2]);
 		glRotatef(Camera[0],1.0,0.0,0.0);
 		glRotatef(Camera[1],0.0,1.0,0.0);
@@ -355,6 +343,11 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 			glPushName(BOARD_HIT);
 		glCallList(List_Name);
 		
+		
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, Texture[1]);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+		
 		/** Fields */
 		if(Active_Player == -1 || Frequency < FREQUENCY || Blink_Field == -1)
 		{			
@@ -362,7 +355,9 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 				if(_type == GL_SELECT)
 					glLoadName(i+1);
 				glColor3f(1.0f,1.0f,1.0f);
-				Draw_Circle(Fields_Get_Radius(Fields,i),Fields_Get_X(Fields,i),H/2+0.01,-Fields_Get_Y(Fields,i));
+				glPushMatrix();
+				DRAW_PAWN(quadratic,Fields,i);
+				glPopMatrix();
 			}
 		}
 		else
@@ -370,12 +365,17 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 			for(i = 0;i < Fields->Number_of_Fields;i++){
 				if(_type == GL_SELECT)
 					glLoadName(i+1);
-				glColor3f(1.0f,1.0f,1.0f);
 				if(i != Blink_Field)
-					Draw_Circle(Fields_Get_Radius(Fields,i),Fields_Get_X(Fields,i),H/2+0.01,-Fields_Get_Y(Fields,i));
+				{
+					glColor3f(1.0f,1.0f,1.0f);
+					glPushMatrix();
+					DRAW_PAWN(quadratic,Fields,i);
+					glPopMatrix();
+				}
 			}
 		}
-	
+		glDisable(GL_TEXTURE_2D);
+		
 		/** Pawns */
 		for(i = 0;i < Number_of_Players;i++){
 			
@@ -396,12 +396,10 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 			}
 			Players++;
 		}
-		
 		Players -= Number_of_Players;
 		glEnable(GL_BLEND);
 		glDepthMask(GL_FALSE);
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-		//glDisable(GL_DEPTH_TEST);
 		glColor4f(1.0f,1.0f,1.0f,0.5f);
 		
 		if(Frequency >= FREQUENCY)
@@ -414,7 +412,6 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 						if(_type == GL_SELECT)
 							glLoadName(100+Active_Player*10+i);
 						glPushMatrix();
-						//glColor3f(Players[Active_Player].Color[0],Players[Active_Player].Color[1],Players[Active_Player].Color[2]);
 						glTranslatef(Fields_Get_X(Fields,Players[Active_Player].Position[i]),0,-Fields_Get_Y(Fields,Players[Active_Player].Position[i]));
 						glCallList(List_Name+1);
 						glPopMatrix();
@@ -426,15 +423,13 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 				glPushMatrix();
 				if(_type == GL_SELECT)
 					glLoadName(100+Active_Player*10+*Blink_Pawns);
-				//glColor3f(Players[Active_Player].Color[0],Players[Active_Player].Color[1],Players[Active_Player].Color[2]);
 				glTranslatef(Fields_Get_X(Fields,Players[Active_Player].Position[*Blink_Pawns]),0,-Fields_Get_Y(Fields,Players[Active_Player].Position[*Blink_Pawns]));
 				glCallList(List_Name+1);
 				glPopMatrix();
 				glPushMatrix();
 				if(_type == GL_SELECT)
 					glLoadName(Blink_Field+1);
-				//glColor3f(1.0f,1.0f,1.0f);
-				Draw_Circle(Fields_Get_Radius(Fields,Blink_Field),Fields_Get_X(Fields,Blink_Field),H/2+0.01,-Fields_Get_Y(Fields,Blink_Field));
+				DRAW_PAWN(quadratic,Fields,Blink_Field);
 				glPopMatrix();
 			}
 		}
@@ -468,7 +463,6 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 		glDepthMask(GL_TRUE);
 		glDisable(GL_BLEND);
 		
-		//glEnable(GL_DEPTH_TEST);
 		free(quadratic);
 		if(_type != GL_SELECT)
 			Draw_Text(_type);
@@ -478,6 +472,8 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 	}
     glutSwapBuffers();
 }
+
+#undef DRAW_PAWN
 
 void Disable_Blink()
 {
@@ -492,18 +488,12 @@ void Draw_Init(Fields_Structure * _fields,Player * _players,int _players_number,
 
 void _Draw_Text(int _type,Text * _text,const char * _name)//int * _width,int *_height)
 {
-	//static int * Width;
-	//static int * Height;
 	static Array * Texts = NULL;
 	Iterator * it;
 	Text * Ptr;
 	int len,bitmap_w,bitmap_h,i,width,height;
 	if(_type == TEXT_INIT)
-	{
-		//Width = _width;
-		//Height = _height;
 		Texts = Create_Array();
-	}
 	else if(_type == TEXT_ADD)
 	{
 		Add_Element(Texts,_name,_text,1,TEXT);
@@ -656,7 +646,7 @@ void Draw_Render()
 	_Draw(GL_RENDER,NULL,NULL,0,NULL,NULL);
 	//_Draw_Text(GL_RENDER,NULL,NULL,0,0);
 }
-
+/*
 void Draw_Pawn(float x,float z,float * colors,int _blink)
 {
 	glPushMatrix();
@@ -677,7 +667,7 @@ void Draw_Pawn(float x,float z,float * colors,int _blink)
 	gluSphere(quadratic,PAWN_RADIUS/2,32,32);
 	gluDeleteQuadric(quadratic);
 	glPopMatrix();
-}
+}*/
 
 int Init_GL(int _width, int _height, char * _label,int _fullscr)
 {
@@ -726,7 +716,6 @@ void Reshape_Window(int _width, int _height)
     gluPerspective(45.0f,(GLfloat)_width/(GLfloat)_height,0.1f,100.0f);
     glMatrixMode(GL_MODELVIEW);
 	
-	//_Reshape_Window(0,_width,_height);
 }
 
 void Change_Display(int _width,int _height)
@@ -736,9 +725,6 @@ void Change_Display(int _width,int _height)
 	glutReshapeWindow(_width,_height);
 	glutPostRedisplay();
 	Reshape_Window(_width,_height);
-	//glFlush();
-	//glutSwapBuffers();
-	//_Reshape_Window(1,_width,_height);
 }
 void _Reshape_Window(int _type,int _width,int _height)
 {
@@ -750,13 +736,9 @@ void _Reshape_Window(int _type,int _width,int _height)
 		Width = _width;
 		Height = _height;
 	
-	//printf("%d %d\n",Width,Height);
 	glutReshapeWindow(Width,Height);
-	//glutPositionWindow(0,0);
 	glutPostRedisplay();
 	}
-	//Width != _width ? _width = Width : 0;
-	//Height != _height ? _height = Height : 0;
 	glViewport(0, 0, _width, _height);		
 
     glMatrixMode(GL_PROJECTION);
@@ -765,32 +747,17 @@ void _Reshape_Window(int _type,int _width,int _height)
     gluPerspective(45.0f,(GLfloat)_width/(GLfloat)_height,0.1f,100.0f);
     glMatrixMode(GL_MODELVIEW);
 }
-void Enable_FullScr()//int _width,int _height)
+void Enable_FullScr()
 {
-	
-	//glutPostRedisplay();
-	//if(_width && _height)
-		//Reshape_Window(_width,_height);
-	//glutReshapeWindow(_width,_height);
-//	glutPostRedisplay();
-	
 	glutFullScreen();
 }
 
 void Disable_FullScr(int _width,int _height)
 {
 	glutPositionWindow(0,0);
-	//glutReshapeWindow(800,600);
-	//glutPostRedisplay();
-	//Reshape_Window(800,600);
-	//glutSwapBuffers();
 	glutReshapeWindow(_width,_height);
-	//glutPostRedisplay();
 	Reshape_Window(_width,_height);
 	glutPostRedisplay();
-	//if(_width && _height)
-		//Reshape_Window(_width,_height);
-	//glutPositionWindow(0,0);
 }
 
 void Draw_Fields(int _type,Fields_Structure * array,int players_number,int _blink)
@@ -824,7 +791,7 @@ void Fields_Generate_4_Players(Field * _pointer)
 	int i,j,shift;
 	
 	Width = MIN(W,D)/2;
-	Radius = 0.03*Width*2;
+	Radius = FIELD_RADIUS;//0.03*Width*2;
 	
 	for(i = 0;i < 4;i++)
 	{
@@ -912,7 +879,7 @@ void Fields_Generate_5_Players(Field * _pointer)
 	int i,j,shift;
 	
 	Width = MIN(W,D)/2;
-	Radius = 0.03*Width*2;
+	Radius = FIELD_RADIUS;//0.03*Width*2;
 	for(i = 0;i < 72;i++)
 		_pointer[i].Radius = 0;
 	for(i = 0;i < 5;i++)
@@ -1072,7 +1039,7 @@ void Fields_Generate_6_Players(Field * _pointer)
 	int i,j,shift;
 	
 	Width = MIN(W,D)/2;
-	Radius = 0.03*Width*2;
+	Radius = FIELD_RADIUS;//0.03*Width*2;
 	for(i = 0;i < 72;i++)
 		_pointer[i].Radius = 0;
 	for(i = 0;i < 6;i++)
