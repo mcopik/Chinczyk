@@ -46,6 +46,8 @@ Array * Default_Game_Options()
 	Add_Element(array,"NUMBER_OF_PLAYERS",&temp,1,INTEGER);
 	temp = 0;
 	Add_Element(array,"PLAYER0_AI",&temp,1,BOOLEAN);
+	temp = AI_EASY;
+	Add_Element(array,"LEVEL",&temp,1,INTEGER);
 	sprintf(buffer,"Gracz %d",1);
 	Add_Element(array,"PLAYER0_NAME",buffer,6,CHAR);
 	Add_Element(array,"PLAYER0_COLOR",&temp2,3,FLOAT);
@@ -317,7 +319,9 @@ void Main_Loop(int _type)
 				Init_Game(Game_Iterator,&Players,&Fields,&Number_of_Players,&First_Move);
 				Draw_Init(Fields,Players,Number_of_Players,&Last_Randomized);
 				srand(time(NULL));
-				AI_Init(Randomized,Players,Active_Pawns,&Available_Move,Number_of_Players,AI_EASY);
+				Find(Game_Iterator,"LEVEL");
+				AI_Init(Randomized,Players,Active_Pawns,&Available_Move,Number_of_Players,\
+							Get_ValueI(Game_Iterator));
 				TEXT_DRAW_FPS;
 				Menu_Active();
 				Set_Change();
@@ -342,7 +346,9 @@ void Main_Loop(int _type)
 									free(First_Move);
 								Init_Game(Game_Iterator,&Players,&Fields,&Number_of_Players,&First_Move);
 								Draw_Init(Fields,Players,Number_of_Players,&Last_Randomized);
-								AI_Init(Randomized,Players,Active_Pawns,&Available_Move,Number_of_Players,AI_EASY);
+								Find(Game_Iterator,"LEVEL");
+								AI_Init(Randomized,Players,Active_Pawns,&Available_Move,Number_of_Players,\
+											Get_ValueI(Game_Iterator));
 							}
 							Menu_Disactive();
 							TEXT_DRAW_PLAYER;
@@ -357,13 +363,8 @@ void Main_Loop(int _type)
 							Width = Get_ValueI(Graph_Iterator);
 							Find(Graph_Iterator,"HEIGHT");
 							Height = Get_ValueI(Graph_Iterator);
-							//Find(Graph_Iterator,"FULLSCREEN");
-							//if(!Get_ValueB(Graph_Iterator))
-								//Change_Display(640,480);
-								//Set_Change();
-								//Draw_Render();
-								Change_Display(Width,Height);
-								Set_Change();
+							Change_Display(Width,Height);
+							Set_Change();
 
 						break;
 						case MENU_GRAPH_CHANGE_FULL:
@@ -380,8 +381,8 @@ void Main_Loop(int _type)
 									Find(Graph_Iterator,"HEIGHT");
 									Height = Get_ValueI(Graph_Iterator);
 									//Disable_FullScr(800,600);
-									Change_Display(800,600);
-									//Change_Display(Width,Height);
+									//Change_Display(800,600);
+									Change_Display(Width,Height);
 									Set_Change();
 									Fullscreen = -1;
 								}
@@ -513,7 +514,7 @@ void Main_Loop(int _type)
 						Players[Active_Player].Position[Selected_Pawn] = Available_Move;
 						if(Check_All_Base(&Players[Active_Player],Active_Player,Number_of_Players))
 						{	
-							Game_Status = LOOP_START;
+							Game_Status = LOOP_MENU;
 							break;
 						}
 						Selected_Pawn = -1;

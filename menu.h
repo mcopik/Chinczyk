@@ -8,8 +8,6 @@ struct Menu_Struct{
 	char ** Captions;
 	Menu ** Children;
 	int (**Action)(Iterator*,Iterator*,Menu **,int);
-	//void (*Draw)(Iterator*,Iterator*,Menu*);
-	//void (*Clean_Drawing)(Menu*);
 	int Number_of_Positions;
 	Menu * Parent;
 };

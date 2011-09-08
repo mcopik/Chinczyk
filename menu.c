@@ -5,6 +5,7 @@
 #include "input.h"
 #include "graphic.h"
 #include "game.h"
+#include "ai.h"
 
 void _Menu(Iterator * _game_it,Iterator * _graph_it,Mouse_Action * _m_event,int * flag);
 
@@ -28,6 +29,34 @@ int Menu_Go_Previous(Iterator * _game_it,Iterator * _graph_it,Menu ** _menu_acti
 {
 	*_menu_active = (*_menu_active)->Parent;
 	return MENU_NO_CHANGE;
+}
+
+int Menu_Level_Change(Iterator * _game_it,Iterator * _graph_it,Menu ** _menu_active,int _position)
+{
+	int temp;
+	char buffer[STRING_SIZE+1];
+	Find(_game_it,"LEVEL");
+	temp = Get_ValueI(_game_it);
+	temp++;
+	if(temp > AI_HARD)
+		temp = AI_EASY;
+	Set_Value(_game_it,&temp);
+	strcpy(buffer,"Poziom trudnosci: ");
+	switch(temp){
+		case AI_EASY:
+			sprintf(buffer,"%s latwy",buffer);
+		break;
+		case AI_MEDIUM:
+			sprintf(buffer,"%s sredni",buffer);
+		break;
+		case AI_HARD:
+			sprintf(buffer,"%s trudny",buffer);
+		break;
+		default:
+			sprintf(buffer,"%s blad!",buffer);
+		break;
+	}
+	strcpy((*_menu_active)->Captions[_position],buffer);
 }
 
 int Menu_Graph_Resolution_Change(Iterator * _game_it,Iterator * _graph_it,\
@@ -93,23 +122,25 @@ int Menu_Game_Number_Change(Iterator * _game_it,Iterator * _graph_it,\
 	char buffer[STRING_SIZE+1];
 	Find(_game_it,"NUMBER_OF_PLAYERS");
 	temp = Get_ValueI(_game_it);
-	temp = ++temp;
+	temp++;
 	if(temp > MAX_PLAYERS)
 	{
 		temp = MIN_PLAYERS;
-		for(i = MIN_PLAYERS+2;i < MAX_PLAYERS+2;i++)
+		Set_Value(_game_it,&temp);
+		for(i = MIN_PLAYERS+3;i < MAX_PLAYERS+3;i++)
 			strcpy((*_menu_active)->Captions[i],"");
 	}
 	else
 	{
+		Set_Value(_game_it,&temp);
 		sprintf(buffer,"PLAYER%d_AI",temp-1);
-		if(Get_ValueB(_game_it))
+		Find(_game_it,buffer);
+		if(!Get_ValueB(_game_it))
 			sprintf(buffer,"Gracz %d: Czlowiek",temp);
 		else
 			sprintf(buffer,"Gracz %d: Komputer",temp);
-		strcpy((*_menu_active)->Captions[temp+1],buffer);
+		strcpy((*_menu_active)->Captions[temp+2],buffer);
 	}
-	Set_Value(_game_it,&temp);
 	sprintf(buffer,"Liczba graczy: %d",temp);
 	strcpy((*_menu_active)->Captions[_position],buffer);
 	return MENU_NO_CHANGE;
@@ -120,17 +151,17 @@ int Menu_Game_Player_Change(Iterator * _game_it,Iterator * _graph_it,\
 {
 	int temp;
 	char buffer[STRING_SIZE+1];
-	sprintf(buffer,"PLAYER%d_AI",_position-2);
+	sprintf(buffer,"PLAYER%d_AI",_position-3);
 	Find(_game_it,buffer);
 	if(Get_ValueB(_game_it))
 	{
 		temp = 0;
-		sprintf(buffer,"Gracz %d: Czlowiek",_position-1);
+		sprintf(buffer,"Gracz %d: Czlowiek",_position-2);
 	}
 	else
 	{
 		temp = 1;
-		sprintf(buffer,"Gracz %d: Komputer",_position-1);
+		sprintf(buffer,"Gracz %d: Komputer",_position-2);
 	}
 	Set_Value(_game_it,&temp);
 	strcpy((*_menu_active)->Captions[_position],buffer);
@@ -222,41 +253,60 @@ void Menu_Init(Menu ** _main,Iterator * _game_it,Iterator * _graph_it)
 	ptr->Children[1] = (Menu*) malloc(sizeof(*ptr->Children[1]));
 	ptr->Children[1]->Parent = ptr;
 	Find(_game_it,"NUMBER_OF_PLAYERS");
-	ptr->Children[1]->Number_of_Positions = Get_ValueI(_game_it) + 2;
-	ptr->Children[1]->Captions = (char**) malloc((MAX_PLAYERS+2)*\
+	ptr->Children[1]->Number_of_Positions = Get_ValueI(_game_it) + 3;
+	ptr->Children[1]->Captions = (char**) malloc((MAX_PLAYERS+3)*\
 									sizeof(*(ptr->Children[1]->Captions)));
-	ptr->Children[1]->Children = (Menu**) malloc((MAX_PLAYERS+2)*\
+	ptr->Children[1]->Children = (Menu**) malloc((MAX_PLAYERS+3)*\
 									sizeof(*(ptr->Children[1]->Children)));
 	ptr->Children[1]->Action = (int (**)(Iterator*,Iterator*,Menu **,int)) \
-	malloc((MAX_PLAYERS+2)*sizeof(*(ptr->Children[1]->Action)));
+	malloc((MAX_PLAYERS+3)*sizeof(*(ptr->Children[1]->Action)));
 	
-	for(i = 0;i < MAX_PLAYERS+2;i++)
+	for(i = 0;i < MAX_PLAYERS+3;i++)
 		ptr->Children[1]->Captions[i] = (char*) malloc((STRING_SIZE+1)*\
 									sizeof(ptr->Children[1]->Captions[i]));
-	sprintf(buffer,"Liczba graczy: %d",ptr->Children[1]->Number_of_Positions-2);
+	Find(_game_it,"LEVEL");
+	strcpy(buffer,"Poziom trudnosci: ");
+	switch(Get_ValueI(_game_it)){
+		case AI_EASY:
+			sprintf(buffer,"%s latwy",buffer);
+		break;
+		case AI_MEDIUM:
+			sprintf(buffer,"%s sredni",buffer);
+		break;
+		case AI_HARD:
+			sprintf(buffer,"%s trudny",buffer);
+		break;
+		default:
+			sprintf(buffer,"%s blad!",buffer);
+		break;
+	}
 	strcpy(ptr->Children[1]->Captions[0],buffer);
-	strcpy(ptr->Children[1]->Captions[1],"Wroc");
-	ptr->Children[1]->Action[0] = &Menu_Game_Number_Change;
+	ptr->Children[1]->Action[0] = &Menu_Level_Change;
 	ptr->Children[1]->Children[0] = NULL;
-	ptr->Children[1]->Action[1] = &Menu_Go_Previous;
+	sprintf(buffer,"Liczba graczy: %d",ptr->Children[1]->Number_of_Positions-3);
+	strcpy(ptr->Children[1]->Captions[1],buffer);
+	ptr->Children[1]->Action[1] = &Menu_Game_Number_Change;
 	ptr->Children[1]->Children[1] = NULL;
-	for(i = 0;i < ptr->Children[1]->Number_of_Positions-2;i++){
+	strcpy(ptr->Children[1]->Captions[2],"Wroc");
+	ptr->Children[1]->Action[2] = &Menu_Go_Previous;
+	ptr->Children[1]->Children[2] = NULL;
+	for(i = 0;i < ptr->Children[1]->Number_of_Positions-3;i++){
 		sprintf(buffer,"PLAYER%d_AI",i);
 		Find(_game_it,buffer);
 		if(Get_ValueB(_game_it))
 			sprintf(buffer,"Gracz %d: Komputer",i+1);
 		else
 			sprintf(buffer,"Gracz %d: Czlowiek",i+1);
-		strcpy(ptr->Children[1]->Captions[i+2],buffer);
-		ptr->Children[1]->Children[i+2] = NULL;
-		ptr->Children[1]->Action[i+2] = &Menu_Game_Player_Change;
+		strcpy(ptr->Children[1]->Captions[i+3],buffer);
+		ptr->Children[1]->Children[i+3] = NULL;
+		ptr->Children[1]->Action[i+3] = &Menu_Game_Player_Change;
 	}
-	for(i = ptr->Children[1]->Number_of_Positions;i < MAX_PLAYERS+2;i++){
+	for(i = ptr->Children[1]->Number_of_Positions;i < MAX_PLAYERS+3;i++){
 		ptr->Children[1]->Children[i] = NULL;
 		ptr->Children[1]->Action[i] = &Menu_Game_Player_Change;
 		strcpy(ptr->Children[1]->Captions[i],"");
 	}
-	ptr->Children[1]->Number_of_Positions = MAX_PLAYERS+2;
+	ptr->Children[1]->Number_of_Positions = MAX_PLAYERS+3;
 	ptr->Action[1] = &Menu_Go_Next;
 	
 	ptr->Children[2] = (Menu*) malloc(sizeof(*ptr->Children[2]));

@@ -17,7 +17,7 @@ void _AI(int _active_player, Mouse_Action ** _m_event,AI_Info * _info)
 	static int Active_Player = -1;
 	int i,temp,max_index;
 	float max,temp2;
-	
+	printf("AI active player: %d Counter: %d\n",_active_player,Counter);
 	if(_info)
 	{
 		Info.Players = _info->Players;
@@ -39,6 +39,7 @@ void _AI(int _active_player, Mouse_Action ** _m_event,AI_Info * _info)
 					Info.Players[Active_Player].Position[i] < temp+2*NUMBER_OF_PAWNS)
 						Counter--;
 		}
+		printf("Counter: %d\n",Counter);
 		// there is only one(or zero) pawns on board
 		// the best way is to get more pawns in game
 		if(Counter < 2)
@@ -46,10 +47,13 @@ void _AI(int _active_player, Mouse_Action ** _m_event,AI_Info * _info)
 			for(i = 0;i < NUMBER_OF_PAWNS;i++){
 				//distance to home from new position is equal to length-1 <=>
 				//<=> when new position is first field on board
+				printf("i: %d distance: %d length: %d\n",i,Get_Distance(Info.Active_Pawns[i],Active_Player, \
+					Info.Number_of_Players), Info.Number_of_Players*NUMBER_OF_FIELDS_PER_PLAYER -1);
 				if(Get_Distance(Info.Active_Pawns[i],Active_Player,\
 					Info.Number_of_Players) == Info.Number_of_Players*NUMBER_OF_FIELDS_PER_PLAYER -1)
 				{
 						Counter++;
+						printf("MOVE! %d \n",100 + Active_Player*10 + i);
 						*_m_event = malloc(sizeof(**_m_event));
 						(*_m_event)->Hits = 1;
 						(*_m_event)->Buffer[0] = 1;
@@ -113,8 +117,12 @@ void _AI(int _active_player, Mouse_Action ** _m_event,AI_Info * _info)
 					Info.Number_of_Players) == Info.Number_of_Players*NUMBER_OF_FIELDS_PER_PLAYER -1)
 				Counter++;
 			//if new position is in home
-			if(Get_Distance(Info.Active_Pawns[max_index],Active_Player,\
-					Info.Number_of_Players) == -1)
+			printf("new position: %d player: %d n_o_p: %d\n",Info.Active_Pawns[max_index],Active_Player, \
+					Info.Number_of_Players);
+			printf("distance: %d",Get_Distance(Info.Active_Pawns[max_index],Active_Player,\
+					Info.Number_of_Players));
+			if(!Get_Distance(Info.Active_Pawns[max_index],Active_Player,\
+					Info.Number_of_Players))
 				Counter--;
 			//simulating click on selected pawn
 			*_m_event = malloc(sizeof(**_m_event));
@@ -124,6 +132,22 @@ void _AI(int _active_player, Mouse_Action ** _m_event,AI_Info * _info)
 			(*_m_event)->Buffer[2] = 0;
 			(*_m_event)->Buffer[3] = 100 + Active_Player*10 + max_index;
 			return;
+		}
+		else
+		{
+			for(i = 0;i < NUMBER_OF_PAWNS;i++)
+			{
+				if(Info.Active_Pawns[i] != -1)
+				{
+					*_m_event = malloc(sizeof(**_m_event));
+					(*_m_event)->Hits = 1;
+					(*_m_event)->Buffer[0] = 1;
+					(*_m_event)->Buffer[1] = 0;
+					(*_m_event)->Buffer[2] = 0;
+					(*_m_event)->Buffer[3] = 100 + Active_Player*10 + i;
+					return;
+				}
+			}
 		}
 	}
 	//simulating click to move selected pawn

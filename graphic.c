@@ -981,9 +981,9 @@ void Fields_Generate_5_Players(Field * _pointer)
 	{
 		for(j = 0;j < NUMBER_OF_PAWNS;j++)
 		{
-			_pointer[(4*2*i+1)*NUMBER_OF_PAWNS+j].Position[0] = POW(-1,i)*Radius*(j+1);
-			_pointer[(4*2*i+1)*NUMBER_OF_PAWNS+j].Position[1] = 2*Radius*(j+1);
-			_pointer[(4*2*i+1)*NUMBER_OF_PAWNS+j].Radius = Radius;
+			_pointer[(4*2*i+2)*NUMBER_OF_PAWNS-j-1].Position[0] = POW(-1,i)*Radius*(j+1);
+			_pointer[(4*2*i+2)*NUMBER_OF_PAWNS-j-1].Position[1] = 2*Radius*(j+1);
+			_pointer[(4*2*i+2)*NUMBER_OF_PAWNS-j-1].Radius = Radius;
 		}
 	}
 	shift = 2*NUMBER_OF_PAWNS*5;
