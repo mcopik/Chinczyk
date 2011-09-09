@@ -3,9 +3,7 @@
 */
 #ifndef ARRAY_H
 #define	ARRAY_H
-#ifdef	__cplusplus
-extern "C" {
-#endif
+#include <stddef.h>
 #define STRING_SIZE 32
 
 typedef struct _Array_Element Array_Element;
@@ -31,11 +29,11 @@ typedef struct{
 
 /** Types of data which are implemented */
 enum{
-	BOOLEAN = 0,
-	CHAR,
-	INTEGER,
-	FLOAT,
-	TEXT
+	ARRAY_BOOLEAN = 0,
+	ARRAY_CHAR,
+	ARRAY_INTEGER,
+	ARRAY_FLOAT,
+	ARRAY_TEXT
 };
 
 /** \fn size_t Type_Size(int _type);
@@ -127,12 +125,10 @@ void Erase(Iterator * _it);
 short int Get_ValueB(Iterator * _it);
 int Get_ValueI(Iterator * _it);
 float Get_ValueF(Iterator * _it);
-int * Get_Value_ArrayB(Iterator * _it);
+short int * Get_Value_ArrayB(Iterator * _it);
 int * Get_Value_ArrayI(Iterator * _it);
 char * Get_Value_ArrayC(Iterator * _it);
 float * Get_Value_ArrayF(Iterator * _it);
 
-#ifdef	__cplusplus
-}
-#endif
+
 #endif

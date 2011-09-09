@@ -1,6 +1,6 @@
-#include <GL/glut.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <GL/glut.h>
 #include "input.h"
 #include "graphic.h"
 #include "fifo.h"
@@ -11,21 +11,7 @@
 int Find_Hit(int _value,int _hits,unsigned int * _buffer)
 {
 	int i, j;
-	/*printf("%d hits:\n", _hits);
- 
- 	for (i = 0; i < _hits; i++)
- 		printf(	"Number: %d\n"
-		
- 				"Min Z: %d\n"
- 				"Max Z: %d\n"
- 				"Name on stack: %d\n",
- 				(GLubyte)_buffer[i * 4],
- 				(GLubyte)_buffer[i * 4 + 1],
- 				(GLubyte)_buffer[i * 4 + 2],
- 				(GLubyte)_buffer[i * 4 + 3]
- 				);
- 
- 	printf("\n");*/
+	
 	int Number;
 	for (i = 0; i < _hits; i++){
 		Number = *_buffer;
@@ -64,7 +50,9 @@ void _Key_Pressed(int _type, Key_Action ** _pointer)
 
 void Key_Pressed(unsigned char _key,int _x,int _y)
 {
-	Key_Action * Action = malloc(sizeof(*Action));
+	Key_Action * Action;
+
+	Action = malloc(sizeof(*Action));
 	Action->Key = _key;
 	Action->X = _x;
 	Action->Y = _y;
@@ -90,22 +78,22 @@ void Special_Key_Pressed(int key,int x,int y){
 
     switch(key){
         case GLUT_KEY_LEFT:
-			Change_Camera(LEFT);
+			Change_Camera(CAMERA_LEFT);
         break;
         case GLUT_KEY_RIGHT:
-			Change_Camera(RIGHT);
+			Change_Camera(CAMERA_RIGHT);
         break;
         case GLUT_KEY_UP:
-			Change_Camera(UP);
+			Change_Camera(CAMERA_UP);
         break;
         case GLUT_KEY_DOWN:
-			Change_Camera(DOWN);
+			Change_Camera(CAMERA_DOWN);
         break;      
         case GLUT_KEY_PAGE_UP:
-			Change_Camera(CLOSER);
+			Change_Camera(CAMERA_CLOSER);
         break;
         case GLUT_KEY_PAGE_DOWN:
-			Change_Camera(FARTHER);
+			Change_Camera(CAMERA_FARTHER);
         break;
     }
 }
@@ -197,6 +185,7 @@ void Clean_Mouse_Event()
 int _Event(int _type)
 {
 	static FIFO * Buffer = NULL;
+
 	if(!Buffer)
 	{
 		Buffer = FIFO_Create();

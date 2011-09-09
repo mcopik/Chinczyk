@@ -10,12 +10,12 @@ size_t Type_Size(int _type)
 {
 	switch(_type)
 	{
-		case BOOLEAN:	return sizeof(short int); break;
-		case INTEGER:	return sizeof(int); break;
-		case CHAR:		return sizeof(char); break;
-		case FLOAT:		return sizeof(float); break;
-		case TEXT:		return sizeof(Text); break;
-		default:		ERROR(0,"Wrong type or not implemented yet!"); break;
+		case ARRAY_BOOLEAN:	return sizeof(short int); break;
+		case ARRAY_INTEGER:	return sizeof(int); break;
+		case ARRAY_CHAR:		return sizeof(char); break;
+		case ARRAY_FLOAT:		return sizeof(float); break;
+		case ARRAY_TEXT:		return sizeof(Text); break;
+		default:		ERROR_MACRO(0,"Wrong type or not implemented yet!"); break;
 	}
 }		
 
@@ -99,7 +99,7 @@ int Add_Element(Array * _array,const char * _name,void * _value,int _size,int _t
 			else if(temp == 1)
 				left = position+1;
 			else
-				ERROR(0,"Element exists already in array");
+				ERROR_MACRO(0,"Element exists already in array");
 		}
 		ptr = malloc(sizeof(*ptr));
 		Get_First(it);
@@ -202,7 +202,7 @@ int Insert_Value(Array * _array,const char * _name,void * _value)
 		Set_Value(it,_value);
 	}
 	else
-		ERROR(1,"Element doesn't exist");
+		ERROR_MACRO(1,"Element doesn't exist");
 	Delete_Iterator(it);
 	return 0;
 }
@@ -243,7 +243,7 @@ Iterator * Create_Iterator(Array * _array)
 	Iterator * ptr = NULL;
 	if(_array)
 	{
-		ptr = malloc(sizeof(*ptr));
+		ptr = (Iterator*)malloc(sizeof(*ptr));
 		ptr->Object = _array;
 		ptr->Position = _array->First;
 	}
@@ -349,14 +349,14 @@ Array * Load(const char * _label,const char * _path)
 	
 	file = fopen(_path,"rb");
 	if(!file)
-		ERROR(NULL,"Couldn't open file %s!",_path);
+		ERROR_MACRO(NULL,"Couldn't open file %s!",_path);
 	fgetc(file);
 	while(!feof(file)){
 		fseek(file,-1,SEEK_CUR);
 		if(fread(buffer,sizeof(char),STRING_SIZE,file) != STRING_SIZE)
-			ERROR(NULL,"Error: couldn't find section label!");
+			ERROR_MACRO(NULL,"ERROR: couldn't find section label!");
 		if(fread(&size,sizeof(size),1,file) != 1)
-			ERROR(NULL,"Error: couldn't find size of section!");
+			ERROR_MACRO(NULL,"Error: couldn't find size of section!");
 		begin_size = size;
 		if(!strcmp(buffer,_label))
 		{
@@ -364,24 +364,24 @@ Array * Load(const char * _label,const char * _path)
 			while(begin_size >= size && size > 0){
 				
 				if(fread(name,sizeof(char),STRING_SIZE,file) != STRING_SIZE)
-					ERROR(NULL,"Error: couldn't find variable name!");
+					ERROR_MACRO(NULL,"Error: couldn't find variable name!");
 				size -= STRING_SIZE*sizeof(char);		
 	
 				if(fread(&type,sizeof(type),1,file) != 1)
-					ERROR(NULL,"Error: couldn't find type of %s!",name);
+					ERROR_MACRO(NULL,"Error: couldn't find type of %s!",name);
 				size -= sizeof(type);
 				
 				type_size = Type_Size(type);
 				if(!type_size)
-					ERROR(NULL," ");
+					ERROR_MACRO(NULL," ");
 
 				if(fread(&len,sizeof(len),1,file) != 1)
-					ERROR(NULL,"Error: couldn't read number of data in %s!",name);
+					ERROR_MACRO(NULL,"Error: couldn't read number of data in %s!",name);
 				size -= sizeof(len);
 				
 				value = malloc(type_size*len);
 				if(fread(value,type_size,len,file) != len)
-					ERROR(NULL,"Error: wrong number of data in %s!",name);
+					ERROR_MACRO(NULL,"Error: wrong number of data in %s!",name);
 
 				Add_Element(ret,name,value,len,type);
 				free(value);
@@ -481,10 +481,10 @@ int Save(Array * _array,const char * _label,const char * _path)
 		fwrite(first_p,sizeof(*first_p),size_1,file);
 		
 	if(fwrite(_label,sizeof(char),STRING_SIZE,file) != STRING_SIZE)
-		ERROR(1,"Error during writing data");
+		ERROR_MACRO(1,"Error during writing data");
 	size_b = Get_Size(_array);
 	if(fwrite(&size_b,sizeof(size_b),1,file) != 1)
-		ERROR(1,"Error during writing data");
+		ERROR_MACRO(1,"Error during writing data");
 		
 	it = Create_Iterator(_array);
 	Get_First(it);
@@ -493,13 +493,13 @@ int Save(Array * _array,const char * _label,const char * _path)
 		type = Get_Type(it);
 		size = Get_Value_Size(it);
 		if(fwrite(Get_Name(it),sizeof(char),STRING_SIZE,file) != STRING_SIZE)
-			ERROR(1,"Error during writing data");
+			ERROR_MACRO(1,"Error during writing data");
 		if(fwrite(&type,sizeof(type),1,file) != 1)
-			ERROR(1,"Error during writing data");
+			ERROR_MACRO(1,"Error during writing data");
 		if(fwrite(&size,sizeof(size),1,file) != 1)
-			ERROR(1,"Error during writing data");
+			ERROR_MACRO(1,"Error during writing data");
 		if(fwrite(Get_Value(it),Type_Size(type),size,file) != size)
-			ERROR(1,"Error during writing data");
+			ERROR_MACRO(1,"Error during writing data");
 		Get_Next(it);
 	}
 	
@@ -517,29 +517,29 @@ int Save(Array * _array,const char * _label,const char * _path)
 type name(Iterator * _it)								\
 {														\
 	if(!_it->Position)									\
-		ERROR(-1,"Empty iterator");						\
+		ERROR_MACRO(-1,"Empty iterator");						\
 	if(_it->Position->Type != _type)					\
-		ERROR(-1,"Wrong type in option");				\
+		ERROR_MACRO(-1,"Wrong type in option");				\
 	return *((type*)_it->Position->Value);				\
 }
-GET_VALUE(Get_ValueB,short int,BOOLEAN);
-GET_VALUE(Get_ValueI,int,INTEGER);
-GET_VALUE(Get_ValueF,float,FLOAT);
+GET_VALUE(Get_ValueB,short int,ARRAY_BOOLEAN);
+GET_VALUE(Get_ValueI,int,ARRAY_INTEGER);
+GET_VALUE(Get_ValueF,float,ARRAY_FLOAT);
 
 #define GET_VALUE_ARRAY(name,type,_type)				\
 type * name(Iterator * _it)								\
 {														\
 	type * ptr = NULL;									\
 	if(!_it->Position)									\
-		ERROR(NULL,"Empty iterator");					\
+		ERROR_MACRO(NULL,"Empty iterator");					\
 	if(_it->Position->Type != _type)					\
-		ERROR(-1,"Wrong type in option");				\
+		ERROR_MACRO(-1,"Wrong type in option");				\
 	ptr = malloc(sizeof(*ptr)*_it->Position->Size);		\
 	memset(ptr,0,_it->Position->Size*sizeof(*ptr));		\
 	memcpy(ptr,_it->Position->Value,_it->Position->Size*sizeof(*ptr));\
 	return ptr;									\
 }
-GET_VALUE_ARRAY(Get_Value_ArrayB,int,BOOLEAN);
-GET_VALUE_ARRAY(Get_Value_ArrayI ,int,INTEGER);
-GET_VALUE_ARRAY(Get_Value_ArrayF,float,FLOAT);
-GET_VALUE_ARRAY(Get_Value_ArrayC,char,CHAR);
+GET_VALUE_ARRAY(Get_Value_ArrayB,short int,ARRAY_BOOLEAN);
+GET_VALUE_ARRAY(Get_Value_ArrayI,int,ARRAY_INTEGER);
+GET_VALUE_ARRAY(Get_Value_ArrayF,float,ARRAY_FLOAT);
+GET_VALUE_ARRAY(Get_Value_ArrayC,char,ARRAY_CHAR);

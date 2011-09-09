@@ -95,9 +95,9 @@ void _AI(int _active_player, Mouse_Action ** _m_event,AI_Info * _info)
 					//ratio = 1 - distance to home/length of board
 					else
 					{
-						temp2 = Get_Distance(Info.Players[Active_Player].Position[i],Active_Player,\
+						temp2 = (float)Get_Distance(Info.Players[Active_Player].Position[i],Active_Player,\
 								Info.Number_of_Players);
-						temp2 = 1 - temp2/(Info.Number_of_Players*NUMBER_OF_FIELDS_PER_PLAYER);
+						temp2 = 1.0f - (float)(temp2/(Info.Number_of_Players*NUMBER_OF_FIELDS_PER_PLAYER));
 						//second condition is for avoiding situation, when one pawn is moving forward
 						//and second one is still on first field
 						if(max < temp2 || max/temp2 >= 3.0f)

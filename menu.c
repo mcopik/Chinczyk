@@ -1,6 +1,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef _WIN32
+# include <GL/freeglut.h>
+#else
+# include <GL/glut.h>
+#endif
 #include "menu.h"
 #include "input.h"
 #include "graphic.h"
@@ -172,23 +177,17 @@ int Menu_Game_Player_Change(Iterator * _game_it,Iterator * _graph_it,\
 void Menu_Draw(Iterator * _graph_it,Menu * _menu)
 {
 	int i;
-   // int width,height;
 	char * buffer;
-	buffer = malloc(sizeof(*buffer)*(STRING_SIZE+1));
-   /* Find(_graph_it,"WIDTH");
-	width = Get_ValueI(_graph_it);
-    Find(_graph_it,"HEIGHT");
-	height = Get_ValueI(_graph_it);*/
-	Text_Draw(0.8,0.05,MENU_BUTTON_HIT,FONT2,TEXT_CENTER,MENU_MSG,MENU_TEXT);
+	buffer = (char*)malloc(sizeof(*buffer)*(STRING_SIZE+1));
+	Text_Draw(0.8f,0.05f,MENU_BUTTON_HIT,(void*)FONT2,TEXT_CENTER,MENU_MSG,MENU_TEXT);
     for(i = 0;i < _menu->Number_of_Positions;i++)
 	{
 		if(strcmp(_menu->Captions[i],""))
 		{
 			sprintf(buffer,"MENU_TEXT_%d",i);
-			Text_Draw(0.8,0.1+0.05*i,200+i,FONT1,TEXT_CENTER,buffer,_menu->Captions[i]);
+			Text_Draw(0.8f,(float)(0.1+0.05*i),200+i,(void*)FONT1,\
+				TEXT_CENTER,buffer,_menu->Captions[i]);
 		}
-		//sprintf(buffer,"MENU_TEXT_%d",i);
-		//Text_Draw(0.8,0.1+0.05*i,200+i,FONT1,TEXT_CENTER,buffer,_menu->Captions[i]);
 	}
 	free(buffer);
     Set_Change();

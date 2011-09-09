@@ -5,7 +5,11 @@
  * @date 2011.05.09
  * @version 0.1
 */
-#include <GL/glut.h>
+#ifdef _WIN32
+# include <GL/freeglut.h>
+#else
+# include <GL/glut.h>
+#endif
 #include <string.h>
 #include "game.h"
 #include "input.h"
@@ -34,6 +38,5 @@ int main(int argc, char** argv)
 	glutMouseFunc(&Mouse_Event);
 	glutCloseFunc(&Close_Game);
     glutMainLoop();
-    return (EXIT_SUCCESS);
+    return 0;
 }
-

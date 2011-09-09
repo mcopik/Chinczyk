@@ -8,18 +8,15 @@
 #ifndef GAME_H
 #define	GAME_H
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
 
-#include <GL/glut.h>
+
 #include "array.h"
 #include "input.h"
 #include "fifo.h"
 
 #define MENU_BUTTON_HIT 230
 #define DEFAULT_ARGUMENT "--default"
-#define ERROR(ret,...)		\
+#define ERROR_MACRO(ret,...)		\
 {							\
 	printf(__VA_ARGS__);	\
 	return ret;				\
@@ -51,11 +48,11 @@ extern "C" {
 #define DRAWING_TEXT "Wylosowano:"
 
 #define TEXT_DRAW_PLAYER 									\
-Text_Draw(0.05,0.1,255,FONT1,TEXT_NORMAL,					\
+Text_Draw(0.05f,0.1f,255,(void*)FONT1,TEXT_NORMAL,			\
 			NAME_MSG,"%s",Players[Active_Player].Name);
 		
 #define TEXT_DRAW_FPS 										\
-Text_Draw(0.05,0.05,255,FONT1,TEXT_NORMAL,					\
+Text_Draw(0.05f,0.05f,255,(void*)FONT1,TEXT_NORMAL,			\
 			FPS_MSG,"%s %d",FPS_TEXT,FPS_Counter);
 		
 #define TEXT_DRAW_RAND(buffer,number,tab) 					\
@@ -64,12 +61,12 @@ strcpy(buffer,DRAWING_TEXT);								\
 for(i = 0;i < number;i++){									\
 	sprintf(buffer,"%s %d",buffer,tab[i]);					\
 }															\
-Text_Draw(0.05,0.15,255,(void*)FONT1,						\
+Text_Draw(0.05f,0.15f,255,(void*)FONT1,						\
 			TEXT_NORMAL,DRAW_MSG,"%s",buffer);				\
 free(buffer);
 		
 #define TEXT_DRAW_MENU_BUTTON								\
-Text_Draw(0.85,0.05,MENU_BUTTON_HIT,						\
+Text_Draw(0.85f,0.05f,MENU_BUTTON_HIT,						\
 			(void*)FONT2,TEXT_NORMAL,MENU_MSG,"%s",MENU_TEXT);		
 	
 	enum{
@@ -87,19 +84,19 @@ Text_Draw(0.85,0.05,MENU_BUTTON_HIT,						\
 	};
 	
 	enum{
-		HUMAN,
-		AI
+		PLAYER_HUMAN,
+		PLAYER_AI
 	};
 	
 	enum{
-		INIT,
-		INIT_DEF,
-		LOOP,
-		CLOSE
+		GAME_INIT,
+		GAME_INIT_DEF,
+		GAME_LOOP,
+		GAME_CLOSE
 	};
 	enum{
-		SET_CHANGE,
-		CHECK_CHANGE
+		CHANGE_SET,
+		CHANGE_CHECK
 	};
 	/**
 	 * 
@@ -133,9 +130,7 @@ Text_Draw(0.85,0.05,MENU_BUTTON_HIT,						\
 	int Find_First_Free(Player * _player,int _number_of_player,int _number_of_players);
 	int Get_Distance(int _position,int _player_number,int _number_of_players);
 	void Close_Game();
-#ifdef	__cplusplus
-}
-#endif
+
 
 #endif	/* GAME_H */
 

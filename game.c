@@ -8,20 +8,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <time.h>
+#ifdef _WIN32
+# include <GL/freeglut.h>
+#else
+# include <GL/glut.h>
+#endif
 
-
-inline int POW(int a, int b){
-		
+int POW(int a, int b)
+{	
 		int i;
-		int j = a;
+		int j;
+		
+		j = a;
 		if(b == 0)
 		return 1;
 		for(i = 1;i < b;i++)
 			j *= a;
 		return j;
-		
 }
 
 Array * Default_Game_Options()
@@ -29,30 +33,32 @@ Array * Default_Game_Options()
 	int i,temp;
 	float temp2[3] = {1.0f,0.0f,0.0f};
 	char buffer[STRING_SIZE+1],buffer2[STRING_SIZE+2];
+	Array * array;
+	
 	remove(PATH);
-	Array * array = Create_Array();
+	array = Create_Array();
 	temp = 4;
-	Add_Element(array,"NUMBER_OF_PLAYERS",&temp,1,INTEGER);
+	Add_Element(array,"NUMBER_OF_PLAYERS",&temp,1,ARRAY_INTEGER);
 	temp = 0;
-	Add_Element(array,"PLAYER0_AI",&temp,1,BOOLEAN);
+	Add_Element(array,"PLAYER0_AI",&temp,1,ARRAY_BOOLEAN);
 	temp = AI_EASY;
-	Add_Element(array,"LEVEL",&temp,1,INTEGER);
+	Add_Element(array,"LEVEL",&temp,1,ARRAY_INTEGER);
 	sprintf(buffer,"Gracz %d",1);
-	Add_Element(array,"PLAYER0_NAME",buffer,6,CHAR);
-	Add_Element(array,"PLAYER0_COLOR",&temp2,3,FLOAT);
+	Add_Element(array,"PLAYER0_NAME",buffer,6,ARRAY_CHAR);
+	Add_Element(array,"PLAYER0_COLOR",&temp2,3,ARRAY_FLOAT);
 	temp = 1;
 	for(i = 1;i < MAX_PLAYERS;i++){
 		sprintf(buffer,"PLAYER%d_AI",i);
-		Add_Element(array,buffer,&temp,1,BOOLEAN);
+		Add_Element(array,buffer,&temp,1,ARRAY_BOOLEAN);
 		sprintf(buffer,"PLAYER%d_NAME",i);
 		sprintf(buffer2,"Gracz %d",i+1);
-		Add_Element(array,buffer,buffer2,11,CHAR);
+		Add_Element(array,buffer,buffer2,11,ARRAY_CHAR);
 		if(i < 4)
 			temp2[i-1] = 0.43f;
 		else
 			temp2[i-3] = 0.6f;
 		sprintf(buffer,"PLAYER%d_COLOR",i);
-		Add_Element(array,buffer,&temp2,3,FLOAT);
+		Add_Element(array,buffer,&temp2,3,ARRAY_FLOAT);
 	}
 	return array;
 }
@@ -60,20 +66,22 @@ Array * Default_Game_Options()
 Array * Default_Graphic_Options()
 {
 	int temp;
-	Array * array = Create_Array();
+	Array * array;
+	
+	array = Create_Array();
 	temp = 800;
-	Add_Element(array,"WIDTH",&temp,1,INTEGER);
+	Add_Element(array,"WIDTH",&temp,1,ARRAY_INTEGER);
 	temp = 600;
-	Add_Element(array,"HEIGHT",&temp,1,INTEGER);
-	Add_Element(array,"LABEL","Chinczyk",9,CHAR);
+	Add_Element(array,"HEIGHT",&temp,1,ARRAY_INTEGER);
+	Add_Element(array,"LABEL","Chinczyk",9,ARRAY_CHAR);
 	temp = 0;
-	Add_Element(array,"FULLSCREEN",&temp,1,BOOLEAN);
+	Add_Element(array,"FULLSCREEN",&temp,1,ARRAY_BOOLEAN);
 	return array;
 }
 
 void Create_Player(Player * _player,const char * _name,float * _colors,int _type)
 {
-	_player->Name = malloc(sizeof(*_name)*(STRING_SIZE+1));
+	_player->Name = (char*)malloc(sizeof(*_player->Name)*(STRING_SIZE+1));
 	strcpy(_player->Name,_name);
 	memcpy(_player->Color,_colors,sizeof(*_colors)*3);
 	_player->Type = _type;
@@ -81,8 +89,10 @@ void Create_Player(Player * _player,const char * _name,float * _colors,int _type
 
 void Set_Positions(Player * _player,int _number_of_player,int _players_number)
 {
-	int temp = _number_of_player*NUMBER_OF_PAWNS*2;
+	int temp;
 	int i;
+
+	temp = _number_of_player*NUMBER_OF_PAWNS*2;
 	for(i=0;i < NUMBER_OF_PAWNS;i++){
 		_player->Position[i] = temp++;
 	}
@@ -97,6 +107,8 @@ void Init_Game(Iterator * _it,Player ** _players,Fields_Structure ** _fields,int
 {
 	int i;
 	float * temp2;
+	char * buffer;
+	char * buffer2;
 	Find(_it,"NUMBER_OF_PLAYERS");
 	*_number_of_players = Get_ValueI(_it);
 	*_fields = Fields_Generate(*_number_of_players);
@@ -104,8 +116,7 @@ void Init_Game(Iterator * _it,Player ** _players,Fields_Structure ** _fields,int
 	*_first_move = malloc(sizeof(**_first_move)*(*_number_of_players));
 	for(i = 0;i < *_number_of_players;i++)
 		(*_first_move)[i] = 2;
-	char * buffer = malloc(STRING_SIZE*sizeof(char));
-	char * buffer2;
+	buffer = (char*)malloc(STRING_SIZE*sizeof(char));
 	for(i = 0;i < *_number_of_players;i++)
 	{
 		sprintf(buffer,"PLAYER%d_COLOR",i);
@@ -118,14 +129,14 @@ void Init_Game(Iterator * _it,Player ** _players,Fields_Structure ** _fields,int
 			sprintf(buffer,"PLAYER%d_NAME",i);
 			Find(_it,buffer);
 			buffer2 = Get_Value_ArrayC(_it);
-			Create_Player(*_players,buffer2,temp2,AI);
+			Create_Player(*_players,buffer2,temp2,PLAYER_AI);
 		}
 		else
 		{
 			sprintf(buffer,"PLAYER%d_NAME",i);
 			Find(_it,buffer);
 			buffer2 = Get_Value_ArrayC(_it);
-			Create_Player(*_players,buffer2,temp2,HUMAN);
+			Create_Player(*_players,buffer2,temp2,PLAYER_HUMAN);
 		}
 		Set_Positions(*_players,i,*_number_of_players);
 		(*_players)++;
@@ -185,7 +196,7 @@ void Main_Loop(int _type)
 	}
 	if(Game_Status == LOOP_CONFIG)
 	{
-		if(_type == INIT_DEF)
+		if(_type == GAME_INIT_DEF)
 		{
 			Game_Options = Default_Game_Options();
 			Graphic_Options = Default_Graphic_Options();
@@ -224,7 +235,7 @@ void Main_Loop(int _type)
 		Game_Status = LOOP_START;
 	}
 	
-	if(_type == CLOSE || Game_Status == LOOP_QUIT)
+	if(_type == GAME_CLOSE || Game_Status == LOOP_QUIT)
 	{
 		Game_Status = LOOP_QUIT;
 		Next_Time = Frame_Length+Time;
@@ -255,7 +266,7 @@ void Main_Loop(int _type)
 		}
 		if(Game_Status != LOOP_START && Game_Status != LOOP_NEXT_PLAYER && Game_Status != LOOP_QUIT)
 		{
-			if(Players[Active_Player].Type == HUMAN || Game_Status == LOOP_MENU)
+			if(Players[Active_Player].Type == PLAYER_HUMAN || Game_Status == LOOP_MENU)
 			{
 				temp = Event_Get();
 				if(temp == EVENT_MOUSE)
@@ -575,13 +586,13 @@ void Main_Loop(int _type)
 				Game_Status = LOOP_QUIT;
 			break;
 			case LOOP_NEXT_PLAYER:
-				if(Players[Active_Player].Type == AI)
+				if(Players[Active_Player].Type == PLAYER_AI)
 				{
 					Active_Player = ++Active_Player % Number_of_Players;
 					/** clean events buffer, so actions from time of AI move
 					 * wouldn't affect game
 					 */
-					if(Players[Active_Player].Type == HUMAN)
+					if(Players[Active_Player].Type == PLAYER_HUMAN)
 					{
 						temp = Event_Get();
 						while(temp != -1){
@@ -603,7 +614,7 @@ void Main_Loop(int _type)
 				}
 				else
 				Active_Player = ++Active_Player % Number_of_Players;
-				if(Players[Active_Player].Type == AI)
+				if(Players[Active_Player].Type == PLAYER_AI)
 					Delay = FPS;
 				TEXT_DRAW_PLAYER;
 				TEXT_DRAW_RAND(buffer,0,tab);
@@ -638,7 +649,7 @@ void Main_Loop(int _type)
 				Clean_Key_Event();
 				Event_Clean();
 				Quit = 1;
-				if(_type != CLOSE)
+				if(_type != GAME_CLOSE)
 					glutDestroyWindow(Window_Number);
 			break;
 		}
@@ -656,22 +667,22 @@ void Main_Loop(int _type)
 
 void Process()
 {
-	Main_Loop(LOOP);
+	Main_Loop(GAME_LOOP);
 }
 
 void Init_Process(int _default)
 {
 	if(_default)
-		Main_Loop(INIT_DEF);
+		Main_Loop(GAME_INIT_DEF);
 	else
-		Main_Loop(INIT);
+		Main_Loop(GAME_INIT);
 }
 
 int _Change(int _type)
 {
 	static int Change = 0;
 	
-	if(_type == SET_CHANGE)
+	if(_type == CHANGE_SET)
 		Change = 1;
 	else
 	{
@@ -688,12 +699,12 @@ int _Change(int _type)
 
 void Set_Change()
 {
-	_Change(SET_CHANGE);
+	_Change(CHANGE_SET);
 }
 
 int Check_Change()
 {
-	return _Change(CHECK_CHANGE);
+	return _Change(CHANGE_CHECK);
 }
 		
 int Check_Move(int _position,int _value,int _number_of_players,int _player_number)
@@ -702,6 +713,7 @@ int Check_Move(int _position,int _value,int _number_of_players,int _player_numbe
 	int base = _player_number*NUMBER_OF_FIELDS_PER_PLAYER + shift;
 	int length = NUMBER_OF_FIELDS_PER_PLAYER*_number_of_players;
 	int temp;
+
 	if(_position < shift)
 	{
 		/** is pawn in base or in home? */
@@ -755,11 +767,11 @@ int Check_Move(int _position,int _value,int _number_of_players,int _player_numbe
 
 int Find_First_Free(Player * _player,int _number_of_player,int _number_of_players)
 {
-	int i;
-	int tab[NUMBER_OF_PAWNS];
+	int i,shift,tab[NUMBER_OF_PAWNS];
+
 	for(i = 0;i < NUMBER_OF_PAWNS;i++)
 		tab[i] = 0;
-	int shift = NUMBER_OF_PAWNS*2*_number_of_player;
+	shift = NUMBER_OF_PAWNS*2*_number_of_player;
 	for(i = 0;i < NUMBER_OF_PAWNS;i++){
 		if(_player[_number_of_player].Position[i] >= shift &&\
 		_player[_number_of_player].Position[i] < shift + NUMBER_OF_PAWNS)
@@ -776,6 +788,7 @@ int Get_Distance(int _position,int _player_number,int _number_of_players)
 	int shift = NUMBER_OF_PAWNS*_number_of_players*2;
 	int base = _player_number*NUMBER_OF_FIELDS_PER_PLAYER + shift;
 	int length = NUMBER_OF_FIELDS_PER_PLAYER*_number_of_players;
+
 	if(_position < shift)
 			return 0;
 	if(_position >= base)
@@ -787,6 +800,7 @@ int Get_Distance(int _position,int _player_number,int _number_of_players)
 int Check_Occupied(Player * _players, int _move, int _active_player, int _number_of_players)
 {
 	int i,j;
+
 	for(i = 0;i < _number_of_players;i++){
 		for(j = 0;j < NUMBER_OF_PAWNS;j++){
 			if(_move == _players[i].Position[j])
@@ -804,6 +818,7 @@ int Check_Occupied(Player * _players, int _move, int _active_player, int _number
 int Check_All_Base(Player * _player,int _active_player,int _number_of_players)
 {
 	int i;
+
 	for(i = 0;i < NUMBER_OF_PAWNS;i++){
 		if(!(_player->Position[i] >= NUMBER_OF_PAWNS*(2*_active_player+1) &&\
 			_player->Position[i] < NUMBER_OF_PAWNS*(2*_active_player+2)))
@@ -814,7 +829,7 @@ int Check_All_Base(Player * _player,int _active_player,int _number_of_players)
 
 void Close_Game()
 {
-	Main_Loop(CLOSE);
+	Main_Loop(GAME_CLOSE);
 }
 
 

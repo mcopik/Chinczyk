@@ -1,9 +1,14 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include <GL/glut.h>
 #include <math.h>
 #include <assert.h>
+#ifdef _WIN32
+# include <GL/freeglut.h>
+#else
+# include <GL/glut.h>
+#endif
 #include "graphic.h"
 #include "game.h"
 
@@ -18,28 +23,28 @@ float * Camera_Action(int _type,float * _camera,int _action)
 			memcpy(Camera,_camera,sizeof(*Camera)*3);
 		break;
 		case CAMERA_GET:
-			pt = malloc(sizeof(*pt)*3);
+			pt = (float*)malloc(sizeof(*pt)*3);
 			memcpy(pt,Camera,sizeof(*Camera)*3);
 			return pt;
 		break;
 		case CAMERA_CHANGE:
 			switch(_action){
-				case UP:
+				case CAMERA_UP:
 					Camera[0] += CAMERA_SPEED;
 				break;
-				case DOWN:
+				case CAMERA_DOWN:
 					Camera[0] -= CAMERA_SPEED;
 				break;
-				case LEFT:
+				case CAMERA_LEFT:
 					Camera[1] += CAMERA_SPEED;
 				break;
-				case RIGHT:
+				case CAMERA_RIGHT:
 					Camera[1] -= CAMERA_SPEED;
 				break;
-				case FARTHER:
+				case CAMERA_FARTHER:
 					Camera[2] += CAMERA_SPEED;
 				break;
-				case CLOSER:
+				case CAMERA_CLOSER:
 					Camera[2] -= CAMERA_SPEED;
 				break;
 			}
@@ -68,7 +73,7 @@ float * Get_Camera()
 	return Camera_Action(CAMERA_GET,NULL,0);
 }
 
-void Interval(float * number, int min,int max){
+void Interval(float * number, float min,float max){
 
     if (*number < min)
         *number = min;
@@ -79,38 +84,36 @@ void Interval(float * number, int min,int max){
 int Load_Image(Image * _image,const char * _path){
 
 	FILE * file;
-	uint8_t bpp,temp;
+	unsigned short int bpp,temp;
 	size_t size;
 	int i;
 
 	file = fopen(_path,"rb");
 	if(!file)
-		ERROR(1,"Bitmap doesn't exist");
+		ERROR_MACRO(1,"Bitmap doesn't exist");
 	/** First part of header */
 	fseek(file,18,SEEK_CUR);
 
 	if(fread(&_image->Width,4,1,file) != 1)
-		ERROR(1,"Error reading data");
+		ERROR_MACRO(1,"Error reading data");
 	if(fread(&_image->Height,4,1,file) != 1)
-		ERROR(1,"Error reading data");
+		ERROR_MACRO(1,"Error reading data");
 		
 	/** number of planes - unnecessary */
 	fseek(file,2,SEEK_CUR);
 	if(fread(&bpp,2,1,file) != 1)
-		ERROR(1,"Error reading data");
+		ERROR_MACRO(1,"Error reading data");
 		
 	/**bpp is size of data for every pixel in bites
 		dividing it by 8 gives size in bytes */
 	size = _image->Width*_image->Height*bpp/8;
-	_image->Data = malloc(size);
+	_image->Data = (char*)malloc(sizeof(*_image->Data)*size);
 
-	if(!_image->Data)
-		ERROR(1,"Error during memory allocation");
 	/**other data */
 	fseek(file, 24, SEEK_CUR);
 
 	if(fread(_image->Data,size,1,file) != 1)
-		ERROR(1,"Error reading data");
+		ERROR_MACRO(1,"Error reading data");
 	/** for some strange reason bitmap contains
 	 * colors as blue,green,red */
 	for(i = 0;i < size;i += 3){
@@ -128,7 +131,7 @@ void  Close_Image(Image * _image){
 }
 
 #define DRAW_PAWN(quadratic,array,number)	\
-glTranslatef(Fields_Get_X(array,number),H/2+0.01,-Fields_Get_Y(array,number));	\
+glTranslatef(Fields_Get_X(array,number),(float)(H/2+0.01),-Fields_Get_Y(array,number));	\
 glRotatef(90.0f,1.0f,0.0f,0.0f); \
 gluDisk(quadratic, 0, Fields_Get_Radius(array,number), 50, 10);
 					
@@ -154,6 +157,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 	static int Blink_Field = -1;
 	static int Active_Player = -1;
 	static int Cube_Pips[2][6] = {{3,3,5,5,3,3},{2,6,6,1,1,5}};
+	static Image * Image1; 
 	char buffer[STRING_SIZE+1];
 	int i,j;
 	
@@ -168,7 +172,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 		free(Camera);
 		
 		glEnable(GL_TEXTURE_2D);
-		Image * Image1 = malloc(sizeof(*Image1));
+		Image1 = malloc(sizeof(*Image1));
 		for(i = 0;i < NUMBER_OF_TEXTURES;i++){
 			sprintf(buffer,"texture%d.bmp",i+1);
 			Load_Image(Image1,buffer);
@@ -225,7 +229,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 			gluCylinder(Quadric,PAWN_RADIUS,PAWN_RADIUS*0.2,PAWN_HEIGHT,32,32);
 	
 			glRotatef(90.0f,1.0f,0.0f,0.0f);
-			glTranslatef(0.0f,PAWN_HEIGHT+PAWN_RADIUS/2,0.0f);
+			glTranslatef(0.0f,(float)(PAWN_HEIGHT+PAWN_RADIUS/2),0.0f);
 	
 			glRotatef(-90.0f,1.0f,0.0f,0.0f);
 			gluSphere(Quadric,PAWN_RADIUS/2,32,32);
@@ -498,7 +502,7 @@ void _Draw_Text(int _type,Text * _text,const char * _name)//int * _width,int *_h
 		Texts = Create_Array();
 	else if(_type == TEXT_ADD)
 	{
-		Add_Element(Texts,_name,_text,1,TEXT);
+		Add_Element(Texts,_name,_text,1,ARRAY_TEXT);
 		free(_text);
 	}
 	else if(_type == TEXT_REMOVE)
@@ -550,14 +554,14 @@ void _Draw_Text(int _type,Text * _text,const char * _name)//int * _width,int *_h
 				if(_type == GL_SELECT)
 					glPushName(0);
 				while(1){
-					Ptr = Get_Value(it);
+					Ptr = (Text*)Get_Value(it);
 					len = strlen(Ptr->String);
+					bitmap_w = 0;
 					if(_type == GL_SELECT || Ptr->Position == TEXT_CENTER)
 					{
 						bitmap_h = Font_Height(Ptr->Font);
-						bitmap_w = 0;
 						for(i = 0;i < len;i++)
-							bitmap_w += glutBitmapWidth(Ptr->Font,Ptr->String[i]);
+							bitmap_w += glutBitmapWidth((void*)Ptr->Font,Ptr->String[i]);
 					}
 					if(_type == GL_SELECT)
 					{
@@ -747,14 +751,14 @@ void Fields_Generate_4_Players(Field * _pointer)
 	int i,j,shift;
 	
 	Width = MIN(W,D)/2;
-	Radius = FIELD_RADIUS;//0.03*Width*2;
+	Radius = FIELD_RADIUS;
 	
 	for(i = 0;i < 4;i++)
 	{
 			for(j = 0;j < NUMBER_OF_PAWNS;j++)
 			{
-				_pointer[i*2*NUMBER_OF_PAWNS+j].Position[0] = 0.9*Width - Radius;
-				_pointer[i*2*NUMBER_OF_PAWNS+j].Position[1] = 0.9*Width - Radius;
+				_pointer[i*2*NUMBER_OF_PAWNS+j].Position[0] = (float)(0.9*Width - Radius);
+				_pointer[i*2*NUMBER_OF_PAWNS+j].Position[1] = (float)(0.9*Width - Radius);
 				_pointer[i*2*NUMBER_OF_PAWNS+j].Radius = Radius;
 			}
 	}
@@ -782,8 +786,9 @@ void Fields_Generate_4_Players(Field * _pointer)
 	{
 		for(j = 0;j < NUMBER_OF_PAWNS;j++)
 		{
-			_pointer[2*2*NUMBER_OF_PAWNS*i+NUMBER_OF_PAWNS+j].Position[0] = 0.0f;
-			_pointer[2*2*NUMBER_OF_PAWNS*i+NUMBER_OF_PAWNS+j].Position[1] = (0.9*Width - (2+j)*Radius*2)*POW(-1,i);
+			_pointer[2*2*NUMBER_OF_PAWNS*i+NUMBER_OF_PAWNS+j].Position[0] = (float)(0.0f);
+			_pointer[2*2*NUMBER_OF_PAWNS*i+NUMBER_OF_PAWNS+j].Position[1] = \
+							(float)((0.9*Width - (2+j)*Radius*2)*POW(-1,i));
 			_pointer[2*2*NUMBER_OF_PAWNS*i+NUMBER_OF_PAWNS+j].Radius = Radius;
 		}
 	}
@@ -791,7 +796,8 @@ void Fields_Generate_4_Players(Field * _pointer)
 	{
 		for(j = 0;j < NUMBER_OF_PAWNS;j++)
 		{
-			_pointer[2*2*NUMBER_OF_PAWNS*i+3*NUMBER_OF_PAWNS+j].Position[0] = (0.9*Width - (2+j)*Radius*2)*POW(-1,i);
+			_pointer[2*2*NUMBER_OF_PAWNS*i+3*NUMBER_OF_PAWNS+j].Position[0] = \
+							(float)((0.9*Width - (2+j)*Radius*2)*POW(-1,i));
 			_pointer[2*2*NUMBER_OF_PAWNS*i+3*NUMBER_OF_PAWNS+j].Position[1] = 0.0f;
 			_pointer[2*2*NUMBER_OF_PAWNS*i+3*NUMBER_OF_PAWNS+j].Radius = Radius;
 		}
@@ -801,8 +807,10 @@ void Fields_Generate_4_Players(Field * _pointer)
 	{
 		for(j = 0;j < NUMBER_OF_FIELDS_PER_PLAYER;j++)
 		{
-			_pointer[shift+i*NUMBER_OF_FIELDS_PER_PLAYER+j].Position[0] = 0.0f + j* (0.9*Width-Radius)/8;
-			_pointer[shift+i*NUMBER_OF_FIELDS_PER_PLAYER+j].Position[1] = (0.9*Width - Radius) - j* (0.9*Width-Radius)/8;
+			_pointer[shift+i*NUMBER_OF_FIELDS_PER_PLAYER+j].Position[0] = \
+								(float)(j*(0.9*Width-Radius)/8);
+			_pointer[shift+i*NUMBER_OF_FIELDS_PER_PLAYER+j].Position[1] = \
+								(float)((0.9*Width - Radius) - j* (0.9*Width-Radius)/8);
 			_pointer[shift+i*NUMBER_OF_FIELDS_PER_PLAYER+j].Radius = Radius;
 		}	
 	}
@@ -810,8 +818,10 @@ void Fields_Generate_4_Players(Field * _pointer)
 	{
 		for(j = 0;j < NUMBER_OF_FIELDS_PER_PLAYER;j++)
 		{
-			_pointer[shift+(i+1)*NUMBER_OF_FIELDS_PER_PLAYER+j].Position[0] = (0.9*Width-Radius) - j*(0.9*Width-Radius)/8;
-			_pointer[shift+(i+1)*NUMBER_OF_FIELDS_PER_PLAYER+j].Position[1] = 0.0f - j* (0.9*Width-Radius)/8;
+			_pointer[shift+(i+1)*NUMBER_OF_FIELDS_PER_PLAYER+j].Position[0] = \
+								(float)((0.9*Width-Radius) - j*(0.9*Width-Radius)/8);
+			_pointer[shift+(i+1)*NUMBER_OF_FIELDS_PER_PLAYER+j].Position[1] = \
+								(float)(-j*(0.9*Width-Radius)/8);
 			_pointer[shift+(i+1)*NUMBER_OF_FIELDS_PER_PLAYER+j].Radius = Radius;
 		}	
 	}
@@ -886,7 +896,7 @@ void Fields_Generate_5_Players(Field * _pointer)
 		for(j = 0;j < NUMBER_OF_PAWNS;j++)
 		{
 			_pointer[(1+2*i)*NUMBER_OF_PAWNS+j].Position[1] = 0.0f;
-			_pointer[(1+2*i)*NUMBER_OF_PAWNS+j].Position[0] = (0.8*Width - (2+j)*Radius*2);
+			_pointer[(1+2*i)*NUMBER_OF_PAWNS+j].Position[0] = (float)(0.8*Width - (2+j)*Radius*2);
 			_pointer[(1+2*i)*NUMBER_OF_PAWNS+j].Radius = Radius;
 		}
 	}
@@ -896,7 +906,7 @@ void Fields_Generate_5_Players(Field * _pointer)
 	for(i = 0;i < NUMBER_OF_PAWNS;i++)
 	{
 			_pointer[2*2*(NUMBER_OF_PAWNS+1)+i].Position[0] = 0.0f;
-			_pointer[2*2*(NUMBER_OF_PAWNS+1)+i].Position[1] = -(0.7*Width - (2+i)*Radius*2);
+			_pointer[2*2*(NUMBER_OF_PAWNS+1)+i].Position[1] = (float)(-(0.7*Width - (2+i)*Radius*2));
 			_pointer[2*2*(NUMBER_OF_PAWNS+1)+i].Radius = Radius;
 	}
 	//first and fifth player
@@ -927,7 +937,7 @@ void Fields_Generate_5_Players(Field * _pointer)
 	}
 	shift += NUMBER_OF_FIELDS_PER_PLAYER;
 	//second player
-	_pointer[shift].Position[0] = _pointer[3*NUMBER_OF_PAWNS].Position[0] + 2.5*Radius;
+	_pointer[shift].Position[0] = _pointer[3*NUMBER_OF_PAWNS].Position[0] + 2.5f*Radius;
 	_pointer[shift].Position[1] = 0.0f;
 	_pointer[shift].Radius = Radius;
 	for(i = 1;i < NUMBER_OF_FIELDS_PER_PLAYER;i++)
@@ -955,7 +965,7 @@ void Fields_Generate_5_Players(Field * _pointer)
 	}
 	shift += NUMBER_OF_FIELDS_PER_PLAYER;
 	//fourth player
-	_pointer[shift].Position[0] = _pointer[7*NUMBER_OF_PAWNS].Position[0] - 2.5*Radius;
+	_pointer[shift].Position[0] = _pointer[7*NUMBER_OF_PAWNS].Position[0] - 2.5f*Radius;
 	_pointer[shift].Position[1] = 0.0f;
 	_pointer[shift].Radius = Radius;
 	for(i = 1;i < NUMBER_OF_FIELDS_PER_PLAYER;i++)
@@ -977,7 +987,7 @@ void Fields_Generate_5_Players(Field * _pointer)
 	}
 	for(i = 3;i < 6;i++)
 	{
-		_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0] + 2.5*Radius;
+		_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0] + 2.5f*Radius;
 		_pointer[shift+i].Position[1] = _pointer[shift+i-1].Position[1];
 		_pointer[shift+i].Radius = Radius;
 	}
@@ -1051,7 +1061,7 @@ void Fields_Generate_6_Players(Field * _pointer)
 	for(i = 0;i < NUMBER_OF_PAWNS;i++)
 	{
 			_pointer[(2*2+1)*NUMBER_OF_PAWNS+i].Position[0] = 0.0f;
-			_pointer[(2*2+1)*NUMBER_OF_PAWNS+i].Position[1] = -(0.7*Width - (2+i)*Radius*2);
+			_pointer[(2*2+1)*NUMBER_OF_PAWNS+i].Position[1] = (float)(-(0.7*Width - (2+i)*Radius*2));
 			_pointer[(2*2+1)*NUMBER_OF_PAWNS+i].Radius = Radius;
 	}
 	//fourth and fifth player
@@ -1070,7 +1080,7 @@ void Fields_Generate_6_Players(Field * _pointer)
 	for(i = 0;i < NUMBER_OF_PAWNS;i++)
 	{
 			_pointer[(2*5+1)*NUMBER_OF_PAWNS+i].Position[0] = 0.0f;
-			_pointer[(2*5+1)*NUMBER_OF_PAWNS+i].Position[1] = 0.7*Width - (2+i)*Radius*2;
+			_pointer[(2*5+1)*NUMBER_OF_PAWNS+i].Position[1] = (float)(0.7*Width - (2+i)*Radius*2);
 			_pointer[(2*5+1)*NUMBER_OF_PAWNS+i].Radius = Radius;
 	}
 	shift = 2*NUMBER_OF_PAWNS*6;
@@ -1087,7 +1097,7 @@ void Fields_Generate_6_Players(Field * _pointer)
 	for(i = 3;i < 6;i++)
 	{
 		_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0];
-		_pointer[shift+i].Position[1] = _pointer[shift+i-1].Position[1] - 2.5*Radius;
+		_pointer[shift+i].Position[1] = _pointer[shift+i-1].Position[1] - 2.5f*Radius;
 		_pointer[shift+i].Radius = Radius;
 	}
 	for(i = 6;i < 8;i++)
@@ -1204,26 +1214,6 @@ float Fields_Get_Y(Fields_Structure * _fields,int _number)
 	return _fields->Data[_number].Position[1];
 }
 
-void Draw_Circle(float _radius, float _x, float _y,float _z)
-{
-	int i;
-	if(_radius)
-	{
-		glPushMatrix();
-		glTranslatef(_x,_y,_z);
-		glBegin(GL_LINES);
-		float theta;
-		for (i = 0; i < 180; i++)
-		{
-			theta = 2.0f * PI * (float)i / 180.0f;
-			glVertex3f(_radius * cos(theta),0,_radius * sin(theta));
-			glVertex3f(_radius * cos(theta+PI),0,_radius * sin(theta+PI));
-		}
-		glEnd();
-		glPopMatrix();
-	}
-}
-
 void Text_Draw(float _x,float _y,int _select_name,void *_font,int _position_type,\
 				const char * _name,const char * _format,...)
 {
@@ -1288,11 +1278,13 @@ void Text_Create_Player(const char * _name)
 }
 
 void Text_Create_FPS(int _fps)
-{
-    //5 digits for FPS. everything can happen
-    char * buffer = malloc(sizeof(*buffer)*(strlen(DRAWING_TEXT)+6));
+{ 
+	Text * ptr;
+    char * buffer;
+	//5 digits for FPS. everything can happen
+	buffer = malloc(sizeof(*buffer)*(strlen(DRAWING_TEXT)+6));
     sprintf(buffer,"%s %d",FPS_TEXT,_fps);
-    Text * ptr = Text_Create(50,25,200,buffer,FONT1);
+    ptr = Text_Create(50,25,200,buffer,FONT1);
     free(buffer);
     Text_Remove(FPS_MSG);
     Text_Add(ptr,FPS_MSG);

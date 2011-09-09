@@ -8,9 +8,7 @@
 #ifndef INPUT_H
 #define	INPUT_H
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
+
 
 #define BUFFER_SIZE 20
 #define EVENTS_BUFFER 5
@@ -49,9 +47,7 @@ void Event_Clean();
 int Find_Hit(int _value,int _hits,unsigned int * _buffer);
 void Clean_Key_Event();
 void Clean_Mouse_Event();
-#ifdef	__cplusplus
-}
-#endif
+
 
 #endif	/* INPUT_H */
 

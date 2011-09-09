@@ -8,7 +8,7 @@
 #ifndef GRAPHIC_H
 #define	GRAPHIC_H
 
-#include <GL/glut.h>
+
 #include <stdint.h>
 #include "game.h"
 /** Constants */
@@ -19,7 +19,7 @@
 #define W 7.0f
 #define H 0.5f
 #define D 7.0f
-#define FIELD_RADIUS MIN(W,D)*0.03
+#define FIELD_RADIUS (float)(MIN(W,D)*0.03)
 #define PAWN_RADIUS	(FIELD_RADIUS - 0.01f)
 #define PAWN_HEIGHT	0.3f
 #define PI 3.1415926f
@@ -36,26 +36,22 @@
 #define FREQUENCY 5
 #define TEXT_BUFFER_SIZE 10
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
-    
 enum{
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN,
-    FARTHER,
-    CLOSER
-};
-enum{
-	FULL_NOT,
-	FULLSCREEN
+    CAMERA_LEFT,
+    CAMERA_RIGHT,
+    CAMERA_UP,
+    CAMERA_DOWN,
+    CAMERA_FARTHER,
+    CAMERA_CLOSER
 };
 enum{
 	CAMERA_SET,
 	CAMERA_GET,
 	CAMERA_CHANGE
+};
+enum{
+	FULL_NOT,
+	FULLSCREEN
 };
 enum{
 	TEXT_INIT,
@@ -103,7 +99,7 @@ void Set_Camera(float * _camera);
 float * Get_Camera();
 int Load_Image(Image * _image,const char * _path);
 void Close_Image(Image * _image);
-void Interval(float * number, int min,int max);
+void Interval(float * number, float min,float max);
 int Init_GL(int _width, int _height, char * _label,int _fullscr);
 void Draw_Render();
 void Draw_Select();
@@ -137,8 +133,6 @@ void Text_Create_Draw(int _size,int * _tab);
 void Text_Create_FPS(int _fps);
 void Draw_Cube_Pips(float _radius, int _number);
 int Font_Height(void * _font);
-#ifdef	__cplusplus
-}
-#endif
+
 
 #endif	/* GRAPHIC_H */
