@@ -90,7 +90,7 @@ int Add_Element(Array * _array,const char * _name,void * _value,int _size,int _t
 			else
 			{
 				Get_Last(it);
-				for(i=0;i<_array->Length-position;i++)
+				for(i=0;i<_array->Length-position-1;i++)
 					Get_Previous(it);
 			}
 			temp = Compare_Strings(_name,it->Position->Key);

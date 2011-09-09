@@ -143,7 +143,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 	static float * Camera;
 	static int Frequency = -1;
 	static int * Randomized;
-	static GLUquadricObj *quadratic = NULL;
+	static GLUquadricObj * Quadric = NULL;
 	/** \var static unsigned int Texture[3];
     *	\brief Contains textures
 	* 	0 - grass
@@ -211,27 +211,26 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 				glTexCoord2f(5.0f, 5.0f);	glVertex3f(W/2,H/2,D/2);
 				glTexCoord2f(0.0f, 5.0f);	glVertex3f(-W/2,H/2,D/2);
 			glEnd();
-			//glFlush();
 			glDisable(GL_TEXTURE_2D);
 		glEndList();
 		
 		/** Draws pawn */
-		quadratic = gluNewQuadric();
-		gluQuadricDrawStyle(quadratic, GLU_FILL);
-		gluQuadricTexture(quadratic, GL_TRUE);
-		gluQuadricNormals(quadratic, GLU_SMOOTH);
+		Quadric = gluNewQuadric();
+		gluQuadricDrawStyle(Quadric, GLU_FILL);
+		gluQuadricTexture(Quadric, GL_TRUE);
+		gluQuadricNormals(Quadric, GLU_SMOOTH);
 		glNewList(List_Name+1,GL_COMPILE);
 			glTranslatef(0,H/2+0.01f,0);
 			glRotatef(-90.0f,1.0f,0.0f,0.0f);
-			gluCylinder(quadratic,PAWN_RADIUS,PAWN_RADIUS*0.2,PAWN_HEIGHT,32,32);
+			gluCylinder(Quadric,PAWN_RADIUS,PAWN_RADIUS*0.2,PAWN_HEIGHT,32,32);
 	
 			glRotatef(90.0f,1.0f,0.0f,0.0f);
 			glTranslatef(0.0f,PAWN_HEIGHT+PAWN_RADIUS/2,0.0f);
 	
 			glRotatef(-90.0f,1.0f,0.0f,0.0f);
-			gluSphere(quadratic,PAWN_RADIUS/2,32,32);
+			gluSphere(Quadric,PAWN_RADIUS/2,32,32);
 		glEndList();
-		free(quadratic);
+		gluDeleteQuadric(Quadric);
 		
 		/** Draws cube */
 		glNewList(List_Name+2,GL_COMPILE);
@@ -324,10 +323,10 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 		glMatrixMode(GL_MODELVIEW);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 		glLoadIdentity();
-		quadratic = gluNewQuadric();
-		gluQuadricDrawStyle(quadratic, GLU_FILL);
-		gluQuadricTexture(quadratic, GL_TRUE);
-		gluQuadricNormals(quadratic, GLU_SMOOTH);
+		Quadric = gluNewQuadric();
+		gluQuadricDrawStyle(Quadric, GLU_FILL);
+		gluQuadricTexture(Quadric, GL_TRUE);
+		gluQuadricNormals(Quadric, GLU_SMOOTH);
 		
 		
 		/** Camera */
@@ -356,7 +355,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 					glLoadName(i+1);
 				glColor3f(1.0f,1.0f,1.0f);
 				glPushMatrix();
-				DRAW_PAWN(quadratic,Fields,i);
+				DRAW_PAWN(Quadric,Fields,i);
 				glPopMatrix();
 			}
 		}
@@ -369,7 +368,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 				{
 					glColor3f(1.0f,1.0f,1.0f);
 					glPushMatrix();
-					DRAW_PAWN(quadratic,Fields,i);
+					DRAW_PAWN(Quadric,Fields,i);
 					glPopMatrix();
 				}
 			}
@@ -426,10 +425,14 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 				glTranslatef(Fields_Get_X(Fields,Players[Active_Player].Position[*Blink_Pawns]),0,-Fields_Get_Y(Fields,Players[Active_Player].Position[*Blink_Pawns]));
 				glCallList(List_Name+1);
 				glPopMatrix();
+				glEnable(GL_TEXTURE_2D);
+				glBindTexture(GL_TEXTURE_2D, Texture[1]);
+				glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
 				glPushMatrix();
 				if(_type == GL_SELECT)
 					glLoadName(Blink_Field+1);
-				DRAW_PAWN(quadratic,Fields,Blink_Field);
+				DRAW_PAWN(Quadric,Fields,Blink_Field);
+				glDisable(GL_TEXTURE_2D);
 				glPopMatrix();
 			}
 		}
@@ -462,8 +465,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 		
 		glDepthMask(GL_TRUE);
 		glDisable(GL_BLEND);
-		
-		free(quadratic);
+		gluDeleteQuadric(Quadric);
 		if(_type != GL_SELECT)
 			Draw_Text(_type);
 		}
@@ -676,7 +678,7 @@ int Init_GL(int _width, int _height, char * _label,int _fullscr)
     glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse);  // add lighting. (diffuse).
     glLightfv(GL_LIGHT1, GL_POSITION,LightPosition); // set light position.
     glEnable(GL_LIGHT1);                            // turn light 1 on.
-    /*glBlendFunc(GL_SRC_ALPHA,GL_ONE);			// Set The Blending Function For Translucency
+    glBlendFunc(GL_SRC_ALPHA,GL_ONE);			// Set The Blending Function For Translucency
     glColor4f(1.0f, 1.0f, 1.0f, 0.5); */  
 	return Window_Number;
 }
@@ -700,28 +702,7 @@ void Change_Display(int _width,int _height)
 	glutPostRedisplay();
 	Reshape_Window(_width,_height);
 }
-/*
-void _Reshape_Window(int _type,int _width,int _height)
-{
-	printf("RW %d %d %d\n",_type,_width,_height);
-	static int Width = 0;
-	static int Height = 0;
-	if(_type || !Width)
-	{
-		Width = _width;
-		Height = _height;
-	
-	glutReshapeWindow(Width,Height);
-	glutPostRedisplay();
-	}
-	glViewport(0, 0, _width, _height);		
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-
-    gluPerspective(45.0f,(GLfloat)_width/(GLfloat)_height,0.1f,100.0f);
-    glMatrixMode(GL_MODELVIEW);
-}*/
 void Enable_FullScr()
 {
 	glutFullScreen();
@@ -1322,18 +1303,22 @@ void Text_Create_FPS(int _fps)
 void Draw_Cube_Pips(float _radius, int _number)
 {
 	int i;
+	GLUquadricObj * Quadric = gluNewQuadric();
+	gluQuadricDrawStyle(Quadric, GLU_FILL);
+	gluQuadricNormals(Quadric, GLU_SMOOTH);
 	switch(_number){
 		
 		case 1:
-			glRotatef(90.0f,1.0f,0.0f,0.0f);
-			Draw_Circle(_radius,0.0f,0.0f,0.0f);
+			//glRotatef(90.0f,1.0f,0.0f,0.0f);
+			//Draw_Circle(_radius,0.0f,0.0f,0.0f);
+			gluDisk(Quadric, 0, _radius, 50, 10);
 		break;
 		case 2:
 			for(i = 0;i < 2;i++){
 				glPushMatrix();
 					glTranslatef(2*_radius*POW(-1,i),2*_radius*POW(-1,i),0.0f);
-					glRotatef(90.0f,1.0f,0.0f,0.0f);
-					Draw_Circle(_radius,0.0f,0.0f,0.0f);
+					//glRotatef(90.0f,1.0f,0.0f,0.0f);
+					gluDisk(Quadric, 0, _radius, 50, 10);
 				glPopMatrix();
 			}
 		break;
@@ -1341,19 +1326,19 @@ void Draw_Cube_Pips(float _radius, int _number)
 			for(i = 0;i < 2;i++){
 				glPushMatrix();
 					glTranslatef(2*_radius*POW(-1,i),2*_radius*POW(-1,i),0.0f);
-					glRotatef(90.0f,1.0f,0.0f,0.0f);
-					Draw_Circle(_radius,0.0f,0.0f,0.0f);
+					//glRotatef(90.0f,1.0f,0.0f,0.0f);
+					gluDisk(Quadric, 0, _radius, 50, 10);
 				glPopMatrix();
 			}
-			glRotatef(90.0f,1.0f,0.0f,0.0f);
-			Draw_Circle(_radius,0.0f,0.0f,0.0f);
+			//glRotatef(90.0f,1.0f,0.0f,0.0f);
+			gluDisk(Quadric, 0, _radius, 50, 10);
 		break;
 		case 4:
 			for(i = 0;i < 4;i++){
 				glPushMatrix();
 					glTranslatef(3*_radius*(!(i % 2) ? -1 : 1),3*_radius*(i > 1 ? -1 : 1),0.0f);
-					glRotatef(90.0f,1.0f,0.0f,0.0f);
-					Draw_Circle(_radius,0.0f,0.0f,0.0f);
+					//glRotatef(90.0f,1.0f,0.0f,0.0f);
+					gluDisk(Quadric, 0, _radius, 50, 10);
 				glPopMatrix();
 			}
 		break;
@@ -1361,30 +1346,31 @@ void Draw_Cube_Pips(float _radius, int _number)
 			for(i = 0;i < 4;i++){
 				glPushMatrix();
 					glTranslatef(2*_radius*(!(i % 2) ? -1 : 1),2*_radius*(i > 1 ? -1 : 1),0.0f);
-					glRotatef(90.0f,1.0f,0.0f,0.0f);
-					Draw_Circle(_radius,0.0f,0.0f,0.0f);
+					//glRotatef(90.0f,1.0f,0.0f,0.0f);
+					gluDisk(Quadric, 0, _radius, 50, 10);
 				glPopMatrix();
 			}
-			glRotatef(90.0f,1.0f,0.0f,0.0f);
-			Draw_Circle(_radius,0.0f,0.0f,0.0f);
+			//glRotatef(90.0f,1.0f,0.0f,0.0f);
+			gluDisk(Quadric, 0, _radius, 50, 10);
 		break;
 		case 6:
 			for(i = 0;i < 4;i++){
 				glPushMatrix();
 					glTranslatef(2*_radius*(!(i % 2) ? -1 : 1),3*_radius*(i > 1 ? -1 : 1),0.0f);
-					glRotatef(90.0f,1.0f,0.0f,0.0f);
-					Draw_Circle(_radius,0.0f,0.0f,0.0f);
+					//glRotatef(90.0f,1.0f,0.0f,0.0f);
+					gluDisk(Quadric, 0, _radius, 50, 10);
 				glPopMatrix();
 			}
 			for(i = 0;i < 2;i++){
 				glPushMatrix();
 				glTranslatef(2*_radius*POW(-1,i),0.0f,0.0f);
-				glRotatef(90.0f,1.0f,0.0f,0.0f);
-				Draw_Circle(_radius,0.0f,0.0f,0.0f);
+				//glRotatef(90.0f,1.0f,0.0f,0.0f);
+				gluDisk(Quadric, 0, _radius, 50, 10);
 				glPopMatrix();
 			}
 		break;
 	}
+	gluDeleteQuadric(Quadric);
 }
 
 int Font_Height(void * _font)

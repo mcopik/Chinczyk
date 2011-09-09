@@ -187,8 +187,8 @@ void Menu_Draw(Iterator * _graph_it,Menu * _menu)
 			sprintf(buffer,"MENU_TEXT_%d",i);
 			Text_Draw(0.8,0.1+0.05*i,200+i,FONT1,TEXT_CENTER,buffer,_menu->Captions[i]);
 		}
-		sprintf(buffer,"MENU_TEXT_%d",i);
-		Text_Draw(0.8,0.1+0.05*i,200+i,FONT1,TEXT_CENTER,buffer,_menu->Captions[i]);
+		//sprintf(buffer,"MENU_TEXT_%d",i);
+		//Text_Draw(0.8,0.1+0.05*i,200+i,FONT1,TEXT_CENTER,buffer,_menu->Captions[i]);
 	}
 	free(buffer);
     Set_Change();
@@ -208,12 +208,12 @@ void Menu_Clean_Drawing(Menu *_menu)
 	Set_Change();
 }
 
-void Clean(Menu * _menu)
+void Menu_Free(Menu * _menu)
 {
 	int i;
 	for(i = 0;i < _menu->Number_of_Positions;i++){
 		if(_menu->Children[i])
-			Clean(_menu->Children[i]);
+			Menu_Free(_menu->Children[i]);
 	}
 	for(i = 0;i < _menu->Number_of_Positions;i++)
 		free(_menu->Captions[i]);
@@ -412,7 +412,7 @@ void _Menu(Iterator * _game_it,Iterator * _graph_it,Mouse_Action * _m_event,int 
 	}
 	else if(*flag == -1)
 	{
-		Clean(Main);
+		Menu_Free(Main);
 	}
 	else
 	{

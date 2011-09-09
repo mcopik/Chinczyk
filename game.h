@@ -45,6 +45,7 @@ extern "C" {
 #define NAME_MSG "Name_Msg"
 #define FPS_MSG "FPS_Msg"
 #define MENU_MSG "Menu_Msg"
+#define WIN_MSG "Win_Msg"
 #define MENU_TEXT "Menu"
 #define FPS_TEXT "FPS: "
 #define DRAWING_TEXT "Wylosowano:"
@@ -69,7 +70,7 @@ free(buffer);
 		
 #define TEXT_DRAW_MENU_BUTTON								\
 Text_Draw(0.85,0.05,MENU_BUTTON_HIT,						\
-			(void*)FONT2,MENU_MSG,"%s",MENU_TEXT);		
+			(void*)FONT2,TEXT_NORMAL,MENU_MSG,"%s",MENU_TEXT);		
 	
 	enum{
 		LOOP_CONFIG,

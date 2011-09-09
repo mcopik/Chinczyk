@@ -31,7 +31,7 @@ Array * Default_Game_Options()
 	char buffer[STRING_SIZE+1],buffer2[STRING_SIZE+2];
 	remove(PATH);
 	Array * array = Create_Array();
-	temp = 6;//4;
+	temp = 4;
 	Add_Element(array,"NUMBER_OF_PLAYERS",&temp,1,INTEGER);
 	temp = 0;
 	Add_Element(array,"PLAYER0_AI",&temp,1,BOOLEAN);
@@ -168,6 +168,7 @@ void Main_Loop(int _type)
 	static int Delay = 0;
 	static int Quit = 0;
 	static int Fullscreen = 0;
+	static int Win = 0;
 	int Next_Time;
 	int Buffer;
 	int * tab;
@@ -323,7 +324,7 @@ void Main_Loop(int _type)
 						case MENU_NEW_GAME:
 							Find(Game_Iterator,"NUMBER_OF_PLAYERS");
 							temp = Get_ValueI(Game_Iterator);
-							if(temp != Number_of_Players)
+							if(temp != Number_of_Players || Win)
 							{
 								if(Fields)
 									Fields_Close(Fields);
@@ -338,6 +339,11 @@ void Main_Loop(int _type)
 								Find(Game_Iterator,"LEVEL");
 								AI_Init(Randomized,Players,Active_Pawns,&Available_Move,Number_of_Players,\
 											Get_ValueI(Game_Iterator));
+							}
+							if(Win)
+							{
+								Win = 0;
+								Text_Remove(WIN_MSG);
 							}
 							Menu_Disactive();
 							TEXT_DRAW_PLAYER;
@@ -362,11 +368,11 @@ void Main_Loop(int _type)
 									Enable_FullScr();
 								else
 								{
-									Find(Graph_Iterator,"WIDTH");
+									/*Find(Graph_Iterator,"WIDTH");
 									Width = Get_ValueI(Graph_Iterator);
 									Find(Graph_Iterator,"HEIGHT");
-									Height = Get_ValueI(Graph_Iterator);
-									Change_Display(800,600);//Change_Display(Width,Height);
+									Height = Get_ValueI(Graph_Iterator);*/
+									Change_Display(800,600);
 									Set_Change();
 									Fullscreen = -1;
 								}
@@ -498,14 +504,21 @@ void Main_Loop(int _type)
 						Players[Active_Player].Position[Selected_Pawn] = Available_Move;
 						if(Check_All_Base(&Players[Active_Player],Active_Player,Number_of_Players))
 						{	
+							Delay = 2*FPS;
+							Text_Draw(0.5,0.1,255,FONT2,TEXT_CENTER,WIN_MSG,\
+									"Zwyciestwo: %s",Players[Active_Player].Name);
+							Menu_Active();
+							Disable_Blink();
+							Set_Change();
 							Game_Status = LOOP_MENU;
+							Win = 1;
 							break;
 						}
 						Selected_Pawn = -1;
 						Available_Move = -1;
 						temp = FIFO_Pop(Randomized);
 						FIFO_Get_All(Randomized,&temp,&tab);
-						Text_Create_Draw(temp,tab);
+						TEXT_DRAW_RAND(buffer,temp,tab);
 						free(tab);
 						if(FIFO_Check(Randomized) == -1 && Next_Draw)
 						{
