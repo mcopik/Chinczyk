@@ -1,9 +1,15 @@
-/**
- * @mainpage
+/*!
+ * @mainpage main
+ * Gra Chińczyk.@n
+ * Liczba graczy: 4-6.@n
+ * Poziomy trudności: Łatwy, Średni, Trudny.@n
+ * Rozdzielczość: 640x480,800x600,1024x768.@n
+ * Gra w pełnym ekranie: Tak.@n
+ * Uruchomienie gry z argumentem '--default' powoduje ominięcie etapu wczytywania opcji gry z pliku.@n
  * @par Chińczyk
  * @author Marcin Copik
- * @date 2011.05.09
- * @version 0.1
+ * @date 2011.09.10
+ * @version 1.0
 */
 #ifdef _WIN32
 # include <GL/freeglut.h>
@@ -14,10 +20,9 @@
 #include "game.h"
 #include "input.h"
 #include "graphic.h"
-
-/**
- * Main function
- * Initialization of all OpenGL's systems and loading data
+/*!
+*	Główna funkcja.@n
+*	Konfiguruje funkcje używane przez GLUT.@n
 */
 int main(int argc, char** argv) 
 {

@@ -15,7 +15,7 @@
 # include <GL/glut.h>
 #endif
 
-int POW(int a, int b)
+int POW(int _a, int _b)
 {	
 		int i;
 		int j;
@@ -44,7 +44,7 @@ Array * Default_Game_Options()
 	temp = AI_EASY;
 	Add_Element(array,"LEVEL",&temp,1,ARRAY_INTEGER);
 	sprintf(buffer,"Gracz %d",1);
-	Add_Element(array,"PLAYER0_NAME",buffer,6,ARRAY_CHAR);
+	Add_Element(array,"PLAYER0_NAME",buffer,strlen(buffer)+1,ARRAY_CHAR);
 	Add_Element(array,"PLAYER0_COLOR",&temp2,3,ARRAY_FLOAT);
 	temp = 1;
 	for(i = 1;i < MAX_PLAYERS;i++){
@@ -52,7 +52,7 @@ Array * Default_Game_Options()
 		Add_Element(array,buffer,&temp,1,ARRAY_BOOLEAN);
 		sprintf(buffer,"PLAYER%d_NAME",i);
 		sprintf(buffer2,"Gracz %d",i+1);
-		Add_Element(array,buffer,buffer2,11,ARRAY_CHAR);
+		Add_Element(array,buffer,buffer2,strlen(buffer2)+1,ARRAY_CHAR);
 		if(i < 4)
 			temp2[i-1] = 0.43f;
 		else
@@ -73,7 +73,7 @@ Array * Default_Graphic_Options()
 	Add_Element(array,"WIDTH",&temp,1,ARRAY_INTEGER);
 	temp = 600;
 	Add_Element(array,"HEIGHT",&temp,1,ARRAY_INTEGER);
-	Add_Element(array,"LABEL","Chinczyk",9,ARRAY_CHAR);
+	Add_Element(array,"LABEL","Chinczyk",strlen("Chinczyk")+1,ARRAY_CHAR);
 	temp = 0;
 	Add_Element(array,"FULLSCREEN",&temp,1,ARRAY_BOOLEAN);
 	return array;
@@ -280,6 +280,7 @@ void Main_Loop(int _type)
 					{
 						free(k_event);
 						k_event = NULL;
+						Game_Status = LOOP_QUIT;
 					}
 				}
 			}
@@ -388,8 +389,6 @@ void Main_Loop(int _type)
 									Fullscreen = -1;
 								}
 							}
-						break;
-						case MENU_GAME_CHANGE:
 						break;
 						case MENU_CLOSE:
 							Game_Status = LOOP_QUIT;
@@ -831,6 +830,3 @@ void Close_Game()
 {
 	Main_Loop(GAME_CLOSE);
 }
-
-
-	

@@ -99,7 +99,7 @@ int Add_Element(Array * _array,const char * _name,void * _value,int _size,int _t
 			else if(temp == 1)
 				left = position+1;
 			else
-				ERROR_MACRO(0,"Element exists already in array");
+				ERROR_MACRO(1,"Element exists already in array");
 		}
 		ptr = malloc(sizeof(*ptr));
 		Get_First(it);
@@ -126,9 +126,7 @@ int Add_Element(Array * _array,const char * _name,void * _value,int _size,int _t
 				_array->Last = ptr;
 		}
 	}
-	//buffer = malloc(sizeof(*buffer)*(STRING_SIZE+1));
-	//memset(buffer,0,sizeof(*buffer)*(STRING_SIZE+1));
-	//strcpy(buffer,_name);
+	
 	if(_value)
 	{
 		value = malloc(Type_Size(_type)*_size);
@@ -137,6 +135,7 @@ int Add_Element(Array * _array,const char * _name,void * _value,int _size,int _t
 	ptr->Size = _size;
 	ptr->Type = _type;
 	ptr->Value = value;
+	memset(ptr->Key,0,sizeof(*ptr->Key)*(STRING_SIZE+1));
 	strcpy(ptr->Key,_name);
 	_array->Size += Type_Size(_type)*_size + sizeof(ptr->Size) \
 				+ sizeof(*(ptr->Key))*STRING_SIZE + sizeof(ptr->Type);
@@ -193,8 +192,9 @@ Iterator * Find_Element(Array * _array,const char * _name)
 
 int Insert_Value(Array * _array,const char * _name,void * _value)
 {
-	Iterator * it = Find_Element(_array,_name);
-	
+	Iterator * it;
+
+	it = Find_Element(_array,_name);
 	if(it->Position)
 	{
 		if(Get_Value(it))
@@ -215,17 +215,14 @@ void Free_Array(Array * _array)
 	{
 		while(it->Position != _array->Last){
 			Get_Next(it);
-			//free(it->Position->Previous->Key);
 			free(it->Position->Previous->Value);
 			free(it->Position->Previous);
 		}
-		//free(it->Position->Key);
 		free(it->Position->Value);
 		free(it->Position);
 	}
 	else
 	{
-		//free(it->Position->Key);
 		free(it->Position->Value);
 		free(it->Position);
 	}
@@ -252,7 +249,7 @@ Iterator * Create_Iterator(Array * _array)
 
 void Erase(Iterator * _it)
 {
-	//Array_Element * temp;
+
 	if(_it->Position)
 	{
 		if(_it->Position->Next && _it->Position->Previous)

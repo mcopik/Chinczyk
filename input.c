@@ -6,13 +6,11 @@
 #include "fifo.h"
 
 
-
-
 int Find_Hit(int _value,int _hits,unsigned int * _buffer)
 {
-	int i, j;
-	
+	int i, j;	
 	int Number;
+
 	for (i = 0; i < _hits; i++){
 		Number = *_buffer;
 		_buffer += 3;
@@ -74,9 +72,9 @@ void Clean_Key_Event()
 	}
 }
 
-void Special_Key_Pressed(int key,int x,int y){
+void Special_Key_Pressed(int _key,int _x,int _y){
 
-    switch(key){
+    switch(_key){
         case GLUT_KEY_LEFT:
 			Change_Camera(CAMERA_LEFT);
         break;

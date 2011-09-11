@@ -73,14 +73,14 @@ float * Get_Camera()
 	return Camera_Action(CAMERA_GET,NULL,0);
 }
 
-void Interval(float * number, float min,float max){
-
-    if (*number < min)
-        *number = min;
-    else if(*number > max)
-        *number = max;
-
+void Interval(float * _number,float _min,float _max)
+{
+    if (*_number < _min)
+        *_number = _min;
+    else if(*_number > _max)
+        *_number = _max;
 }
+
 int Load_Image(Image * _image,const char * _path){
 
 	FILE * file;
@@ -147,11 +147,6 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 	static int Frequency = -1;
 	static int * Randomized;
 	static GLUquadricObj * Quadric = NULL;
-	/** \var static unsigned int Texture[3];
-    *	\brief Contains textures
-	* 	0 - grass
-	* 	1 - circle of field
-	*/
 	static unsigned int Texture[3];
 	static int Blink_Pawns[4] = {-1,-1,-1,-1};
 	static int Blink_Field = -1;
@@ -189,7 +184,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 		free(Image1);
 		
 		List_Name = glGenLists(3);
-		/** Board */
+		//Rysuje planszę
 		glNewList(List_Name, GL_COMPILE);
 			glBegin(GL_QUADS);
 				glColor3f(0.2f,0.27f,0.08f);
@@ -218,7 +213,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 			glDisable(GL_TEXTURE_2D);
 		glEndList();
 		
-		/** Draws pawn */
+		// Rysuje pionek
 		Quadric = gluNewQuadric();
 		gluQuadricDrawStyle(Quadric, GLU_FILL);
 		gluQuadricTexture(Quadric, GL_TRUE);
@@ -236,7 +231,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 		glEndList();
 		gluDeleteQuadric(Quadric);
 		
-		/** Draws cube */
+		//Rysuje kostkę
 		glNewList(List_Name+2,GL_COMPILE);
 			glBegin(GL_QUADS);
 					//tył
@@ -474,7 +469,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 			Draw_Text(_type);
 		}
 		if(Frequency != -1 && _type != GL_SELECT)
-			Frequency = ++Frequency % (2*FREQUENCY);
+			Frequency = (Frequency+1) % (2*FREQUENCY);
 	}
     glutSwapBuffers();
 }
@@ -492,7 +487,7 @@ void Draw_Init(Fields_Structure * _fields,Player * _players,int _players_number,
 	_Draw(0,_fields,_players,_players_number,_randomized,NULL);
 }
 
-void _Draw_Text(int _type,Text * _text,const char * _name)//int * _width,int *_height)
+void _Draw_Text(int _type,Text * _text,const char * _name)
 {
 	static Array * Texts = NULL;
 	Iterator * it;
@@ -627,7 +622,6 @@ void Text_Clean()
 	_Draw_Text(TEXT_CLEAN,NULL,NULL);
 }
 
-
 Text * Text_Create(float _x,float _y,int _select,const char * _string,void * _font)
 {
 	Text * ret = malloc(sizeof(*ret));
@@ -653,8 +647,8 @@ void Draw_Render()
 
 int Init_GL(int _width, int _height, char * _label,int _fullscr)
 {
-	
 	int Window_Number;
+	
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH);
     glutInitWindowSize(_width, _height);
     glutInitWindowPosition(0, 0);
@@ -689,7 +683,6 @@ int Init_GL(int _width, int _height, char * _label,int _fullscr)
 
 void Reshape_Window(int _width, int _height)
 {
-	printf("RWX %d %d\n",_width,_height);
 	glViewport(0, 0, _width, _height);		
 
     glMatrixMode(GL_PROJECTION);
@@ -711,20 +704,20 @@ void Enable_FullScr()
 {
 	glutFullScreen();
 }
-
+/*
 void Disable_FullScr(int _width,int _height)
 {
 	glutPositionWindow(0,0);
 	glutReshapeWindow(_width,_height);
 	Reshape_Window(_width,_height);
 	glutPostRedisplay();
-}
+}*/
 
-void Draw_Fields(int _type,Fields_Structure * array,int players_number,int _blink)
+/*void Draw_Fields(int _type,Fields_Structure * array,int players_number,int _blink)
 {
 	
 }
-	
+	*/
 void Blink_Set_Pawn(int _number,int * _pawns)
 {
 	Blink_Info * ptr = malloc(sizeof(*ptr));
@@ -1193,6 +1186,7 @@ Fields_Structure * Fields_Generate(int _number_of_players){
 	
 	return ret;
 }	
+
 void Fields_Close(Fields_Structure * _fields)
 {
 	free(_fields->Data);
@@ -1252,7 +1246,7 @@ void Text_Draw(float _x,float _y,int _select_name,void *_font,int _position_type
 	Text_Add(ptr,_name);
 	Set_Change();
 }
-
+/*
 void Text_Create_Draw(int _size,int * _tab)
 {
     int i;
@@ -1290,26 +1284,24 @@ void Text_Create_FPS(int _fps)
     Text_Add(ptr,FPS_MSG);
     Set_Change();
 }
-
+*/
 
 void Draw_Cube_Pips(float _radius, int _number)
 {
 	int i;
+	
 	GLUquadricObj * Quadric = gluNewQuadric();
 	gluQuadricDrawStyle(Quadric, GLU_FILL);
 	gluQuadricNormals(Quadric, GLU_SMOOTH);
 	switch(_number){
 		
 		case 1:
-			//glRotatef(90.0f,1.0f,0.0f,0.0f);
-			//Draw_Circle(_radius,0.0f,0.0f,0.0f);
 			gluDisk(Quadric, 0, _radius, 50, 10);
 		break;
 		case 2:
 			for(i = 0;i < 2;i++){
 				glPushMatrix();
 					glTranslatef(2*_radius*POW(-1,i),2*_radius*POW(-1,i),0.0f);
-					//glRotatef(90.0f,1.0f,0.0f,0.0f);
 					gluDisk(Quadric, 0, _radius, 50, 10);
 				glPopMatrix();
 			}
@@ -1318,18 +1310,15 @@ void Draw_Cube_Pips(float _radius, int _number)
 			for(i = 0;i < 2;i++){
 				glPushMatrix();
 					glTranslatef(2*_radius*POW(-1,i),2*_radius*POW(-1,i),0.0f);
-					//glRotatef(90.0f,1.0f,0.0f,0.0f);
 					gluDisk(Quadric, 0, _radius, 50, 10);
 				glPopMatrix();
 			}
-			//glRotatef(90.0f,1.0f,0.0f,0.0f);
 			gluDisk(Quadric, 0, _radius, 50, 10);
 		break;
 		case 4:
 			for(i = 0;i < 4;i++){
 				glPushMatrix();
 					glTranslatef(3*_radius*(!(i % 2) ? -1 : 1),3*_radius*(i > 1 ? -1 : 1),0.0f);
-					//glRotatef(90.0f,1.0f,0.0f,0.0f);
 					gluDisk(Quadric, 0, _radius, 50, 10);
 				glPopMatrix();
 			}
@@ -1338,25 +1327,21 @@ void Draw_Cube_Pips(float _radius, int _number)
 			for(i = 0;i < 4;i++){
 				glPushMatrix();
 					glTranslatef(2*_radius*(!(i % 2) ? -1 : 1),2*_radius*(i > 1 ? -1 : 1),0.0f);
-					//glRotatef(90.0f,1.0f,0.0f,0.0f);
 					gluDisk(Quadric, 0, _radius, 50, 10);
 				glPopMatrix();
 			}
-			//glRotatef(90.0f,1.0f,0.0f,0.0f);
 			gluDisk(Quadric, 0, _radius, 50, 10);
 		break;
 		case 6:
 			for(i = 0;i < 4;i++){
 				glPushMatrix();
 					glTranslatef(2*_radius*(!(i % 2) ? -1 : 1),3*_radius*(i > 1 ? -1 : 1),0.0f);
-					//glRotatef(90.0f,1.0f,0.0f,0.0f);
 					gluDisk(Quadric, 0, _radius, 50, 10);
 				glPopMatrix();
 			}
 			for(i = 0;i < 2;i++){
 				glPushMatrix();
 				glTranslatef(2*_radius*POW(-1,i),0.0f,0.0f);
-				//glRotatef(90.0f,1.0f,0.0f,0.0f);
 				gluDisk(Quadric, 0, _radius, 50, 10);
 				glPopMatrix();
 			}
@@ -1367,7 +1352,7 @@ void Draw_Cube_Pips(float _radius, int _number)
 
 int Font_Height(void * _font)
 {
-	if(_font ==GLUT_BITMAP_9_BY_15)
+	if(_font == GLUT_BITMAP_9_BY_15)
 		return 15;
 	else if(_font == GLUT_BITMAP_TIMES_ROMAN_24)
 		return 24;
