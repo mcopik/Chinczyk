@@ -136,8 +136,8 @@ free(buffer);
  * Kod tworzący napis wyświetlający napis Menu.@n
  */
 #define TEXT_DRAW_MENU_BUTTON								\
-Text_Draw(0.85f,0.05f,MENU_BUTTON_HIT,						\
-			(void*)FONT2,TEXT_NORMAL,MENU_MSG,"%s",MENU_TEXT);		
+Text_Draw(0.8f,0.05f,MENU_BUTTON_HIT,						\
+			(void*)FONT2,TEXT_CENTER,MENU_MSG,"%s",MENU_TEXT);		
 /*!
  * Wyliczenie obejmujące stany gry.@n
  */

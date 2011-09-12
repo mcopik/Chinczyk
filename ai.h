@@ -13,6 +13,18 @@
 #include "input.h"
 #include "fifo.h"
 /*!
+ * Współczynnik agresywności komputera - poziom łatwy.@n
+ */
+#define LEVEL_EASY 0.25f
+/*!
+ * Współczynnik agresywności komputera - poziom średni.@n
+ */
+#define LEVEL_MEDIUM 0.5f
+/*!
+ * Współczynnik agresywności komputera - poziom trudny.@n
+ */
+#define LEVEL_HARD 0.75f
+/*!
  * Wyliczenie obejmujące poziomy trudności gry.@n
  */
 enum AI_Levels{
@@ -29,7 +41,7 @@ typedef struct{
 	FIFO * Randomized;	//!< Kolejka wylosowanych wartości
 	int * Available_Move;	//!< Wskaźnik na zmienną przechowującą informację o możliwym ruchu pionka
 	int * Active_Pawns;	//!< Wskaźnik na tablicę przechowująca informacje o możliwych ruchach pionków
-	int Level;	//!< Poziom trudności gry
+	float Level;	//!< Poziom trudności gry
 } AI_Info;
 /*!
  * Funkcja inicjalizująca algorytm.@n

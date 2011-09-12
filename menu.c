@@ -80,7 +80,8 @@ int Menu_Graph_Resolution_Change(Iterator * _game_it,Iterator * _graph_it,\
 		for(i = 0;i < 3;i++)
 			if(width == Display[i][0])
 				break;
-		i = ++i % 3;
+		++i;
+		i %= 3;
 		width = Display[i][0];
 		Set_Value(_graph_it,(void*)&width);
 		Find(_graph_it,"HEIGHT");
@@ -179,7 +180,6 @@ void Menu_Draw(Iterator * _graph_it,Menu * _menu)
 	int i;
 	char * buffer;
 	buffer = (char*)malloc(sizeof(*buffer)*(STRING_SIZE+1));
-	Text_Draw(0.8f,0.05f,MENU_BUTTON_HIT,(void*)FONT2,TEXT_CENTER,MENU_MSG,MENU_TEXT);
     for(i = 0;i < _menu->Number_of_Positions;i++)
 	{
 		if(strcmp(_menu->Captions[i],""))
@@ -198,7 +198,6 @@ void Menu_Clean_Drawing(Menu *_menu)
 	int i;
 	char * buffer;
 	buffer = malloc(sizeof(*buffer)*(STRING_SIZE+1));
-	Text_Remove(MENU_MSG);
 	for(i = 0;i < _menu->Number_of_Positions;i++){
 		sprintf(buffer,"MENU_TEXT_%d",i);
 		Text_Remove(buffer);

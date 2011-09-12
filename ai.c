@@ -3,13 +3,6 @@
 #include "input.h"
 #include "ai.h"
 
-#define LEVEL_EASY 0.25f
-#define LEVEL_MEDIUM 0.5f
-#define LEVEL_HARD 0.75f
-
-
-
-
 void _AI(int _active_player, Mouse_Action ** _m_event,AI_Info * _info)
 {
 	static AI_Info Info;

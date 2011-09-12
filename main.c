@@ -35,13 +35,21 @@ int main(int argc, char** argv)
 	}
     glutInit(&argc, argv);
 	Init_Process(Default_Flag);
+	//funkcja rysoująca
     glutDisplayFunc(&Draw_Render);
+	//funkcja pętli gry
     glutIdleFunc(&Process);
+	//funkcja zmiany rozmiaru okna
     glutReshapeFunc(&Reshape_Window);
+	//funkcja obsługi zdarzeń klawiatury
     glutKeyboardFunc(&Key_Pressed);
+	//funkcja obsługi specjalnych klawiszy
     glutSpecialFunc(&Special_Key_Pressed);
+	//funkcja obsługi zdarzeń myszy
 	glutMouseFunc(&Mouse_Event);
+	//funkcja zamknięcia gry
 	glutCloseFunc(&Close_Game);
+	//uruchomienie pętli
     glutMainLoop();
     return 0;
 }

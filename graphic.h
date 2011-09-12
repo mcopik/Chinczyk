@@ -85,7 +85,7 @@
 /*!
  * Częstotliwość animacji migania pionka/pola(w klatkach).@n
  */
-#define FREQUENCY 
+#define FREQUENCY 12
 /*!
  * Makro wyznaczające wartość minimalną.@n
  */
@@ -110,10 +110,12 @@ enum Camera_Actions{
     CAMERA_GET,	//!< Pobranie wartości kamery
     CAMERA_CHANGE	//!< Zmiana położenia kamery
 };
-
-enum {
-    FULL_NOT = 0,
-    FULLSCREEN
+/*!
+ * Wyliczenie obejmujące stany okna.@n
+ */
+enum Fullscreen{
+    NO_FULLSCREEN = 0,	//!< Rendering w oknie
+    FULLSCREEN	//!< Rendering w trybie pełnoekranowym
 };
 /*!
  * Wyliczenie obejmujące:@n

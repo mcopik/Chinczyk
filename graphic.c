@@ -318,158 +318,157 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 	{
 		if(!(Frequency % FREQUENCY)||_type==GL_SELECT||Check_Change())
 		{
+			glMatrixMode(GL_MODELVIEW);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
+			glLoadIdentity();
+			Quadric = gluNewQuadric();
+			gluQuadricDrawStyle(Quadric, GLU_FILL);
+			gluQuadricTexture(Quadric, GL_TRUE);
+			gluQuadricNormals(Quadric, GLU_SMOOTH);
 			
-		glMatrixMode(GL_MODELVIEW);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
-		glLoadIdentity();
-		Quadric = gluNewQuadric();
-		gluQuadricDrawStyle(Quadric, GLU_FILL);
-		gluQuadricTexture(Quadric, GL_TRUE);
-		gluQuadricNormals(Quadric, GLU_SMOOTH);
-		
-		
-		/** Camera */
-		Camera = Get_Camera();
-		glTranslatef(0.0f,0.0f,-Camera[2]);
-		glRotatef(Camera[0],1.0,0.0,0.0);
-		glRotatef(Camera[1],0.0,1.0,0.0);
-		free(Camera);
-		
-		glColor3f(1.0f,1.0f,1.0f);
-		/** Board */
-		if(_type == GL_SELECT)
-			glPushName(BOARD_HIT);
-		glCallList(List_Name);
-		
-		
-		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, Texture[1]);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-		
-		/** Fields */
-		if(Active_Player == -1 || Frequency < FREQUENCY || Blink_Field == -1)
-		{			
-			for(i = 0;i < Fields->Number_of_Fields;i++){
-				if(_type == GL_SELECT)
-					glLoadName(i+1);
-				glColor3f(1.0f,1.0f,1.0f);
-				glPushMatrix();
-				DRAW_PAWN(Quadric,Fields,i);
-				glPopMatrix();
-			}
-		}
-		else
-		{
-			for(i = 0;i < Fields->Number_of_Fields;i++){
-				if(_type == GL_SELECT)
-					glLoadName(i+1);
-				if(i != Blink_Field)
-				{
+			
+			/** Camera */
+			Camera = Get_Camera();
+			glTranslatef(0.0f,0.0f,-Camera[2]);
+			glRotatef(Camera[0],1.0,0.0,0.0);
+			glRotatef(Camera[1],0.0,1.0,0.0);
+			free(Camera);
+			
+			glColor3f(1.0f,1.0f,1.0f);
+			/** Board */
+			if(_type == GL_SELECT)
+				glPushName(BOARD_HIT);
+			glCallList(List_Name);
+			
+			
+			glEnable(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, Texture[1]);
+			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+			
+			/** Fields */
+			if(Active_Player == -1 || Frequency < FREQUENCY || Blink_Field == -1)
+			{			
+				for(i = 0;i < Fields->Number_of_Fields;i++){
+					if(_type == GL_SELECT)
+						glLoadName(i+1);
 					glColor3f(1.0f,1.0f,1.0f);
 					glPushMatrix();
 					DRAW_PAWN(Quadric,Fields,i);
 					glPopMatrix();
 				}
 			}
-		}
-		glDisable(GL_TEXTURE_2D);
-		
-		/** Pawns */
-		for(i = 0;i < Number_of_Players;i++){
-			
-			for(j = 0;j < NUMBER_OF_PAWNS;j++){
-					
-				if( !(Frequency >= FREQUENCY && Active_Player == i &&\
-					( (Blink_Field != -1 && *Blink_Pawns == j) ||\
-					 (Blink_Field == -1 && Blink_Pawns[j]) ) ) )
-				{
-					glPushMatrix();
+			else
+			{
+				for(i = 0;i < Fields->Number_of_Fields;i++){
 					if(_type == GL_SELECT)
-						glLoadName(100+i*10+j);
-					glColor3f(Players->Color[0],Players->Color[1],Players->Color[2]);
-					glTranslatef(Fields_Get_X(Fields,Players->Position[j]),0,-Fields_Get_Y(Fields,Players->Position[j]));
-					glCallList(List_Name+1);
-					glPopMatrix();
-				}
-			}
-			Players++;
-		}
-		Players -= Number_of_Players;
-		glEnable(GL_BLEND);
-		glDepthMask(GL_FALSE);
-		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-		glColor4f(1.0f,1.0f,1.0f,0.5f);
-		
-		if(Frequency >= FREQUENCY)
-		{
-			if(Blink_Field == -1)
-			{	
-				for(i = 0;i < NUMBER_OF_PAWNS;i++){
-					if(Blink_Pawns[i])
+						glLoadName(i+1);
+					if(i != Blink_Field)
 					{
-						if(_type == GL_SELECT)
-							glLoadName(100+Active_Player*10+i);
+						glColor3f(1.0f,1.0f,1.0f);
 						glPushMatrix();
-						glTranslatef(Fields_Get_X(Fields,Players[Active_Player].Position[i]),0,-Fields_Get_Y(Fields,Players[Active_Player].Position[i]));
-						glCallList(List_Name+1);
+						DRAW_PAWN(Quadric,Fields,i);
 						glPopMatrix();
 					}
 				}
 			}
-			else
-			{
-				glPushMatrix();
-				if(_type == GL_SELECT)
-					glLoadName(100+Active_Player*10+*Blink_Pawns);
-				glTranslatef(Fields_Get_X(Fields,Players[Active_Player].Position[*Blink_Pawns]),0,-Fields_Get_Y(Fields,Players[Active_Player].Position[*Blink_Pawns]));
-				glCallList(List_Name+1);
-				glPopMatrix();
-				glEnable(GL_TEXTURE_2D);
-				glBindTexture(GL_TEXTURE_2D, Texture[1]);
-				glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-				glPushMatrix();
-				if(_type == GL_SELECT)
-					glLoadName(Blink_Field+1);
-				DRAW_PAWN(Quadric,Fields,Blink_Field);
-				glDisable(GL_TEXTURE_2D);
-				glPopMatrix();
+			glDisable(GL_TEXTURE_2D);
+			
+			/** Pawns */
+			for(i = 0;i < Number_of_Players;i++){
+				
+				for(j = 0;j < NUMBER_OF_PAWNS;j++){
+						
+					if( !(Frequency >= FREQUENCY && Active_Player == i &&\
+						( (Blink_Field != -1 && *Blink_Pawns == j) ||\
+						 (Blink_Field == -1 && Blink_Pawns[j]) ) ) )
+					{
+						glPushMatrix();
+						if(_type == GL_SELECT)
+							glLoadName(100+i*10+j);
+						glColor3f(Players->Color[0],Players->Color[1],Players->Color[2]);
+						glTranslatef(Fields_Get_X(Fields,Players->Position[j]),0,-Fields_Get_Y(Fields,Players->Position[j]));
+						glCallList(List_Name+1);
+						glPopMatrix();
+					}
+				}
+				Players++;
 			}
-		}
-		/** Cube */
-		if(_type == GL_SELECT)
-			glLoadName(CUBE_HIT);
-		glLoadIdentity();
-		glTranslatef(CUBE_X,CUBE_Y,CUBE_Z);
-		glRotatef(20.0f,1.0f,0.0f,0.0f);
-		glRotatef(15.0f,0.0f,1.0f,0.0f);
-		glCallList(List_Name+2);
-		glColor3f(0.0f,0.0f,0.0f);
-		glPushMatrix();
-			glTranslatef(0.0f,CUBE_SIZE/2+0.01f,0.0f);
-			glRotatef(-90.0f,1.0f,0.0f,0.0f);
-			Draw_Cube_Pips(CUBE_SIZE/(float)10,*Randomized);
-		glPopMatrix();
-		glPushMatrix();
-			glTranslatef(0.0f,0.0f,CUBE_SIZE/2+0.01f);
-			Draw_Cube_Pips(CUBE_SIZE/(float)10,Cube_Pips[1][*Randomized-1]);
-		glPopMatrix();
-		glPushMatrix();
-			glTranslatef(-CUBE_SIZE/2-0.01f,0.0f,0.0f);
-			glRotatef(-90.0f,0.0f,1.0f,0.0f);
-			Draw_Cube_Pips(CUBE_SIZE/10,Cube_Pips[0][*Randomized-1]);
-		glPopMatrix();
-		
-		if(_type == GL_SELECT)
-			glPopName();
-		
-		glDepthMask(GL_TRUE);
-		glDisable(GL_BLEND);
-		gluDeleteQuadric(Quadric);
-		if(_type != GL_SELECT)
-			Draw_Text(_type);
+			Players -= Number_of_Players;
+			glEnable(GL_BLEND);
+			glDepthMask(GL_FALSE);
+			glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+			glColor4f(1.0f,1.0f,1.0f,0.5f);
+			
+			if(Frequency >= FREQUENCY)
+			{
+				if(Blink_Field == -1)
+				{	
+					for(i = 0;i < NUMBER_OF_PAWNS;i++){
+						if(Blink_Pawns[i])
+						{
+							if(_type == GL_SELECT)
+								glLoadName(100+Active_Player*10+i);
+							glPushMatrix();
+							glTranslatef(Fields_Get_X(Fields,Players[Active_Player].Position[i]),0,-Fields_Get_Y(Fields,Players[Active_Player].Position[i]));
+							glCallList(List_Name+1);
+							glPopMatrix();
+						}
+					}
+				}
+				else
+				{
+					glPushMatrix();
+					if(_type == GL_SELECT)
+						glLoadName(100+Active_Player*10+*Blink_Pawns);
+					glTranslatef(Fields_Get_X(Fields,Players[Active_Player].Position[*Blink_Pawns]),0,-Fields_Get_Y(Fields,Players[Active_Player].Position[*Blink_Pawns]));
+					glCallList(List_Name+1);
+					glPopMatrix();
+					glEnable(GL_TEXTURE_2D);
+					glBindTexture(GL_TEXTURE_2D, Texture[1]);
+					glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+					glPushMatrix();
+					if(_type == GL_SELECT)
+						glLoadName(Blink_Field+1);
+					DRAW_PAWN(Quadric,Fields,Blink_Field);
+					glDisable(GL_TEXTURE_2D);
+					glPopMatrix();
+				}
+			}
+			/** Cube */
+			if(_type == GL_SELECT)
+				glLoadName(CUBE_HIT);
+			glLoadIdentity();
+			glTranslatef(CUBE_X,CUBE_Y,CUBE_Z);
+			glRotatef(20.0f,1.0f,0.0f,0.0f);
+			glRotatef(15.0f,0.0f,1.0f,0.0f);
+			glCallList(List_Name+2);
+			glColor3f(0.0f,0.0f,0.0f);
+			glPushMatrix();
+				glTranslatef(0.0f,CUBE_SIZE/2+0.01f,0.0f);
+				glRotatef(-90.0f,1.0f,0.0f,0.0f);
+				Draw_Cube_Pips(CUBE_SIZE/(float)10,*Randomized);
+			glPopMatrix();
+			glPushMatrix();
+				glTranslatef(0.0f,0.0f,CUBE_SIZE/2+0.01f);
+				Draw_Cube_Pips(CUBE_SIZE/(float)10,Cube_Pips[1][*Randomized-1]);
+			glPopMatrix();
+			glPushMatrix();
+				glTranslatef(-CUBE_SIZE/2-0.01f,0.0f,0.0f);
+				glRotatef(-90.0f,0.0f,1.0f,0.0f);
+				Draw_Cube_Pips(CUBE_SIZE/10,Cube_Pips[0][*Randomized-1]);
+			glPopMatrix();
+			
+			if(_type == GL_SELECT)
+				glPopName();
+			
+			glDepthMask(GL_TRUE);
+			glDisable(GL_BLEND);
+			gluDeleteQuadric(Quadric);
+			if(_type != GL_SELECT)
+				Draw_Text(_type);
 		}
 		if(Frequency != -1 && _type != GL_SELECT)
-			Frequency = (Frequency+1) % (2*FREQUENCY);
+			Frequency = ++Frequency % (2*FREQUENCY);
 	}
     glutSwapBuffers();
 }
@@ -671,6 +670,9 @@ int Init_GL(int _width, int _height, char * _label,int _fullscr)
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE);
 	glColor4f(1.0f, 1.0f, 1.0f, 0.5);
 	glDisable(GL_BLEND);
+	
+	if(_fullscr == FULLSCREEN)
+		glutFullScreen();
     // set up light number 1.
     /*glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient);  // add lighting. (ambient)
     glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse);  // add lighting. (diffuse).
