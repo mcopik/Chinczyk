@@ -5,8 +5,11 @@
 
 void _AI(int _active_player, Mouse_Action ** _m_event,AI_Info * _info)
 {
+	//podstawowe informacje niezbędne do prawidłowej pracy algorytmu
 	static AI_Info Info;
+	//liczba pionków na planszy
 	static int Counter = NUMBER_OF_PAWNS;
+	//aktywny gracz
 	static int Active_Player = -1;
 	int i,temp,max_index;
 	float max,temp2;
@@ -20,29 +23,29 @@ void _AI(int _active_player, Mouse_Action ** _m_event,AI_Info * _info)
 		Info.Level = _info->Level;
 		Info.Number_of_Players = _info->Number_of_Players;
 	}
+	//funkcja wywołana aby wybrać pionka do ruchu
 	else if(_active_player >= 0)
 	{
+		//zmiana gracza, konieczne wyliczenie liczby pionków na splanszy
 		if(Active_Player != _active_player)
 		{
 			Active_Player = _active_player;
 			Counter = NUMBER_OF_PAWNS;
-			temp = Active_Player*NUMBER_OF_PAWNS*2;
 			for(i = 0;i < NUMBER_OF_PAWNS;i++)
-				if(Info.Players[Active_Player].Position[i] >= temp &&\
-					Info.Players[Active_Player].Position[i] < temp+2*NUMBER_OF_PAWNS)
+				if(!Get_Distance(Info.Players[Active_Player].Position[i],Active_Player,Info.Number_of_Players))
 						Counter--;
 		}
-		// there is only one(or zero) pawns on board
-		// the best way is to get more pawns in game
+		// jeden albo zero pionków w grze, wypada wprowadzić więcej na planszę
 		if(Counter < 2)
 		{
 			for(i = 0;i < NUMBER_OF_PAWNS;i++){
-				//distance to home from new position is equal to length-1 <=>
-				//<=> when new position is first field on board
+				//dystans od nowej pozycji do końca planszy jest równy długość planszy -1 <=>
+				//<=> gdy nowa pozycja jest pierwszą na planszy 
 				if(Get_Distance(Info.Active_Pawns[i],Active_Player,\
 					Info.Number_of_Players) == Info.Number_of_Players*NUMBER_OF_FIELDS_PER_PLAYER -1)
 				{
 						Counter++;
+						//przygotowanie zdarzenia myszy odpowiadającego za wprowadzenie pionka na planszę
 						*_m_event = malloc(sizeof(**_m_event));
 						(*_m_event)->Hits = 1;
 						(*_m_event)->Buffer[0] = 1;
@@ -55,27 +58,30 @@ void _AI(int _active_player, Mouse_Action ** _m_event,AI_Info * _info)
 		}
 		if(Counter > 0)
 		{
-			//at least two pawns on board, situation is safe
-			//or one pawn on board, but there's no way to get more
+			//dwa pionki na planszy, stabilna sytuacja
+			//lub jeden pionek, ale nie da rady więcej
 			max = -1.0f;
 			max_index = -1;
 			for(i = 0;i < NUMBER_OF_PAWNS;i++){
-				// computer's not going to move pawn which can't move
 				if(Info.Active_Pawns[i] != -1)
 				{
-					//moving this pawn will "kill" another pawn
-					//when there are two pawns which can attack, we're going to choose
-					//this one which is closer to "home"
+					//sprawdzenie czy ruszenie tego pionka zabije innego
+					//jeśli jest więcej niż jeden pionek do zabicia, trzeba wybrać tego bardziej opłacalnego
 					if(Check_Occupied(Info.Players,Info.Active_Pawns[i],\
 					Active_Player,Info.Number_of_Players) > 0)
 					{	
+						//pionek do bicia; jeśli nie ma bardziej opłacalnej opcji, wybieramy tą
+						//"opłacalność" = współczynnik agresywności komputera
 						if(max < Info.Level)
 						{
 							max = Info.Level;
 							max_index = i;
 						}
+						//jest już przynajmniej jeden pionek do bicia
 						else if(max == Info.Level)
 						{
+							//wybieramy ten pionek przeciwnika, który jest bliżej bazy
+							//większy zysk dla nas, większa strata dla przeciwnika
 							if(Get_Distance(Info.Players[Active_Player].Position[max_index],Active_Player,\
 								Info.Number_of_Players) > \
 								Get_Distance(Info.Players[Active_Player].Position[i],Active_Player,\
@@ -83,16 +89,17 @@ void _AI(int _active_player, Mouse_Action ** _m_event,AI_Info * _info)
 								max_index = i;
 						}
 					}
-					//when move has no effect on other pawns
-					//we're going to choose this one which is closer to "home"
-					//ratio = 1 - distance to home/length of board
+					//jeśli ruch nie bije nikogo innego, to wybieramy pionek bliższy bazie
+					//współczynnik opłacalności = 1 - dystans_do_domu/długość_planszy
+					//współczynnik jest po to, aby móc porównać czyt bardziej opłacalny jest ruch pionkiem blisko bazy
+					//czy bicie innego
 					else
 					{
 						temp2 = (float)Get_Distance(Info.Players[Active_Player].Position[i],Active_Player,\
 								Info.Number_of_Players);
 						temp2 = 1.0f - (float)(temp2/(Info.Number_of_Players*NUMBER_OF_FIELDS_PER_PLAYER));
-						//second condition is for avoiding situation, when one pawn is moving forward
-						//and second one is still on first field
+						//drugi warunek jest po to, aby uniknąć sytuacji, gdy jeden z pionków zbliża się do bazy
+						//a drugi stoi na pierwszym polu; rozsądna gra wymaga równomiernego prowadzenia pionków
 						if(max < temp2 || max/temp2 >= 3.0f)
 						{	
 							max = temp2;
@@ -101,15 +108,15 @@ void _AI(int _active_player, Mouse_Action ** _m_event,AI_Info * _info)
 					}
 				}
 			}
-			//if new position if first field on board
+			//jeśli wprowadzamy pionek na planszę
 			if(Get_Distance(Info.Active_Pawns[max_index],Active_Player,\
 					Info.Number_of_Players) == Info.Number_of_Players*NUMBER_OF_FIELDS_PER_PLAYER -1)
 				Counter++;
-			//if new position is in home
+			//jeśli wyprowadzamy pionek z planszy
 			if(!Get_Distance(Info.Active_Pawns[max_index],Active_Player,\
 					Info.Number_of_Players))
 				Counter--;
-			//simulating click on selected pawn
+			//przygotowanie zdarzenia myszy odpowiadającego za wprowadzenie pionka na planszę
 			*_m_event = malloc(sizeof(**_m_event));
 			(*_m_event)->Hits = 1;
 			(*_m_event)->Buffer[0] = 1;
@@ -120,6 +127,7 @@ void _AI(int _active_player, Mouse_Action ** _m_event,AI_Info * _info)
 		}
 		else
 		{
+			//zero pionków na planszy, ale być może możliwy ruch na mecie
 			for(i = 0;i < NUMBER_OF_PAWNS;i++)
 			{
 				if(Info.Active_Pawns[i] != -1)
@@ -135,7 +143,7 @@ void _AI(int _active_player, Mouse_Action ** _m_event,AI_Info * _info)
 			}
 		}
 	}
-	//simulating click to move selected pawn
+	//funkcja wywołana aby ruszyć wybrany pionek
 	else
 	{
 		*_m_event = malloc(sizeof(**_m_event));
@@ -170,6 +178,7 @@ void AI_Init(FIFO * _randomized,Player * _players,int * _a_pawns,int * _a_move,\
 	temp.Active_Pawns = _a_pawns;
 	temp.Randomized = _randomized;
 	temp.Number_of_Players = _number_of_players;
+	//przekształcenie poziomu trudności na współczynnik agresywności komputera
 	switch(_level)
 	{
 		case AI_EASY:

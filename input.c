@@ -10,7 +10,7 @@ int Find_Hit(int _value,int _hits,unsigned int * _buffer)
 {
 	int i, j;	
 	int Number;
-
+	//forma odczytu wynika z formatu zapisu danych przez mechanizm 'picking' OpenGL
 	for (i = 0; i < _hits; i++){
 		Number = *_buffer;
 		_buffer += 3;
@@ -27,13 +27,14 @@ void _Key_Pressed(int _type, Key_Action ** _pointer)
 {
 	static Key_Action * Events[EVENTS_BUFFER];
 	static int Position = -1;
-	
+	//dodanie zdarzenia, nie nastąpi przepełnienie bufora
 	if(_type == EVENT_SET && Position < EVENTS_BUFFER)
 	{
 		Position++;
 		Events[Position] = *_pointer;
 		Event_Set(EVENT_KEY);
 	}
+	//odczyt zdarzenia
 	else if(_type == EVENT_GET)
 	{
 		if(Position >= 0)

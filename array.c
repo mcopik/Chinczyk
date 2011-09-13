@@ -12,19 +12,21 @@ size_t Type_Size(int _type)
 	{
 		case ARRAY_BOOLEAN:	return sizeof(short int); break;
 		case ARRAY_INTEGER:	return sizeof(int); break;
-		case ARRAY_CHAR:		return sizeof(char); break;
-		case ARRAY_FLOAT:		return sizeof(float); break;
-		case ARRAY_TEXT:		return sizeof(Text); break;
-		default:		ERROR_MACRO(0,"Wrong type or not implemented yet!"); break;
+		case ARRAY_CHAR:	return sizeof(char); break;
+		case ARRAY_FLOAT:	return sizeof(float); break;
+		case ARRAY_TEXT:	return sizeof(Text); break;
+		default:	ERROR_MACRO(0,"Wrong type or not implemented yet!"); break;
 	}
 }		
 
-/** \fn int Compare_Strings(const char * _str1,const char * _str2)
-    \brief Simple internal function for comparing strings.
-			Returns 0 if first is "lower", 1 if second is "lower", -1 if both strings are this same
-    \param _str1 First string.
-    \param _str2 Second string.
-*/
+/*!
+ * Funkcja porównująca napisy.@n
+ * Tak, istnieje taka funkcja w bibliotece standardowej.@n
+ * Zapomniałem o niej.@n
+ * @param[in] _str1 Pierwszy napis
+ * @param[in] _str2 Drugi napis
+ * @return 0, gdy pierwszy napis "mniejszy", 1 w przeciwnym wypadku; -1 gdy napisy równe
+ */
 int Compare_Strings(const char * _str1,const char * _str2)
 {
 	while(*_str1 != '\0' && *_str2 != '\0' && *_str1++ == *_str2++);
@@ -67,6 +69,7 @@ int Add_Element(Array * _array,const char * _name,void * _value,int _size,int _t
 	void * value = NULL;
 	int i;
 	
+	//tablica pusta
 	if(!_array->First)
 	{
 		ptr = malloc(sizeof(*ptr));
@@ -77,6 +80,9 @@ int Add_Element(Array * _array,const char * _name,void * _value,int _size,int _t
 	}
 	else
 	{
+		//algorytm wyszukiwania właściwego miejsca w tablicy
+		//opiera się na sprawddzaniu środkowego elementu tablicy
+		//i dalszego analizowania połowy tablicy, w której powinien znajdować się wstawiany element
 		left = 0;
 		right = _array->Length - 1;
 		while(left < right){
@@ -126,7 +132,7 @@ int Add_Element(Array * _array,const char * _name,void * _value,int _size,int _t
 				_array->Last = ptr;
 		}
 	}
-	
+	//przekopiowanie przechowywanej wartości do nowo utworzonego miejsca w pamięci
 	if(_value)
 	{
 		value = malloc(Type_Size(_type)*_size);
@@ -137,8 +143,10 @@ int Add_Element(Array * _array,const char * _name,void * _value,int _size,int _t
 	ptr->Value = value;
 	memset(ptr->Key,0,sizeof(*ptr->Key)*(STRING_SIZE+1));
 	strcpy(ptr->Key,_name);
+	//zwiększenie rozmiaru tablicy(w bajtach)
 	_array->Size += Type_Size(_type)*_size + sizeof(ptr->Size) \
 				+ sizeof(*(ptr->Key))*STRING_SIZE + sizeof(ptr->Type);
+	//zwiększenie długości tablicy(liczba elementów)
 	_array->Length++;
 	Delete_Iterator(it);
 	return 0;
@@ -150,6 +158,7 @@ Iterator * Find_Element(Array * _array,const char * _name)
 	int position = 0,left = 0,right = 0,temp=0;
 	int i;
 	
+	//algorytm identyczny jak w funkcji wstawiania elementu
 	left = 0;
 	right = _array->Length - 1;
 	while(left < right){
@@ -197,6 +206,7 @@ int Insert_Value(Array * _array,const char * _name,void * _value)
 	it = Find_Element(_array,_name);
 	if(it->Position)
 	{
+		//wyczyszczenie istniejącej wartości przed wstawieniem nowej
 		if(Get_Value(it))
 			free(Get_Value(it));
 		Set_Value(it,_value);
@@ -210,7 +220,9 @@ int Insert_Value(Array * _array,const char * _name,void * _value)
 void Free_Array(Array * _array)
 {
 	Iterator * it = Create_Iterator(_array);
+	
 	Get_First(it);
+	//iteracyjny algorytm czyszczenia każdego kolejnego elementu
 	if(it->Position != _array->Last)
 	{
 		while(it->Position != _array->Last){
@@ -252,6 +264,8 @@ void Erase(Iterator * _it)
 
 	if(_it->Position)
 	{
+		//kolejne możliwości położenia elementu w tablicy
+		//wymagane dla zachowania ciągłości danych w tablicy
 		if(_it->Position->Next && _it->Position->Previous)
 		{
 			_it->Position->Next->Previous = _it->Position->Previous;
@@ -269,10 +283,11 @@ void Erase(Iterator * _it)
 		}
 		else
 			_it->Object->First = _it->Object->Last = NULL;
-			
+		//zmniejszenie rozmiaru tablicy(w bajtach)
 		_it->Object->Size -= Type_Size(_it->Position->Type)*_it->Position->Size \
                         + sizeof(_it->Position->Size) \
 			+ sizeof(*(_it->Position->Key))*STRING_SIZE + sizeof(_it->Position->Type);
+		//zmniejszenie ilości elementów w tablicy
 		_it->Object->Length--;
 		free(_it->Position->Value);
 		free(_it->Position);
@@ -350,32 +365,36 @@ Array * Load(const char * _label,const char * _path)
 	fgetc(file);
 	while(!feof(file)){
 		fseek(file,-1,SEEK_CUR);
+		//wczytanie nagłówka tablicy
 		if(fread(buffer,sizeof(char),STRING_SIZE,file) != STRING_SIZE)
 			ERROR_MACRO(NULL,"ERROR: couldn't find section label!");
+		//wczytanie rozmiaru tablicy
 		if(fread(&size,sizeof(size),1,file) != 1)
 			ERROR_MACRO(NULL,"Error: couldn't find size of section!");
 		begin_size = size;
+		//sprawdzenie czy znaleziono właściwą tablicę
 		if(!strcmp(buffer,_label))
 		{
 			ret = Create_Array();
+			//pobieranie wszystkich elementów
 			while(begin_size >= size && size > 0){
-				
+				//nazwa elementu
 				if(fread(name,sizeof(char),STRING_SIZE,file) != STRING_SIZE)
 					ERROR_MACRO(NULL,"Error: couldn't find variable name!");
 				size -= STRING_SIZE*sizeof(char);		
-	
+				//typ danych
 				if(fread(&type,sizeof(type),1,file) != 1)
 					ERROR_MACRO(NULL,"Error: couldn't find type of %s!",name);
 				size -= sizeof(type);
-				
+				//rozmiar typu
 				type_size = Type_Size(type);
 				if(!type_size)
 					ERROR_MACRO(NULL," ");
-
+				//ilość zmiennych w elemencie
 				if(fread(&len,sizeof(len),1,file) != 1)
 					ERROR_MACRO(NULL,"Error: couldn't read number of data in %s!",name);
 				size -= sizeof(len);
-				
+				//wczytanie właściwych danych
 				value = malloc(type_size*len);
 				if(fread(value,type_size,len,file) != len)
 					ERROR_MACRO(NULL,"Error: wrong number of data in %s!",name);
@@ -384,13 +403,16 @@ Array * Load(const char * _label,const char * _path)
 				free(value);
 				size -= type_size*len;	
 			}
+			//zakończyliśmy wczytywanie, ale nie wczytano właściwej ilości danych
 			if(size)
 				WARNING("Size of loaded data is different of size declared \
 				in file. Loaded values may be corrupted");
+			//pusta tablica
 			if(ret->Length == 0)
 				free(ret);
 			break;
 		}
+		//znaleziono inną tablicę, przesuwamy się do następnej
 		else
 		{
 			fseek(file,size,SEEK_CUR);
@@ -412,13 +434,13 @@ int Save(Array * _array,const char * _label,const char * _path)
 	Iterator * it;
 	
 	file = fopen(_path,"rb");
-	/** First case - file doesn't exist or empty */
+	//plik istnieje i posiada jakieś dane
 	if(file)
 	{
 		fgetc(file);
 		if(!feof(file))
 		{
-			/** Search for our label */
+			//szukanie tablicy
 			while(!feof(file)){
 				fseek(file,-1,SEEK_CUR);
 				position = ftell(file);
@@ -426,11 +448,11 @@ int Save(Array * _array,const char * _label,const char * _path)
 					break;
 				if(fread(&size_b,sizeof(size_b),1,file) != 1)
 					break;
-				/** Label found ? */
+				
 				if(!strcmp(buffer,_label))
 				{
 					size_1 = position;
-					/** Sth before our label */
+					//pobranie do pamięci wszystkich danych zapisanych w pliku przed daną tablicą
 					if(size_1 != 0)
 					{
 						first_p = malloc(sizeof(*first_p)*size_1);
@@ -442,7 +464,7 @@ int Save(Array * _array,const char * _label,const char * _path)
 					position = ftell(file);
 					fseek(file,0,SEEK_END);
 					size_2 = ftell(file) - position;
-					/** Sth after our label */
+					//pobranie do pamięci wszystkich danych zapisanych w pliku za daną tablicą
 					if(size_2 != 0)
 					{
 						second_p = malloc(sizeof(*second_p)*(size_2));
@@ -457,7 +479,7 @@ int Save(Array * _array,const char * _label,const char * _path)
 					fgetc(file);
 				}
 			}
-			/** Label hasn't been found */
+			//nie znaleziono tablicy, pobranie do pamięci całego pliku
 			if(first_p == NULL && second_p == NULL)
 			{
 				fseek(file,0,SEEK_END);
@@ -471,7 +493,7 @@ int Save(Array * _array,const char * _label,const char * _path)
 		}
 	}
 	
-	/** Write our data */
+	//zapis danych istniejących wcześniej oraz nowej wersji tablicy(jeśli istniała)//pierwszy zapis tablicy
 	file = fopen(_path,"wb");
 	
 	if(first_p != NULL)
@@ -482,7 +504,7 @@ int Save(Array * _array,const char * _label,const char * _path)
 	size_b = Get_Size(_array);
 	if(fwrite(&size_b,sizeof(size_b),1,file) != 1)
 		ERROR_MACRO(1,"Error during writing data");
-		
+	//zapis elementów w tablicy
 	it = Create_Iterator(_array);
 	Get_First(it);
 	for(i=0;i<_array->Length;i++)
