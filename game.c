@@ -34,15 +34,18 @@ Array * Default_Game_Options()
 	float temp2[3] = {1.0f,0.0f,0.0f};
 	char buffer[STRING_SIZE+1],buffer2[STRING_SIZE+2];
 	Array * array;
-	
+	//usunięcie starego pliku opcji
 	remove(PATH);
 	array = Create_Array();
+	//liczba graczy
 	temp = 4;
 	Add_Element(array,"NUMBER_OF_PLAYERS",&temp,1,ARRAY_INTEGER);
-	temp = 0;
-	Add_Element(array,"PLAYER0_AI",&temp,1,ARRAY_BOOLEAN);
+	//poziom trudności
 	temp = AI_EASY;
 	Add_Element(array,"LEVEL",&temp,1,ARRAY_INTEGER);
+	//
+	temp = 0;
+	Add_Element(array,"PLAYER0_AI",&temp,1,ARRAY_BOOLEAN);
 	sprintf(buffer,"Gracz %d",1);
 	Add_Element(array,"PLAYER0_NAME",buffer,strlen(buffer)+1,ARRAY_CHAR);
 	Add_Element(array,"PLAYER0_COLOR",&temp2,3,ARRAY_FLOAT);

@@ -57,11 +57,4 @@ void Menu_Clean();
  * @return Numer zmiany dokonanej przez kliknięcie.
  */
 int Menu_Click(Mouse_Action * _m_event);
-/*!
- * Funkcja tworzy menu.
- * @param[out] _main Wskaźnik, do którego zostanie przypisany adres stworzonego menu
- * @param[in] _game_it Iterator przypisany do tablicy z opcjami gry
- * @param[in] _graph_it Iterator przypisany do tablicy z opcjami grafiki
- */
-void Menu_Init(Menu ** _main,Iterator * _game_it,Iterator * _graph_it);
 #endif

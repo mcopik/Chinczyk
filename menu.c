@@ -13,33 +13,69 @@
 #include "ai.h"
 
 void _Menu(Iterator * _game_it,Iterator * _graph_it,Mouse_Action * _m_event,int * flag);
-
+/*!
+ * Funkcja uruchomienia nowej gry.@n
+ * @param[in] _game_it Wskaźnik na iterator przypisany do tablicy opcji gry
+ * @param[in] _graph_it Wskaźnik na iterator przypisany do tablicy opcji grafiki
+ * @param[in,out] _menu_active Wskaźnik na strukturę aktywnego menu
+ * @param[in] _position Kliknięta pozycja w menu
+ * @return Numer zmiany dokonanej przez kliknięcie.
+ */
 int Menu_New_Game(Iterator * _game_it,Iterator * _graph_it,Menu ** _menu_active,int _position)
 {
 	return MENU_NEW_GAME;
 }
-
+/*!
+ * Funkcja zamknięcia gry.@n
+ * @param[in] _game_it Wskaźnik na iterator przypisany do tablicy opcji gry
+ * @param[in] _graph_it Wskaźnik na iterator przypisany do tablicy opcji grafiki
+ * @param[in,out] _menu_active Wskaźnik na strukturę aktywnego menu
+ * @param[in] _position Kliknięta pozycja w menu
+ * @return Numer zmiany dokonanej przez kliknięcie.
+ */
 int Menu_Close_Game(Iterator * _game_it,Iterator * _graph_it,Menu ** _menu_active,int _position)
 {
 	return MENU_CLOSE;
 }
-
+/*!
+ * Funkcja przejścia do podmenu.@n
+ * @param[in] _game_it Wskaźnik na iterator przypisany do tablicy opcji gry
+ * @param[in] _graph_it Wskaźnik na iterator przypisany do tablicy opcji grafiki
+ * @param[in,out] _menu_active Wskaźnik na strukturę aktywnego menu
+ * @param[in] _position Kliknięta pozycja w menu
+ * @return Numer zmiany dokonanej przez kliknięcie.
+ */
 int Menu_Go_Next(Iterator * _game_it,Iterator * _graph_it,Menu ** _menu_active,int _position)
 {
 	*_menu_active = (*_menu_active)->Children[_position];
 	return MENU_NO_CHANGE;
 }
-
+/*!
+ * Funkcja powrotu do menu nadrzędnego.@n
+ * @param[in] _game_it Wskaźnik na iterator przypisany do tablicy opcji gry
+ * @param[in] _graph_it Wskaźnik na iterator przypisany do tablicy opcji grafiki
+ * @param[in,out] _menu_active Wskaźnik na strukturę aktywnego menu
+ * @param[in] _position Kliknięta pozycja w menu
+ * @return Numer zmiany dokonanej przez kliknięcie.
+ */
 int Menu_Go_Previous(Iterator * _game_it,Iterator * _graph_it,Menu ** _menu_active,int _position)
 {
 	*_menu_active = (*_menu_active)->Parent;
 	return MENU_NO_CHANGE;
 }
-
+/*!
+ * Funkcja zmiany poziomu trudności.@n
+ * @param[in] _game_it Wskaźnik na iterator przypisany do tablicy opcji gry
+ * @param[in] _graph_it Wskaźnik na iterator przypisany do tablicy opcji grafiki
+ * @param[in,out] _menu_active Wskaźnik na strukturę aktywnego menu
+ * @param[in] _position Kliknięta pozycja w menu
+ * @return Numer zmiany dokonanej przez kliknięcie.
+ */
 int Menu_Level_Change(Iterator * _game_it,Iterator * _graph_it,Menu ** _menu_active,int _position)
 {
 	int temp;
 	char buffer[STRING_SIZE+1];
+	
 	Find(_game_it,"LEVEL");
 	temp = Get_ValueI(_game_it);
 	temp++;
@@ -64,14 +100,23 @@ int Menu_Level_Change(Iterator * _game_it,Iterator * _graph_it,Menu ** _menu_act
 	strcpy((*_menu_active)->Captions[_position],buffer);
 	return MENU_NO_CHANGE;
 }
-
+/*!
+ * Funkcja zmiany rozdzielczości.@n
+ * @param[in] _game_it Wskaźnik na iterator przypisany do tablicy opcji gry
+ * @param[in] _graph_it Wskaźnik na iterator przypisany do tablicy opcji grafiki
+ * @param[in,out] _menu_active Wskaźnik na strukturę aktywnego menu
+ * @param[in] _position Kliknięta pozycja w menu
+ * @return Numer zmiany dokonanej przez kliknięcie.
+ */
 int Menu_Graph_Resolution_Change(Iterator * _game_it,Iterator * _graph_it,\
 									Menu ** _menu_active,int _position)
 {
 	int width,height,i;
 	const char * label = "Rozdzielczosc: ";
 	char * buffer;
+	//Rozdzielczości możliwe do wybrania
 	static int Display[3][2] = {{640,480},{800,600},{1024,768}};
+	
 	Find(_graph_it,"FULLSCREEN");
 	if(!Get_ValueB(_graph_it))
 	{
@@ -93,16 +138,25 @@ int Menu_Graph_Resolution_Change(Iterator * _game_it,Iterator * _graph_it,\
 		free(buffer);
 		return MENU_GRAPH_CHANGE_RES;
 	}
+	//niemożliwa zmiana rozdzielczości w trybie pełnoekranowym
 	else
 		return MENU_NO_CHANGE;
 }
-
+/*!
+ * Funkcja uruchomienia/wyłączenia renderingu w trybie pełnoekranowym.@n
+ * @param[in] _game_it Wskaźnik na iterator przypisany do tablicy opcji gry
+ * @param[in] _graph_it Wskaźnik na iterator przypisany do tablicy opcji grafiki
+ * @param[in,out] _menu_active Wskaźnik na strukturę aktywnego menu
+ * @param[in] _position Kliknięta pozycja w menu
+ * @return Numer zmiany dokonanej przez kliknięcie.
+ */
 int Menu_Graph_Fullscr_Change(Iterator * _game_it,Iterator * _graph_it,\
 								Menu ** _menu_active,int _position)
 {
 	const char * fullscr_label = "Pelny ekran: ";
 	char * buffer;
 	int temp;
+	
 	buffer = (char*) malloc(sizeof(*buffer)*(STRING_SIZE+1));
 	Find(_graph_it,"FULLSCREEN");
 	if(Get_ValueB(_graph_it))
@@ -122,6 +176,14 @@ int Menu_Graph_Fullscr_Change(Iterator * _game_it,Iterator * _graph_it,\
 	free(buffer);
 	return MENU_GRAPH_CHANGE_FULL;
 }
+/*!
+ * Funkcja zmiany liczby graczy.@n
+ * @param[in] _game_it Wskaźnik na iterator przypisany do tablicy opcji gry
+ * @param[in] _graph_it Wskaźnik na iterator przypisany do tablicy opcji grafiki
+ * @param[in,out] _menu_active Wskaźnik na strukturę aktywnego menu
+ * @param[in] _position Kliknięta pozycja w menu
+ * @return Numer zmiany dokonanej przez kliknięcie.
+ */
 int Menu_Game_Number_Change(Iterator * _game_it,Iterator * _graph_it,\
 								Menu ** _menu_active,int _position)
 {
@@ -152,12 +214,20 @@ int Menu_Game_Number_Change(Iterator * _game_it,Iterator * _graph_it,\
 	strcpy((*_menu_active)->Captions[_position],buffer);
 	return MENU_NO_CHANGE;
 }
-
+/*!
+ * Funkcja zmiany typu gracza.@n
+ * @param[in] _game_it Wskaźnik na iterator przypisany do tablicy opcji gry
+ * @param[in] _graph_it Wskaźnik na iterator przypisany do tablicy opcji grafiki
+ * @param[in,out] _menu_active Wskaźnik na strukturę aktywnego menu
+ * @param[in] _position Kliknięta pozycja w menu
+ * @return Numer zmiany dokonanej przez kliknięcie.
+ */
 int Menu_Game_Player_Change(Iterator * _game_it,Iterator * _graph_it,\
 								Menu ** _menu_active,int _position)
 {
 	int temp;
 	char buffer[STRING_SIZE+1];
+	
 	sprintf(buffer,"PLAYER%d_AI",_position-3);
 	Find(_game_it,buffer);
 	if(Get_ValueB(_game_it))
@@ -174,14 +244,20 @@ int Menu_Game_Player_Change(Iterator * _game_it,Iterator * _graph_it,\
 	strcpy((*_menu_active)->Captions[_position],buffer);
 	return MENU_NO_CHANGE;
 }
-
+/*!
+ * Funkcja włączająca rysowanie menu.@n
+ * @param[in] _graph_it Wskaźnik na iterator przypisany do tablicy opcji grafiki
+ * @param[in] _menu Wskaźnik na strukturę rysowanego menu
+ */
 void Menu_Draw(Iterator * _graph_it,Menu * _menu)
 {
 	int i;
 	char * buffer;
+	
 	buffer = (char*)malloc(sizeof(*buffer)*(STRING_SIZE+1));
     for(i = 0;i < _menu->Number_of_Positions;i++)
 	{
+		//gra nie rysuje pustych pozycji w menu
 		if(strcmp(_menu->Captions[i],""))
 		{
 			sprintf(buffer,"MENU_TEXT_%d",i);
@@ -192,7 +268,10 @@ void Menu_Draw(Iterator * _graph_it,Menu * _menu)
 	free(buffer);
     Set_Change();
 }
-
+/*!
+ * Funkcja wyłączająca rysowanie menu.@n
+ * @param[in] _menu Wskaźnik na strukturę aktywnego menu
+ */
 void Menu_Clean_Drawing(Menu *_menu)
 {
 	int i;
@@ -205,10 +284,14 @@ void Menu_Clean_Drawing(Menu *_menu)
 	free(buffer);
 	Set_Change();
 }
-
+/*!
+ * Funkcja zwalniająca zaalokowaną pamięć.@n
+ * @param[in] _menu Wskaźnik na strukturę menu
+ */
 void Menu_Free(Menu * _menu)
 {
 	int i;
+	//rekurencyjne zwalnianie pamięci w wszystkich podmenu
 	for(i = 0;i < _menu->Number_of_Positions;i++){
 		if(_menu->Children[i])
 			Menu_Free(_menu->Children[i]);
@@ -220,7 +303,12 @@ void Menu_Free(Menu * _menu)
 	free(_menu->Action);
 	free(_menu);
 }
-
+/*!
+ * Funkcja inicjalizująca menu.@n
+ * @param[out] _main Wskaźnik do którego zostanie przypisane stworzone menu
+ * @param[in] _game_it Wskaźnik na iterator przypisany do tablicy opcji gry
+ * @param[in] _graph_it Wskaźnik na iterator przypisany do tablicy opcji grafiki
+ */
 void Menu_Init(Menu ** _main,Iterator * _game_it,Iterator * _graph_it)
 {
 	Menu * ptr;
@@ -229,8 +317,10 @@ void Menu_Init(Menu ** _main,Iterator * _game_it,Iterator * _graph_it)
 				* fullscr_label = "Pelny ekran: ";
 	char * buffer;
 	int i;
+	
 	buffer = (char*) malloc(sizeof(*buffer)*(STRING_SIZE+1));
 	ptr = (Menu*) malloc(sizeof(*ptr));
+	//główne menu
 	ptr->Parent = NULL;
 	ptr->Number_of_Positions = 4;
 	ptr->Captions = (char**) malloc(ptr->Number_of_Positions*sizeof(*(ptr->Captions)));
@@ -244,11 +334,10 @@ void Menu_Init(Menu ** _main,Iterator * _game_it,Iterator * _graph_it)
 	ptr->Children = (Menu**) malloc(ptr->Number_of_Positions*sizeof(*(ptr->Children)));
 	ptr->Action = (int (**)(Iterator*,Iterator*,Menu **,int)) \
 					malloc(ptr->Number_of_Positions*sizeof(*(ptr->Action)));
-	
+	//podmenu nr 1
 	ptr->Children[0] = NULL;
 	ptr->Action[0] = &Menu_New_Game;
-	
-	
+	//podmenu nr 2
 	ptr->Children[1] = (Menu*) malloc(sizeof(*ptr->Children[1]));
 	ptr->Children[1]->Parent = ptr;
 	Find(_game_it,"NUMBER_OF_PLAYERS");
@@ -307,7 +396,7 @@ void Menu_Init(Menu ** _main,Iterator * _game_it,Iterator * _graph_it)
 	}
 	ptr->Children[1]->Number_of_Positions = MAX_PLAYERS+3;
 	ptr->Action[1] = &Menu_Go_Next;
-	
+	//podmenu nr 3
 	ptr->Children[2] = (Menu*) malloc(sizeof(*ptr->Children[2]));
 	ptr->Children[2]->Parent = ptr;
 	ptr->Children[2]->Number_of_Positions = 3;
@@ -341,7 +430,7 @@ void Menu_Init(Menu ** _main,Iterator * _game_it,Iterator * _graph_it)
 	ptr->Children[2]->Action[1] = &Menu_Graph_Fullscr_Change;
 	ptr->Children[2]->Action[2] = &Menu_Go_Previous;
 	ptr->Action[2] = &Menu_Go_Next;
-	
+	//podmenu nr 3
 	ptr->Children[3] = NULL;
 	ptr->Action[3] = &Menu_Close_Game;
 	
@@ -379,7 +468,13 @@ int Menu_Click(Mouse_Action * _m_event)
 	_Menu(NULL,NULL,_m_event,&temp);
 	return temp;
 }
-
+/*!
+ * Główna wewnętrzna funkcja menu.@n
+ * @param[in] _game_it Wskaźnik na iterator przypisany do tablicy opcji gry
+ * @param[in] _graph_it Wskaźnik na iterator przypisany do tablicy opcji grafiki
+ * @param[in] _m_event Wskaźnik na strukturę zdarzenia myszy
+ * @param[in] _flag Flaga używana do wyboru działania funkcji
+ */
 void _Menu(Iterator * _game_it,Iterator * _graph_it,Mouse_Action * _m_event,int * flag)
 {
 	static Iterator * Game_Iterator = NULL;
@@ -387,6 +482,7 @@ void _Menu(Iterator * _game_it,Iterator * _graph_it,Mouse_Action * _m_event,int 
 	static Menu * Main;
 	static Menu * Active_Menu;
 	int i;
+	//inicjalizacja danych statycznych oraz samego menu
 	if(_game_it)
 	{
 		Game_Iterator = _game_it;
@@ -394,6 +490,7 @@ void _Menu(Iterator * _game_it,Iterator * _graph_it,Mouse_Action * _m_event,int 
 		Menu_Init(&Main,_game_it,_graph_it);
 		Active_Menu = Main;
 	}
+	//analiza kliknięca w menu
 	else if(_m_event)
 	{
 		for(i = 0;i < Active_Menu->Number_of_Positions;i++){
@@ -408,14 +505,17 @@ void _Menu(Iterator * _game_it,Iterator * _graph_it,Mouse_Action * _m_event,int 
 			}
 		}
 	}
+	//czyszczenie pamięci
 	else if(*flag == -1)
 	{
 		Menu_Free(Main);
 	}
 	else
 	{
+		//włączenie menu
 		if(*flag)
 			Menu_Draw(Graph_Iterator,Active_Menu);
+		//wyłączenie menu
 		else
 			Menu_Clean_Drawing(Active_Menu);
 	}
