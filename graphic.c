@@ -48,7 +48,11 @@ float * Camera_Action(int _type,float * _camera,int _action)
 					Camera[2] -= CAMERA_SPEED;
 				break;
 			}
+			//kontrolne sprawdzenie, aby położenie kamery nie przyjęło
+			//niedozwolnych wartości
+			//nachylenie kamery nad planszą max 90 stopni, min 0 stopni
 			Interval(&Camera[0],0,90);
+			//maksymalne oddalenie, minimalne przybliżenie
 			Interval(&Camera[2],MIN_DISTANCE,MAX_DISTANCE);
 			while(Camera[1] >= 360.0f)
 				Camera[1] -= 360.0f;
@@ -91,31 +95,32 @@ int Load_Image(Image * _image,const char * _path){
 	file = fopen(_path,"rb");
 	if(!file)
 		ERROR_MACRO(1,"Bitmap doesn't exist");
-	/** First part of header */
+	//nagłówek pliku
 	fseek(file,18,SEEK_CUR);
-
+	//szerokość obrazka
 	if(fread(&_image->Width,4,1,file) != 1)
 		ERROR_MACRO(1,"Error reading data");
+	//wysokość obrazka
 	if(fread(&_image->Height,4,1,file) != 1)
 		ERROR_MACRO(1,"Error reading data");
 		
-	/** number of planes - unnecessary */
+	//liczba płaszczyzn
 	fseek(file,2,SEEK_CUR);
+	//liczba bitów na piksel
 	if(fread(&bpp,2,1,file) != 1)
 		ERROR_MACRO(1,"Error reading data");
 		
-	/**bpp is size of data for every pixel in bites
-		dividing it by 8 gives size in bytes */
+	//dzielenie BPP przez 8 da nam liczbę bajtów
 	size = _image->Width*_image->Height*bpp/8;
 	_image->Data = (char*)malloc(sizeof(*_image->Data)*size);
 
-	/**other data */
+	//inne dane
 	fseek(file, 24, SEEK_CUR);
-
+	//dane obrazka(piksele)
 	if(fread(_image->Data,size,1,file) != 1)
 		ERROR_MACRO(1,"Error reading data");
-	/** for some strange reason bitmap contains
-	 * colors as blue,green,red */
+	//BMP przechowuje dane pikseli jako Blue,Green,Red
+	//OpenGL wymaga danych w formacie Red,Green,Blue
 	for(i = 0;i < size;i += 3){
 		temp = _image->Data[i];
 		_image->Data[i] = _image->Data[i+2];
@@ -129,43 +134,67 @@ int Load_Image(Image * _image,const char * _path){
 void  Close_Image(Image * _image){
     free(_image->Data);
 }
-
-#define DRAW_PAWN(quadratic,array,number)	\
+/*!
+ * Makro rysowania pola.@n
+ * Pierwsza linijka dokonuje translacji o wektor o współczynnikach równych położeniu pola w przestrzeni.@n
+ * Druga linijka dokonuje obrotu o 90 stopni na osi X, aby pole leżało na planszy.@n
+ * Trzecia linijka rysuje okrąg.@n
+ * @param[in] quadratic Obiekt typu GLUquadricObj
+ * @param[in] array Wskanik na strukturę pól
+ * @param[in] number Numer pola
+ */
+#define DRAW_FIELD(quadratic,array,number)	\
 glTranslatef(Fields_Get_X(array,number),(float)(H/2+0.01),-Fields_Get_Y(array,number));	\
 glRotatef(90.0f,1.0f,0.0f,0.0f); \
 gluDisk(quadratic, 0, Fields_Get_Radius(array,number), 50, 10);
-					
-
+/*!
+ * Wewnętrzna funkcja rysująca.@n
+ * @param[in] _type Flaga zachowania funkcji
+ * @param[in] _fields Wskaźnik na strukturę pól
+ * @param[in] _players Wskaźnik na tablicę graczy
+ * @param[in] _players_number Liczba graczy
+ * @param[in] _randomized Wskaźnik na zmienną sygnalizująca ostatni wynik losowania
+ * @param[in] _info Wskaźnik na strukturę danych animacji migania
+ */
 void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_number,int * _randomized,Blink_Info * _info)
 {
 	static Fields_Structure * Fields = NULL;
 	static Player * Players = NULL;
 	static int Number_of_Players = 0;
-	static int init = 0;
+	//nazwa listy wyświetlania
 	static int List_Name;
-	static float * Camera;
+	//kamera
+	static float * Camera = NULL;
+	//aktualny wskaźnik częstotliwości migania
 	static int Frequency = -1;
+	//ostatnio wylosowana pozycja
 	static int * Randomized;
+	//obiekt niezbędny do rysowania kwadryków(sfera,dysk,stożek)
 	static GLUquadricObj * Quadric = NULL;
-	static unsigned int Texture[3];
+	//tekstury
+	static unsigned int Texture[NUMBER_OF_TEXTURES];
+	//migające pionki
 	static int Blink_Pawns[4] = {-1,-1,-1,-1};
+	//migające pole
 	static int Blink_Field = -1;
+	//aktywny gracz
 	static int Active_Player = -1;
+	//wartości na dwóch dodatkowych ściankach(na głównej wynik rzutu)
 	static int Cube_Pips[2][6] = {{3,3,5,5,3,3},{2,6,6,1,1,5}};
-	static Image * Image1; 
+	Image * Image1; 
 	char buffer[STRING_SIZE+1];
 	int i,j;
-	
-	if(!init)
+	//pierwsze uruchomienie funkcji
+	if(!Camera)
 	{
 		Camera = malloc(sizeof(*Camera)*3);
-		init = 1;
+		//początkowe ustawienie kamery
 		Camera[0] = 45.0f;
 		Camera[1] = -45.0f;
 		Camera[2] = MIN_DISTANCE;
 		Set_Camera(Camera);
 		free(Camera);
-		
+		//generowanie tekstur
 		glEnable(GL_TEXTURE_2D);
 		Image1 = malloc(sizeof(*Image1));
 		for(i = 0;i < NUMBER_OF_TEXTURES;i++){
@@ -182,9 +211,9 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 		}
 		glDisable(GL_TEXTURE_2D);
 		free(Image1);
-		
+		//generowanie list wyświetlania
 		List_Name = glGenLists(3);
-		//Rysuje planszę
+		//rysuje planszę
 		glNewList(List_Name, GL_COMPILE);
 			glBegin(GL_QUADS);
 				glColor3f(0.2f,0.27f,0.08f);
@@ -201,6 +230,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 					glVertex3f(POW(-1,i)*W/2,H/2,-D/2);
 				}
 			glEnd();
+			//tekstura trawy
 			glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, Texture[0]);
 			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
@@ -219,13 +249,13 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 		gluQuadricTexture(Quadric, GL_TRUE);
 		gluQuadricNormals(Quadric, GLU_SMOOTH);
 		glNewList(List_Name+1,GL_COMPILE);
+			//podstawa pionka
 			glTranslatef(0,H/2+0.01f,0);
 			glRotatef(-90.0f,1.0f,0.0f,0.0f);
 			gluCylinder(Quadric,PAWN_RADIUS,PAWN_RADIUS*0.2,PAWN_HEIGHT,32,32);
-	
+			//kulka na górze pionka
 			glRotatef(90.0f,1.0f,0.0f,0.0f);
 			glTranslatef(0.0f,(float)(PAWN_HEIGHT+PAWN_RADIUS/2),0.0f);
-	
 			glRotatef(-90.0f,1.0f,0.0f,0.0f);
 			gluSphere(Quadric,PAWN_RADIUS/2,32,32);
 		glEndList();
@@ -234,17 +264,17 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 		//Rysuje kostkę
 		glNewList(List_Name+2,GL_COMPILE);
 			glBegin(GL_QUADS);
-					//tył
+
 					glVertex3f(CUBE_SIZE/2,-CUBE_SIZE/2,-CUBE_SIZE/2);
 					glVertex3f(-CUBE_SIZE/2,-CUBE_SIZE/2,-CUBE_SIZE/2);
 					glVertex3f(-CUBE_SIZE/2,-CUBE_SIZE/2,CUBE_SIZE/2);
 					glVertex3f(CUBE_SIZE/2,-CUBE_SIZE/2,CUBE_SIZE/2);
-					//tył lewy
+
 					glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,-CUBE_SIZE/2);
 					glVertex3f(CUBE_SIZE/2,CUBE_SIZE/2,-CUBE_SIZE/2);
 					glVertex3f(CUBE_SIZE/2,-CUBE_SIZE/2,-CUBE_SIZE/2);
 					glVertex3f(-CUBE_SIZE/2,-CUBE_SIZE/2,-CUBE_SIZE/2);
-					//tył prawy
+
 					glVertex3f(CUBE_SIZE/2,-CUBE_SIZE/2,-CUBE_SIZE/2);
 					glVertex3f(CUBE_SIZE/2,CUBE_SIZE/2,-CUBE_SIZE/2);
 					glVertex3f(CUBE_SIZE/2,CUBE_SIZE/2,CUBE_SIZE/2);
@@ -266,6 +296,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 					glVertex3f(CUBE_SIZE/2,CUBE_SIZE/2,CUBE_SIZE/2);
 			glEnd();
 			glColor3f(0.0f,0.0f,0.0f);
+			//linie wyznaczające brzegi kostki
 			glBegin(GL_LINES);
 				glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,CUBE_SIZE/2);
 				glVertex3f(-CUBE_SIZE/2,CUBE_SIZE/2,-CUBE_SIZE/2);
@@ -277,7 +308,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 			glColor3f(1.0f,1.0f,1.0f);
 		glEndList();
 	}
-	
+	//inicjalizacja lub ustawienie danych migania
 	if(_type != GL_SELECT && _type != GL_RENDER)
 	{
 		if(_fields)
@@ -290,11 +321,13 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 		else if(_info)
 		{
 			Active_Player = _info->Player_Number;
+			//miganie pionków
 			if(_info->Field_Number != -1)
 			{
 				Blink_Field = _info->Field_Number;
 				*Blink_Pawns = *_info->Pawns_Numbers;
 			}
+			//migania pola
 			else
 			{
 				for(i = 0;i < NUMBER_OF_PAWNS;i++){
@@ -305,8 +338,10 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 				}
 				Blink_Field = -1;
 			}
+			//włączenie migania
 			Frequency = 0;
 		}
+		//wyłączenie migania
 		else
 		{
 			Active_Player = -1;
@@ -316,6 +351,11 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 	}
 	else
 	{
+		/* renderujemy gdy:
+		 * - zmienia się stan migania(pełny-przeźroczysty) i trzeba narysować ponownie
+		 * - renderowanie w trybie analizy kliknięcia
+		 * - gra sygnalizuje, że doszło do zmiany wymagającej przerysowania ekranu
+		 */
 		if(!(Frequency % FREQUENCY)||_type==GL_SELECT||Check_Change())
 		{
 			glMatrixMode(GL_MODELVIEW);
@@ -327,7 +367,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 			gluQuadricNormals(Quadric, GLU_SMOOTH);
 			
 			
-			/** Camera */
+			//Ustawienie kamery
 			Camera = Get_Camera();
 			glTranslatef(0.0f,0.0f,-Camera[2]);
 			glRotatef(Camera[0],1.0,0.0,0.0);
@@ -335,17 +375,17 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 			free(Camera);
 			
 			glColor3f(1.0f,1.0f,1.0f);
-			/** Board */
+			//rysowanie planszy
 			if(_type == GL_SELECT)
+				//podanie nazwy rysowanego obiektu, niezbędne w trybie analizy kliknięcia
 				glPushName(BOARD_HIT);
 			glCallList(List_Name);
-			
-			
+			//włączenie teksturowania
 			glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, Texture[1]);
 			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
 			
-			/** Fields */
+			//rysowanie pól, gdy nie jest wymagane rysowanie któregoś pola przeźroczystego
 			if(Active_Player == -1 || Frequency < FREQUENCY || Blink_Field == -1)
 			{			
 				for(i = 0;i < Fields->Number_of_Fields;i++){
@@ -353,10 +393,11 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 						glLoadName(i+1);
 					glColor3f(1.0f,1.0f,1.0f);
 					glPushMatrix();
-					DRAW_PAWN(Quadric,Fields,i);
+					DRAW_FIELD(Quadric,Fields,i);
 					glPopMatrix();
 				}
 			}
+			//rysowanie pola z pominięciem tego, które ma być rysowane jako przeźroczyste
 			else
 			{
 				for(i = 0;i < Fields->Number_of_Fields;i++){
@@ -366,18 +407,18 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 					{
 						glColor3f(1.0f,1.0f,1.0f);
 						glPushMatrix();
-						DRAW_PAWN(Quadric,Fields,i);
+						DRAW_FIELD(Quadric,Fields,i);
 						glPopMatrix();
 					}
 				}
 			}
 			glDisable(GL_TEXTURE_2D);
 			
-			/** Pawns */
+			//rysowanie pionków
 			for(i = 0;i < Number_of_Players;i++){
 				
 				for(j = 0;j < NUMBER_OF_PAWNS;j++){
-						
+					//rysowanie z pominięciem przeźroczystych pionków
 					if( !(Frequency >= FREQUENCY && Active_Player == i &&\
 						( (Blink_Field != -1 && *Blink_Pawns == j) ||\
 						 (Blink_Field == -1 && Blink_Pawns[j]) ) ) )
@@ -394,6 +435,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 				Players++;
 			}
 			Players -= Number_of_Players;
+			//włączenie blendowania, niezbędne do rysowania przeźroczystego
 			glEnable(GL_BLEND);
 			glDepthMask(GL_FALSE);
 			glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
@@ -401,6 +443,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 			
 			if(Frequency >= FREQUENCY)
 			{
+				//"migające" pionki
 				if(Blink_Field == -1)
 				{	
 					for(i = 0;i < NUMBER_OF_PAWNS;i++){
@@ -415,6 +458,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 						}
 					}
 				}
+				//migające pole
 				else
 				{
 					glPushMatrix();
@@ -429,12 +473,12 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 					glPushMatrix();
 					if(_type == GL_SELECT)
 						glLoadName(Blink_Field+1);
-					DRAW_PAWN(Quadric,Fields,Blink_Field);
+					DRAW_FIELD(Quadric,Fields,Blink_Field);
 					glDisable(GL_TEXTURE_2D);
 					glPopMatrix();
 				}
 			}
-			/** Cube */
+			//rysowanie kostki
 			if(_type == GL_SELECT)
 				glLoadName(CUBE_HIT);
 			glLoadIdentity();
@@ -443,6 +487,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 			glRotatef(15.0f,0.0f,1.0f,0.0f);
 			glCallList(List_Name+2);
 			glColor3f(0.0f,0.0f,0.0f);
+			//rysowanie oczek na bokach kostek
 			glPushMatrix();
 				glTranslatef(0.0f,CUBE_SIZE/2+0.01f,0.0f);
 				glRotatef(-90.0f,1.0f,0.0f,0.0f);
@@ -473,7 +518,7 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
     glutSwapBuffers();
 }
 
-#undef DRAW_PAWN
+#undef DRAW_FIELD
 
 void Disable_Blink()
 {
@@ -483,22 +528,30 @@ void Disable_Blink()
 void Draw_Init(Fields_Structure * _fields,Player * _players,int _players_number, int * _randomized)
 {
 	if(_fields != NULL && _players != NULL && _players_number >= 0)
-	_Draw(0,_fields,_players,_players_number,_randomized,NULL);
+		_Draw(0,_fields,_players,_players_number,_randomized,NULL);
 }
-
+/*!
+ * Wewnętrzna funkcja rysująca teksty.@n
+ * @param[in] _type Flaga zachowania funkcji
+ * @param[in] _text Wskaźnik na strukturę tekstu
+ * @param[in] _name Nazwa tekstu
+ */
 void _Draw_Text(int _type,Text * _text,const char * _name)
 {
 	static Array * Texts = NULL;
 	Iterator * it;
 	Text * Ptr;
 	int len,bitmap_w,bitmap_h,i,width,height;
+	//inicjalizacja
 	if(_type == TEXT_INIT)
 		Texts = Create_Array();
+	//dodanie tekstu
 	else if(_type == TEXT_ADD)
 	{
 		Add_Element(Texts,_name,_text,1,ARRAY_TEXT);
 		free(_text);
 	}
+	//usunięcie tekstu z tablicy
 	else if(_type == TEXT_REMOVE)
 	{
 		Iterator * it = Find_Element(Texts,_name);
@@ -510,6 +563,7 @@ void _Draw_Text(int _type,Text * _text,const char * _name)
 		}
 		Delete_Iterator(it);
 	}
+	//wyczyszczenie zaalokowanej pamięci
 	else if(_type == TEXT_CLEAN)
 	{
 		Iterator * it = Create_Iterator(Texts);
@@ -524,6 +578,7 @@ void _Draw_Text(int _type,Text * _text,const char * _name)
 		Delete_Iterator(it);
 		Free_Array(Texts);
 	}
+	//rysowanie tekstów
 	else
 	{
 		if(Texts)
@@ -537,10 +592,10 @@ void _Draw_Text(int _type,Text * _text,const char * _name)
 					glMatrixMode(GL_PROJECTION);
 					glPushMatrix();
 					glLoadIdentity();
-					
 				}
 				width = glutGet(GLUT_WINDOW_WIDTH);
 				height = glutGet(GLUT_WINDOW_HEIGHT);
+				//rysujemy na macierzy ekranu dwuwymiarowego
 				gluOrtho2D(0, width,height, 0);
 				glMatrixMode(GL_MODELVIEW);
 				glPushMatrix();
@@ -551,6 +606,8 @@ void _Draw_Text(int _type,Text * _text,const char * _name)
 					Ptr = (Text*)Get_Value(it);
 					len = strlen(Ptr->String);
 					bitmap_w = 0;
+					//musimy wyrenderować dodatkowy prostokąt(patrz niżej)
+					//lub renderujemy napis wycentrowany, więc musimy znać jego szerokość
 					if(_type == GL_SELECT || Ptr->Position == TEXT_CENTER)
 					{
 						bitmap_h = Font_Height(Ptr->Font);
@@ -559,29 +616,30 @@ void _Draw_Text(int _type,Text * _text,const char * _name)
 					}
 					if(_type == GL_SELECT)
 					{
+						//stworzenie prostokąta odwzorowującego położenie napisu na ekranie
+						//kliknięcie na niego sygnalizuje kliknięcie na napis
 						glLoadName(Ptr->Select_Number);
 						glBegin(GL_TRIANGLE_STRIP);
-						if(Ptr->Position == TEXT_CENTER)
-						{
-							glVertex2f(Ptr->X*width-bitmap_w/2, Ptr->Y*height);
-							glVertex2f(Ptr->X*width-bitmap_w/2, Ptr->Y*height-bitmap_h);
-							glVertex2f(Ptr->X*width+bitmap_w/2, Ptr->Y*height);
-							glVertex2f(Ptr->X*width+bitmap_w/2, Ptr->Y*height-bitmap_h);
-						}
-						else
-						{
-							glVertex2f(Ptr->X*width, Ptr->Y*height);
-							glVertex2f(Ptr->X*width, Ptr->Y*height-bitmap_h);
-							glVertex2f(Ptr->X*width+bitmap_w, Ptr->Y*height);
-							glVertex2f(Ptr->X*width+bitmap_w, Ptr->Y*height-bitmap_h);
-						}
+							if(Ptr->Position == TEXT_CENTER)
+							{
+								glVertex2f(Ptr->X*width-bitmap_w/2, Ptr->Y*height);
+								glVertex2f(Ptr->X*width-bitmap_w/2, Ptr->Y*height-bitmap_h);
+								glVertex2f(Ptr->X*width+bitmap_w/2, Ptr->Y*height);
+								glVertex2f(Ptr->X*width+bitmap_w/2, Ptr->Y*height-bitmap_h);
+							}
+							else
+							{
+								glVertex2f(Ptr->X*width, Ptr->Y*height);
+								glVertex2f(Ptr->X*width, Ptr->Y*height-bitmap_h);
+								glVertex2f(Ptr->X*width+bitmap_w, Ptr->Y*height);
+								glVertex2f(Ptr->X*width+bitmap_w, Ptr->Y*height-bitmap_h);
+							}
 						glEnd();
 					}
 					glColor3f(1.0f,1.0f,1.0f);
-					if(Ptr->Position == TEXT_CENTER)
-						glRasterPos2f(Ptr->X*width-bitmap_w/2, Ptr->Y*height);
-					else
-						glRasterPos2f(Ptr->X*width-bitmap_w/2, Ptr->Y*height);
+					//ustawienie pozycji napisu
+					glRasterPos2f(Ptr->X*width-bitmap_w/2, Ptr->Y*height);
+					//rysowanie wszystkich liter po kolei
 					for (i = 0; i < len; i++) {
 						glutBitmapCharacter(Ptr->Font, Ptr->String[i]);
 					}
@@ -647,33 +705,36 @@ void Draw_Render()
 int Init_GL(int _width, int _height, char * _label,int _fullscr)
 {
 	int Window_Number;
-	
+	//inicjalizacja GLUTa
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH);
+	//ustawienie żądanych wymiarów okna
     glutInitWindowSize(_width, _height);
+	//ustawienie pozycji początkowej okna
     glutInitWindowPosition(0, 0);
+	//stworzenie okna
     Window_Number = glutCreateWindow(_label);
-
+	//czyszczenie buforów(koloru, głęboci)
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClearDepth(1.0);
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
     glShadeModel(GL_SMOOTH);
     glViewport(0, 0, _width, _height);
+	//macierz projekcji
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-
     gluPerspective(45.0f,(GLfloat)_width/(GLfloat)_height,0.1f,100.0f);
-
+	//macierz modelowania
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE);
 	glColor4f(1.0f, 1.0f, 1.0f, 0.5);
 	glDisable(GL_BLEND);
-	
+	//renderowanie w oknie/trybie pełnoekranowym
 	if(_fullscr == FULLSCREEN)
 		glutFullScreen();
-    // set up light number 1.
+		
     /*glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient);  // add lighting. (ambient)
     glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse);  // add lighting. (diffuse).
     glLightfv(GL_LIGHT1, GL_POSITION,LightPosition); // set light position.
@@ -685,6 +746,7 @@ int Init_GL(int _width, int _height, char * _label,int _fullscr)
 
 void Reshape_Window(int _width, int _height)
 {
+	//funkcja dokonuje zmian niezbędnych dla nowych wartości rozmiaru okna
 	glViewport(0, 0, _width, _height);		
 
     glMatrixMode(GL_PROJECTION);
@@ -706,24 +768,13 @@ void Enable_FullScr()
 {
 	glutFullScreen();
 }
-/*
-void Disable_FullScr(int _width,int _height)
-{
-	glutPositionWindow(0,0);
-	glutReshapeWindow(_width,_height);
-	Reshape_Window(_width,_height);
-	glutPostRedisplay();
-}*/
 
-/*void Draw_Fields(int _type,Fields_Structure * array,int players_number,int _blink)
-{
-	
-}
-	*/
 void Blink_Set_Pawn(int _number,int * _pawns)
 {
 	Blink_Info * ptr = malloc(sizeof(*ptr));
+	//funkcja ustawia miganie pionków
 	ptr->Player_Number = _number;
+	//tablica z informacją, które pionki mają migać
 	ptr->Pawns_Numbers = _pawns;
 	ptr->Field_Number = -1;
 	_Draw(0,NULL,NULL,0,NULL,ptr);
@@ -733,8 +784,11 @@ void Blink_Set_Pawn(int _number,int * _pawns)
 void Blink_Set_Field(int _number, int _pawn, int _field)
 {
 	Blink_Info * ptr = malloc(sizeof(*ptr));
+	//funkcja ustawia miganie pola
 	ptr->Player_Number = _number;
+	//numer migającego pionka
 	ptr->Pawns_Numbers = &_pawn;
+	//numer pola
 	ptr->Field_Number = _field;
 	_Draw(0,NULL,NULL,0,NULL,ptr);
 	free(ptr);
@@ -747,7 +801,7 @@ void Fields_Generate_4_Players(Field * _pointer)
 	
 	Width = MIN(W,D)/2;
 	Radius = FIELD_RADIUS;
-	
+	//"bazy"
 	for(i = 0;i < 4;i++)
 	{
 			for(j = 0;j < NUMBER_OF_PAWNS;j++)
@@ -776,7 +830,7 @@ void Fields_Generate_4_Players(Field * _pointer)
 	for(i = 0;i < NUMBER_OF_PAWNS;i++)
 		_pointer[6*NUMBER_OF_PAWNS+i].Position[0] *= -1;
 		
-	
+	//mety - gracz 1 i 3
 	for(i = 0;i < 2;i++)
 	{
 		for(j = 0;j < NUMBER_OF_PAWNS;j++)
@@ -787,6 +841,7 @@ void Fields_Generate_4_Players(Field * _pointer)
 			_pointer[2*2*NUMBER_OF_PAWNS*i+NUMBER_OF_PAWNS+j].Radius = Radius;
 		}
 	}
+	//mety - gracz 2 i 4
 	for(i = 0;i < 2;i++)
 	{
 		for(j = 0;j < NUMBER_OF_PAWNS;j++)
@@ -798,6 +853,7 @@ void Fields_Generate_4_Players(Field * _pointer)
 		}
 	}
 	shift = NUMBER_OF_PAWNS*2*4;
+	//pola - gracz 1 i 3
 	for(i = 0;i < 4;i += 2)
 	{
 		for(j = 0;j < NUMBER_OF_FIELDS_PER_PLAYER;j++)
@@ -809,6 +865,7 @@ void Fields_Generate_4_Players(Field * _pointer)
 			_pointer[shift+i*NUMBER_OF_FIELDS_PER_PLAYER+j].Radius = Radius;
 		}	
 	}
+	//pola gracz 2 i 4
 	for(i = 0;i < 4;i += 2)
 	{
 		for(j = 0;j < NUMBER_OF_FIELDS_PER_PLAYER;j++)
@@ -820,13 +877,13 @@ void Fields_Generate_4_Players(Field * _pointer)
 			_pointer[shift+(i+1)*NUMBER_OF_FIELDS_PER_PLAYER+j].Radius = Radius;
 		}	
 	}
-	
+	//pola - gracz 3 
 	for(i = 0;i < NUMBER_OF_FIELDS_PER_PLAYER;i++)
 	{
 		_pointer[shift+NUMBER_OF_FIELDS_PER_PLAYER*2+i].Position[0] *= -1;
 		_pointer[shift+NUMBER_OF_FIELDS_PER_PLAYER*2+i].Position[1] *= -1;
 	}
-	
+	//pola - gracz 4
 	for(i = 0;i < NUMBER_OF_FIELDS_PER_PLAYER;i++)
 	{
 		_pointer[shift+NUMBER_OF_FIELDS_PER_PLAYER*3+i].Position[0] *= -1;
@@ -840,9 +897,8 @@ void Fields_Generate_5_Players(Field * _pointer)
 	int i,j,shift;
 	
 	Width = MIN(W,D)/2;
-	Radius = FIELD_RADIUS;//0.03*Width*2;
-	for(i = 0;i < 72;i++)
-		_pointer[i].Radius = 0;
+	Radius = FIELD_RADIUS;
+	//"bazy"
 	for(i = 0;i < 5;i++)
 	{
 			for(j = 0;j < NUMBER_OF_PAWNS;j++)
@@ -861,7 +917,6 @@ void Fields_Generate_5_Players(Field * _pointer)
 		_pointer[i*2*NUMBER_OF_PAWNS+3].Position[0] -= 2*Radius;
 		_pointer[i*2*NUMBER_OF_PAWNS+3].Position[1] -= 2*Radius;
 	}
-	
 	for(i = 0;i < NUMBER_OF_PAWNS;i++)
 	{
 		_pointer[2*NUMBER_OF_PAWNS+i].Position[1] *= -1;	
@@ -885,7 +940,7 @@ void Fields_Generate_5_Players(Field * _pointer)
 	{
 		_pointer[2*4*NUMBER_OF_PAWNS+i].Position[0] *= -1;	
 	}
-	//second and fourth player
+	//2 i 4 gracz - mety
 	for(i = 1;i < 4;i += 2)
 	{
 		for(j = 0;j < NUMBER_OF_PAWNS;j++)
@@ -897,14 +952,14 @@ void Fields_Generate_5_Players(Field * _pointer)
 	}
 	for(j = 0;j < NUMBER_OF_PAWNS;j++)
 		_pointer[(1+3*2)*NUMBER_OF_PAWNS+j].Position[0] *= -1;
-	//third player
+	//3 gracz
 	for(i = 0;i < NUMBER_OF_PAWNS;i++)
 	{
 			_pointer[2*2*(NUMBER_OF_PAWNS+1)+i].Position[0] = 0.0f;
 			_pointer[2*2*(NUMBER_OF_PAWNS+1)+i].Position[1] = (float)(-(0.7*Width - (2+i)*Radius*2));
 			_pointer[2*2*(NUMBER_OF_PAWNS+1)+i].Radius = Radius;
 	}
-	//first and fifth player
+	//1 i 5 gracz
 	for(i = 0;i < 2;i++)
 	{
 		for(j = 0;j < NUMBER_OF_PAWNS;j++)
@@ -915,7 +970,7 @@ void Fields_Generate_5_Players(Field * _pointer)
 		}
 	}
 	shift = 2*NUMBER_OF_PAWNS*5;
-	//first player
+	//pierwszy gracz - pola
 	for(i = 0;i < NUMBER_OF_FIELDS_PER_PLAYER;i++)
 	{
 		
@@ -931,7 +986,7 @@ void Fields_Generate_5_Players(Field * _pointer)
 		_pointer[shift+i].Radius = Radius;
 	}
 	shift += NUMBER_OF_FIELDS_PER_PLAYER;
-	//second player
+	//2 gracz
 	_pointer[shift].Position[0] = _pointer[3*NUMBER_OF_PAWNS].Position[0] + 2.5f*Radius;
 	_pointer[shift].Position[1] = 0.0f;
 	_pointer[shift].Radius = Radius;
@@ -948,7 +1003,7 @@ void Fields_Generate_5_Players(Field * _pointer)
 		_pointer[shift+i].Radius = Radius;
 	}
 	shift += NUMBER_OF_FIELDS_PER_PLAYER;
-	//third player
+	//3 gracz
 	_pointer[shift].Position[0] = _pointer[shift-1].Position[0] - 3*Radius;
 	_pointer[shift].Position[1] = _pointer[shift-1].Position[1];
 	_pointer[shift].Radius = Radius;
@@ -959,7 +1014,7 @@ void Fields_Generate_5_Players(Field * _pointer)
 		_pointer[shift+i].Radius = Radius;
 	}
 	shift += NUMBER_OF_FIELDS_PER_PLAYER;
-	//fourth player
+	//4 gracz
 	_pointer[shift].Position[0] = _pointer[7*NUMBER_OF_PAWNS].Position[0] - 2.5f*Radius;
 	_pointer[shift].Position[1] = 0.0f;
 	_pointer[shift].Radius = Radius;
@@ -970,7 +1025,7 @@ void Fields_Generate_5_Players(Field * _pointer)
 		_pointer[shift+i].Radius = Radius;
 	}
 	shift += NUMBER_OF_FIELDS_PER_PLAYER;
-	//fifth player
+	//5 gracz
 	_pointer[shift].Position[0] = _pointer[shift - 4*NUMBER_OF_FIELDS_PER_PLAYER].Position[0]*-1;
 	_pointer[shift].Position[1] = _pointer[shift - 4*NUMBER_OF_FIELDS_PER_PLAYER].Position[1];
 	_pointer[shift].Radius = Radius;
@@ -1000,9 +1055,8 @@ void Fields_Generate_6_Players(Field * _pointer)
 	int i,j,shift;
 	
 	Width = MIN(W,D)/2;
-	Radius = FIELD_RADIUS;//0.03*Width*2;
-	for(i = 0;i < 72;i++)
-		_pointer[i].Radius = 0;
+	Radius = FIELD_RADIUS;
+	//bazy
 	for(i = 0;i < 6;i++)
 	{
 			for(j = 0;j < NUMBER_OF_PAWNS;j++)
@@ -1042,7 +1096,7 @@ void Fields_Generate_6_Players(Field * _pointer)
 	for(i = 0;i < NUMBER_OF_PAWNS;i++)
 		_pointer[2*5*NUMBER_OF_PAWNS+i].Position[0] = Radius*POW(-1,i);
 		
-	//first and second player
+	//1 i 2 gracz - mety
 	for(i = 0;i < 2;i++)
 	{
 		for(j = 0;j < NUMBER_OF_PAWNS;j++)
@@ -1052,14 +1106,14 @@ void Fields_Generate_6_Players(Field * _pointer)
 			_pointer[(2*i+2)*NUMBER_OF_PAWNS-j-1].Radius = Radius;
 		}
 	}
-	//third player
+	//3 gracz
 	for(i = 0;i < NUMBER_OF_PAWNS;i++)
 	{
 			_pointer[(2*2+1)*NUMBER_OF_PAWNS+i].Position[0] = 0.0f;
 			_pointer[(2*2+1)*NUMBER_OF_PAWNS+i].Position[1] = (float)(-(0.7*Width - (2+i)*Radius*2));
 			_pointer[(2*2+1)*NUMBER_OF_PAWNS+i].Radius = Radius;
 	}
-	//fourth and fifth player
+	//4 i 5 gracz
 	for(i = 0;i < 2;i++)
 	{
 		for(j = 0;j < NUMBER_OF_PAWNS;j++)
@@ -1071,7 +1125,7 @@ void Fields_Generate_6_Players(Field * _pointer)
 			_pointer[(8+2*i)*NUMBER_OF_PAWNS-j-1].Radius = Radius;
 		}
 	}
-	//sixth player
+	//6 gracz
 	for(i = 0;i < NUMBER_OF_PAWNS;i++)
 	{
 			_pointer[(2*5+1)*NUMBER_OF_PAWNS+i].Position[0] = 0.0f;
@@ -1079,7 +1133,7 @@ void Fields_Generate_6_Players(Field * _pointer)
 			_pointer[(2*5+1)*NUMBER_OF_PAWNS+i].Radius = Radius;
 	}
 	shift = 2*NUMBER_OF_PAWNS*6;
-	//first player
+	//1 gracz - pola
 	_pointer[shift].Position[0] = 2*Radius*(NUMBER_OF_PAWNS+1);
 	_pointer[shift].Position[1] = Radius*(NUMBER_OF_PAWNS+1);
 	_pointer[shift].Radius = Radius;
@@ -1102,7 +1156,7 @@ void Fields_Generate_6_Players(Field * _pointer)
 		_pointer[shift+i].Radius = Radius;
 	}
 	shift += NUMBER_OF_FIELDS_PER_PLAYER;
-	//second player
+	//2 gracz
 	for(i = 0;i < 4;i++)
 	{
 		_pointer[shift+i].Position[0] = _pointer[shift+i-1].Position[0];
@@ -1116,7 +1170,7 @@ void Fields_Generate_6_Players(Field * _pointer)
 		_pointer[shift+i].Radius = Radius;
 	}
 	shift += NUMBER_OF_FIELDS_PER_PLAYER;
-	//third player
+	//3 gracz
 	_pointer[shift].Position[0] = _pointer[shift-1].Position[0] - 2*Radius;
 	_pointer[shift].Position[1] = _pointer[shift-1].Position[1];
 	_pointer[shift].Radius = Radius;
@@ -1127,7 +1181,7 @@ void Fields_Generate_6_Players(Field * _pointer)
 		_pointer[shift+i].Radius = Radius;
 	}
 	shift += NUMBER_OF_FIELDS_PER_PLAYER;
-	//fourth player
+	//4 gracz
 	for(i = 0;i < NUMBER_OF_FIELDS_PER_PLAYER;i++)
 	{
 		_pointer[shift+i].Position[0] = _pointer[shift - 2*NUMBER_OF_FIELDS_PER_PLAYER-i]\
@@ -1137,7 +1191,7 @@ void Fields_Generate_6_Players(Field * _pointer)
 		_pointer[shift+i].Radius = Radius;
 	}
 	shift += NUMBER_OF_FIELDS_PER_PLAYER;
-	//fifth& sixth player
+	//5 i 6 gracz
 	_pointer[shift].Position[0] = 2*Radius*(NUMBER_OF_PAWNS+1)*-1;
 	_pointer[shift].Position[1] = Radius*(NUMBER_OF_PAWNS+1);
 	_pointer[shift].Radius = Radius;
@@ -1170,6 +1224,7 @@ Fields_Structure * Fields_Generate(int _number_of_players){
 		return NULL;
 
 	ret = (Fields_Structure*) malloc(sizeof(*ret));
+	//liczba pól na planszy
 	ret->Number_of_Fields = (NUMBER_OF_PAWNS*2*_number_of_players+\
 							_number_of_players*NUMBER_OF_FIELDS_PER_PLAYER);
 	ret->Number_of_Players = _number_of_players;
@@ -1215,25 +1270,31 @@ void Text_Draw(float _x,float _y,int _select_name,void *_font,int _position_type
 {
 	char * buffer;
 	Text * ptr;
+	//generowanie napisu za pomocą makra funkcji o n argumentach
 	va_list ap;
 	buffer = (char*) malloc(sizeof(*buffer)*2*STRING_SIZE);
 	memset(buffer,0,sizeof(*buffer)*2*STRING_SIZE);
 	va_start(ap,_format);
 	while(*_format != '\0'){
+		//zwykły znak
 		if(*_format != '%')
 			sprintf(buffer,"%s%c",buffer,*_format);
 		else
 		{
 			switch(*++_format){
+				//napis
 				case 's':
 					sprintf(buffer,"%s%s",buffer,va_arg(ap,char *));
 				break;
+				//liczba całkowita
 				case 'd':
 					sprintf(buffer,"%s%d",buffer,va_arg(ap,int));
 				break;
+				//znak
 				case 'c':
 					sprintf(buffer,"%s%c",buffer,va_arg(ap,int));
 				break;
+				//liczba zmiennoprzecinkowa
 				case 'f':
 					sprintf(buffer,"%s%f",buffer,va_arg(ap,double));
 				break;
@@ -1248,45 +1309,6 @@ void Text_Draw(float _x,float _y,int _select_name,void *_font,int _position_type
 	Text_Add(ptr,_name);
 	Set_Change();
 }
-/*
-void Text_Create_Draw(int _size,int * _tab)
-{
-    int i;
-    char * buffer;
-    Text * ptr;
-    buffer = malloc(sizeof(*buffer)*(strlen(DRAWING_TEXT)+1+_size*2));
-    strcpy(buffer,DRAWING_TEXT);
-    for(i = 0;i < _size;i++)
-            sprintf(buffer,"%s %d",buffer,_tab[i]);
-    ptr = Text_Create(50,75,200,buffer,FONT1);
-    free(buffer);
-    Text_Remove(DRAW_MSG);
-    Text_Add(ptr,DRAW_MSG);
-    Set_Change();
-}
-
-void Text_Create_Player(const char * _name)
-{
-    Text * ptr = Text_Create(50,50,200,_name,FONT1);
-    Text_Remove(NAME_MSG);
-    Text_Add(ptr,NAME_MSG);
-    Set_Change();
-}
-
-void Text_Create_FPS(int _fps)
-{ 
-	Text * ptr;
-    char * buffer;
-	//5 digits for FPS. everything can happen
-	buffer = malloc(sizeof(*buffer)*(strlen(DRAWING_TEXT)+6));
-    sprintf(buffer,"%s %d",FPS_TEXT,_fps);
-    ptr = Text_Create(50,25,200,buffer,FONT1);
-    free(buffer);
-    Text_Remove(FPS_MSG);
-    Text_Add(ptr,FPS_MSG);
-    Set_Change();
-}
-*/
 
 void Draw_Cube_Pips(float _radius, int _number)
 {
