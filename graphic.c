@@ -513,7 +513,10 @@ void _Draw(int _type,Fields_Structure * _fields,Player * _players,int _players_n
 				Draw_Text(_type);
 		}
 		if(Frequency != -1 && _type != GL_SELECT)
-			Frequency = ++Frequency % (2*FREQUENCY);
+		{
+			++Frequency;
+			Frequency %= 2*FREQUENCY;
+		}
 	}
     glutSwapBuffers();
 }

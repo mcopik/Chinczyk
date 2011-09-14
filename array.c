@@ -552,8 +552,8 @@ type * name(Iterator * _it)								\
 	if(!_it->Position)									\
 		ERROR_MACRO(NULL,"Empty iterator");					\
 	if(_it->Position->Type != _type)					\
-		ERROR_MACRO(-1,"Wrong type in option");				\
-	ptr = malloc(sizeof(*ptr)*_it->Position->Size);		\
+		ERROR_MACRO(NULL,"Wrong type in option");				\
+	ptr = (type*)malloc(sizeof(*ptr)*_it->Position->Size);		\
 	memset(ptr,0,_it->Position->Size*sizeof(*ptr));		\
 	memcpy(ptr,_it->Position->Value,_it->Position->Size*sizeof(*ptr));\
 	return ptr;									\

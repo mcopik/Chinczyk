@@ -586,7 +586,7 @@ void Main_Loop(int _type)
 			case LOOP_WAIT_DEC:
 				if(m_event)
 				{
-					//sprawdzenie, czy ruszono się na zanzaczono pole
+					//sprawdzenie, czy ruszono się na zaznaczone pole
 					if(Find_Hit(Available_Move+1,m_event->Hits,m_event->Buffer))
 					{
 						temp = Check_Occupied(Players,Available_Move,Active_Player,Number_of_Players);
@@ -630,17 +630,36 @@ void Main_Loop(int _type)
 						//kolejka nie jest pusta, następny ruch
 						else
 						{
-							for(i=0;i < NUMBER_OF_PAWNS;i++){
-								temp = Check_Move(Players[Active_Player].Position[i],FIFO_Check(Randomized), \
-								Number_of_Players,Active_Player);
-								if(temp >= 0 &&\
-								Check_Occupied(Players,temp,Active_Player,Number_of_Players) != -1)
-									Active_Pawns[i] = temp;
-								else
-									Active_Pawns[i] = -1;
+							//pętla wykonywana tak długo, aż będzie możliwy ruch lub będzie pusta kolejka losowań
+							flag = 0;
+							while(!flag && FIFO_Check(Randomized) != -1){
+								for(i=0;i < NUMBER_OF_PAWNS;i++){
+									temp = Check_Move(Players[Active_Player].Position[i],FIFO_Check(Randomized), \
+									Number_of_Players,Active_Player);
+									if(temp >= 0 &&\
+									Check_Occupied(Players,temp,Active_Player,Number_of_Players) != -1)
+									{	
+										Active_Pawns[i] = temp;
+										flag = 1;
+									}
+									else
+										Active_Pawns[i] = -1;
+								}
+								if(!flag)
+									FIFO_Pop(Randomized);
 							}
-							Blink_Set_Pawn(Active_Player,Active_Pawns);
-							Game_Status = LOOP_WAIT_SELECT;
+							if(!flag)
+							{
+								if(Next_Draw)
+									Game_Status = LOOP_WAIT;
+								else
+									Game_Status = LOOP_NEXT_PLAYER;
+							}
+							else
+							{
+								Blink_Set_Pawn(Active_Player,Active_Pawns);
+								Game_Status = LOOP_WAIT_SELECT;
+							}
 						}
 					}
 					//ponowne losowanie
@@ -678,7 +697,8 @@ void Main_Loop(int _type)
 			case LOOP_NEXT_PLAYER:
 				if(Players[Active_Player].Type == PLAYER_AI)
 				{
-					Active_Player = ++Active_Player % Number_of_Players;
+					++Active_Player;
+					Active_Player %= Number_of_Players;
 					//czyszczenie bufora zdarzeń
 					//akcje, które miały miejsce podczas gry komputera
 					//nie zajdą teraz
@@ -703,7 +723,10 @@ void Main_Loop(int _type)
 					}
 				}
 				else
-					Active_Player = ++Active_Player % Number_of_Players;
+				{	
+					++Active_Player;
+					Active_Player %= Number_of_Players;
+				}
 				if(Players[Active_Player].Type == PLAYER_AI)
 					Delay = FPS;
 				TEXT_DRAW_PLAYER;

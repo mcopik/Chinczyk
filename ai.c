@@ -11,7 +11,7 @@ void _AI(int _active_player, Mouse_Action ** _m_event,AI_Info * _info)
 	static int Counter = NUMBER_OF_PAWNS;
 	//aktywny gracz
 	static int Active_Player = -1;
-	int i,temp,max_index;
+	int i,max_index;
 	float max,temp2;
 	
 	if(_info)
