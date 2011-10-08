@@ -1,6 +1,6 @@
 /*!
  * @file input.h
- * Zawiera implementację funkcji i struktur do obsługi wejścia w postaci myszki i klawiatury.@n
+ * Zawiera interfejs funkcji i struktur do obsługi wejścia w postaci myszki i klawiatury.@n
  * @par Chińczyk
  * @author Marcin Copik
  * @date 2011.09.10

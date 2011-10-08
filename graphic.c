@@ -1,3 +1,12 @@
+/*!
+ * @file graphic.c
+ * Zawiera implementację funkcji i struktur do obsługi tworzenia okien i renderowania grafiki.@n
+ * @par Chińczyk
+ * @author Marcin Copik
+ * @date 2011.09.10
+ * @version 1.0
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,7 +22,13 @@
 #include "game.h"
 
 
-
+/*!
+ * Wewnętrzna funkcja operaowania kamerą.@n
+ * @param[in] _type Argument określający zachowanie funkcji
+ * @param[in] _camera Wskaźnik na tablicę danych kamery
+ * @param[in] _action Zmienna określająca zmianę położenia kamery
+ * @return Wskaźnik do struktury danych kamery, gdy żądano pobrania jej; w przeciwnym wypadku NULL
+ */
 float * Camera_Action(int _type,float * _camera,int _action)
 {
 	static float Camera[3];

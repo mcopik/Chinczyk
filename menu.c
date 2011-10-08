@@ -1,3 +1,12 @@
+/*!
+ * @file menu.c
+ * Zawiera implementację wszystkich funkcji używanych do obsługi menu w grze.@n
+ * Menu do rysowania wykorzystuje obsługę struktur Text zaimplementowaną w graphic.@n
+ * @par Chińczyk
+ * @author Marcin Copik
+ * @date 2011.09.10
+ * @version 1.0
+*/
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -473,7 +482,7 @@ int Menu_Click(Mouse_Action * _m_event)
  * @param[in] _game_it Wskaźnik na iterator przypisany do tablicy opcji gry
  * @param[in] _graph_it Wskaźnik na iterator przypisany do tablicy opcji grafiki
  * @param[in] _m_event Wskaźnik na strukturę zdarzenia myszy
- * @param[in] _flag Flaga używana do wyboru działania funkcji
+ * @param[in] flag Flaga używana do wyboru działania funkcji
  */
 void _Menu(Iterator * _game_it,Iterator * _graph_it,Mouse_Action * _m_event,int * flag)
 {

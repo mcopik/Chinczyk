@@ -1,6 +1,6 @@
 /*!
  * @file game.h
- * Zawiera funkcje podstawowe gry, w tym główną pętlę.@n
+ * Zawiera interfejs funkcji podstawowych gry, w tym główną pętlę.@n
  * Funkcje zaimplementowane w tym pliku są odpowiedzialne za konfigurację gry oraz prawidłowe działanie.@n
  * @par Chińczyk
  * @author Marcin Copik

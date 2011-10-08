@@ -1,6 +1,6 @@
 /*!
- * @file
- * Zawiera implementację prostego algorytmu "sztucznej inteligencji".@n
+ * @file ai.h
+ * Zawiera interfejs prostego algorytmu "sztucznej inteligencji".@n
  * Losowość gry jest bardzo duża, algorytm stara się głównie utrzymać stabilną pozycję na planszy(minimum dwa pionki).@n
  * Poziom trudności gry decyduje o agresywności komputera.@n
  * @par Chińczyk

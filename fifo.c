@@ -1,3 +1,12 @@
+/*!
+ * @file fifo.h
+ * Zawiera implementację prostej kolejki(First In, First Out).@n
+ * @par Chińczyk
+ * @author Marcin Copik
+ * @date 2011.09.10
+ * @version 1.0
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "fifo.h"

@@ -1,3 +1,13 @@
+/*!
+ * @file game.c
+ * Zawiera implementację funkcji podstawowych gry, w tym główną pętlę.@n
+ * Funkcje zaimplementowane w tym pliku są odpowiedzialne za konfigurację gry oraz prawidłowe działanie.@n
+ * @par Chińczyk
+ * @author Marcin Copik
+ * @date 2011.09.10
+ * @version 1.0
+*/
+
 #include "game.h"
 #include "graphic.h"
 #include "array.h"
@@ -107,7 +117,15 @@ void Delete_Player(Player * _player)
 {
 	free(_player->Name);
 }
-
+/*!
+ * Funkcja inicjalizująca niezbędne struktury danymi startowymi.@n
+ * @param[in] _it Wskaźnik na iterator opcji gry
+ * @param[out] _players Wskaźnik pod którym zostanie zapisana tablicy graczy
+ * @param[out] _fields Wskaźnik pod którym zostanie zapisana tablicy struktury pól
+ * @param[out] _number_of_players Wskaźnik pod którym zostanie zapisana liczba graczy
+ * @param[out] _first_move Wskaźnik pod którym zostanie zapisana tablicy bonusu startowego
+ * @return Dystans do bazy końcowej; 0, jeśli pozycja należy do bazy startowej/końcowej
+ */
 void Init_Game(Iterator * _it,Player ** _players,Fields_Structure ** _fields,int * _number_of_players,int ** _first_move)
 {
 	int i;
@@ -155,7 +173,10 @@ void Init_Game(Iterator * _it,Player ** _players,Fields_Structure ** _fields,int
 	*_players -= *_number_of_players;
 	free(buffer);
 }
-
+/*!
+ * Wewnętrzna funkcja pętli gry.@n
+ * @param[in] _type Argument startowy określający zachowanie funkcji
+ */
 void Main_Loop(int _type)
 {
 	static Fields_Structure * Fields = NULL;
@@ -792,7 +813,11 @@ void Init_Process(int _default)
 	else
 		Main_Loop(GAME_INIT);
 }
-
+/*!
+ * Wewnętrzna funkcja bufora sygnalizującego zmianę w grze.@n
+ * @param[in] _type Argument określający zachowanie funkcji
+ * @return Gdy żądano zwrotu wartości przechowywanej przez funkcję - zwraca 0 lub 1(nie było/bya zmiana w grze);w przeciwnym razie zwraca 0
+ */
 int _Change(int _type)
 {
 	static int Change = 0;

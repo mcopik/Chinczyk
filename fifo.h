@@ -1,6 +1,6 @@
 /*!
  * @file fifo.h
- * Zawiera implementację prostego stosu(First In, First Out).@n
+ * Zawiera interfejs prostej kolejki(First In, First Out).@n
  * @par Chińczyk
  * @author Marcin Copik
  * @date 2011.09.10

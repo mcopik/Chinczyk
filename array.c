@@ -1,3 +1,12 @@
+/*!
+ * @file array.c
+ * Zawiera implementację zaawansowanej struktury danych.@n
+ * Umożliwia tworzenie tablic przechowujących wartości o kilku typach i dowolnym rozmiarze.@n
+ * @par Chińczyk
+ * @author Marcin Copik
+ * @date 2011.09.10
+ * @version 1.0
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -339,10 +348,10 @@ type name(Iterator * _it)				\
 		return err;						\
 }
 
-GET(Get_Type,unsigned short int,Type,-1);
-GET(Get_Value,void *,Value,NULL);
-GET(Get_Value_Size,unsigned int,Size,0);
-GET(Get_Name,char *,Key,NULL);
+GET(Get_Type,unsigned short int,Type,-1)
+GET(Get_Value,void *,Value,NULL)
+GET(Get_Value_Size,unsigned int,Size,0)
+GET(Get_Name,char *,Key,NULL)
 
 void Set_Value(Iterator * _it,void * _value)
 {
@@ -541,9 +550,9 @@ type name(Iterator * _it)								\
 		ERROR_MACRO(-1,"Wrong type in option");				\
 	return *((type*)_it->Position->Value);				\
 }
-GET_VALUE(Get_ValueB,short int,ARRAY_BOOLEAN);
-GET_VALUE(Get_ValueI,int,ARRAY_INTEGER);
-GET_VALUE(Get_ValueF,float,ARRAY_FLOAT);
+GET_VALUE(Get_ValueB,short int,ARRAY_BOOLEAN)
+GET_VALUE(Get_ValueI,int,ARRAY_INTEGER)
+GET_VALUE(Get_ValueF,float,ARRAY_FLOAT)
 
 #define GET_VALUE_ARRAY(name,type,_type)				\
 type * name(Iterator * _it)								\
@@ -558,7 +567,7 @@ type * name(Iterator * _it)								\
 	memcpy(ptr,_it->Position->Value,_it->Position->Size*sizeof(*ptr));\
 	return ptr;									\
 }
-GET_VALUE_ARRAY(Get_Value_ArrayB,short int,ARRAY_BOOLEAN);
-GET_VALUE_ARRAY(Get_Value_ArrayI,int,ARRAY_INTEGER);
-GET_VALUE_ARRAY(Get_Value_ArrayF,float,ARRAY_FLOAT);
-GET_VALUE_ARRAY(Get_Value_ArrayC,char,ARRAY_CHAR);
+GET_VALUE_ARRAY(Get_Value_ArrayB,short int,ARRAY_BOOLEAN)
+GET_VALUE_ARRAY(Get_Value_ArrayI,int,ARRAY_INTEGER)
+GET_VALUE_ARRAY(Get_Value_ArrayF,float,ARRAY_FLOAT)
+GET_VALUE_ARRAY(Get_Value_ArrayC,char,ARRAY_CHAR)

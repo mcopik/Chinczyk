@@ -1,6 +1,6 @@
 /*!
  * @file graphic.h
- * Zawiera implementację funkcji i struktur do obsługi tworzenia okien i renderowania grafiki.@n
+ * Zawiera interfejs funkcji i struktur do obsługi tworzenia okien i renderowania grafiki.@n
  * @par Chińczyk
  * @author Marcin Copik
  * @date 2011.09.10

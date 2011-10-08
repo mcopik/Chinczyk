@@ -1,6 +1,6 @@
 /*!
  * @file menu.h
- * Zawiera definicje struktury menu oraz wszystkich funkcji używanych do obsługi menu w grze.@n
+ * Zawiera definicje struktury menu oraz interfejs dla wszystkich funkcji używanych do obsługi menu w grze.@n
  * Menu do rysowania wykorzystuje obsługę struktur Text zaimplementowaną w graphic.@n
  * @par Chińczyk
  * @author Marcin Copik

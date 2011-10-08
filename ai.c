@@ -1,8 +1,23 @@
+/*!
+ * @file ai.c
+ * Zawiera implementację prostego algorytmu "sztucznej inteligencji".@n
+ * Losowość gry jest bardzo duża, algorytm stara się głównie utrzymać stabilną pozycję na planszy(minimum dwa pionki).@n
+ * Poziom trudności gry decyduje o agresywności komputera.@n
+ * @par Chińczyk
+ * @author Marcin Copik
+ * @date 2011.09.10
+ * @version 1.0
+*/
 #include <stdlib.h>
 #include "game.h"
 #include "input.h"
 #include "ai.h"
-
+/*!
+ * Wewnętrzna funkcja algorytmu.@n
+ * @param[in] _active_player Aktywny gracz
+ * @param[out] _m_event Wskaźnik na strukturę zdarzenia myszy
+ * @param[in] _info Wskaźnik na strukturę informacyjną
+ */
 void _AI(int _active_player, Mouse_Action ** _m_event,AI_Info * _info)
 {
 	//podstawowe informacje niezbędne do prawidłowej pracy algorytmu

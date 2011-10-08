@@ -1,6 +1,6 @@
 /*!
  * @file array.h
- * Zawiera implementację zaawansowanej struktury danych.@n
+ * Zawiera interfejs zaawansowanej struktury danych.@n
  * Umożliwia tworzenie tablic przechowujących wartości o kilku typach i dowolnym rozmiarze.@n
  * @par Chińczyk
  * @author Marcin Copik
